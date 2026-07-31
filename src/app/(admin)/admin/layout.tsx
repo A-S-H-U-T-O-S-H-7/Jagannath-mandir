@@ -1,0 +1,94 @@
+// app/admin/layout.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { Loader2 } from 'lucide-react';
+import AdminSidebar from '@/components/admin/layout/AdminSidebar';
+import AdminHeader from '@/components/admin/layout/AdminHeader';
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // No user, redirect to login
+        router.push('/admin/login');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Check if user is admin
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+          await auth.signOut();
+          router.push('/admin/login');
+          setLoading(false);
+          return;
+        }
+
+        const userData = userDoc.data();
+        
+        if (userData.role !== 'admin' && userData.role !== 'super_admin') {
+          await auth.signOut();
+          router.push('/admin/login');
+          setLoading(false);
+          return;
+        }
+
+        // User is admin
+        setIsAdmin(true);
+        setLoading(false);
+        
+      } catch (error) {
+        console.error('Admin check error:', error);
+        router.push('/admin/login');
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  // Don't render sidebar on login page
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9F8F4]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
+
+  return (
+    <div className="flex h-screen bg-[#F9F8F4]">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <AdminHeader />
+        <main className="flex-1 overflow-y-auto p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
