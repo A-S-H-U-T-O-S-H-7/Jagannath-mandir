@@ -154,7 +154,7 @@ export default function SevaRituals() {
             variants={fadeInUp}
             className="mt-3 text-sm sm:text-base text-[#555555] leading-relaxed"
           >
-            Participate in the divine rituals and seva opportunities at Jagnanth Mandir. 
+            Participate in the divine rituals and seva opportunities at jagannath Mandir. 
             Each ceremony is performed with utmost devotion and tradition.
           </motion.p>
         </motion.div>

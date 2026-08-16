@@ -146,7 +146,7 @@ export default function GalleryPreview() {
             Temple <span className="text-[#D4AF37]">Gallery</span>
           </h2>
           <p className="text-[#555555] text-sm sm:text-base max-w-xl mx-auto">
-            Explore the divine beauty and vibrant celebrations at Jagnanth Mandir
+            Explore the divine beauty and vibrant celebrations at jagannath Mandir
           </p>
         </div>
 

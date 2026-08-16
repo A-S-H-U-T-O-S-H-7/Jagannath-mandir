@@ -27,7 +27,7 @@ export default function DonationBanner() {
         </div>
         
         <h1 className="text-2xl md:text-4xl font-serif font-bold text-white mb-3">
-          Support <span className="text-[#D4AF37]">Jagnanth Mandir</span>
+          Support <span className="text-[#D4AF37]">jagannath Mandir</span>
         </h1>
         
         <p className="text-sm md:text-lg text-white/80 mb-6 font-light">

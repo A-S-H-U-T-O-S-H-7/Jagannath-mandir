@@ -167,13 +167,13 @@ export default function LoginForm({
         {/* Logo */}
         <div className="flex justify-center">
           <div className="h-16 w-16 rounded-full bg-white shadow-md flex items-center justify-center overflow-hidden ring-1 ring-[#D4AF37]/20">
-            <Image src="/mandir-logo.png" alt="Jagnanth Mandir Noida" width={40} height={40} className="h-10 w-10 object-contain" />
+            <Image src="/mandir-logo.png" alt="jagannath Mandir Noida" width={40} height={40} className="h-10 w-10 object-contain" />
           </div>
         </div>
 
         <div className="text-center space-y-1">
           <h2 className="text-2xl font-serif font-bold text-[#0B3C5D]">Login to Your Account</h2>
-          <p className="text-sm text-[#555555]">Welcome back to Jagnanth Mandir 🙏</p>
+          <p className="text-sm text-[#555555]">Welcome back to jagannath Mandir 🙏</p>
         </div>
 
         {/* Google Login */}

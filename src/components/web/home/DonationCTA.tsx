@@ -65,7 +65,7 @@ export default function DonationCTA() {
                 variants={fadeInUp}
                 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
               >
-                Support <span className="text-[#D4AF37]">Jagnanth Mandir</span>
+                Support <span className="text-[#D4AF37]">jagannath Mandir</span>
               </motion.h2>
 
               <motion.p

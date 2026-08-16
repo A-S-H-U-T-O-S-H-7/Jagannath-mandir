@@ -25,7 +25,7 @@ export default function Hero() {
         <div className="absolute inset-0 z-0">
           <Image
             src={isMobile ? "/hero-mobile.png" : "/hero-desktop.png"}
-            alt="Jagnanth Mandir Noida"
+            alt="jagannath Mandir Noida"
             fill
             priority
             quality={100}

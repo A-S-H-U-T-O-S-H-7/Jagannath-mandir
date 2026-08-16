@@ -46,7 +46,7 @@ export default function AboutTemple() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/20 to-transparent z-10" />
               <Image
                 src="/hero-desktop.png"
-                alt="Jagnanth Mandir Noida - Temple Interior"
+                alt="jagannath Mandir Noida - Temple Interior"
                 width={600}
                 height={500}
                 className="w-full h-[350px] sm:h-[400px] lg:h-[450px] object-cover"
@@ -100,7 +100,7 @@ export default function AboutTemple() {
               className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#0B3C5D] leading-tight"
             >
               Welcome to{' '}
-              <span className="text-[#D4AF37]">Jagnanth Mandir</span>
+              <span className="text-[#D4AF37]">jagannath Mandir</span>
             </motion.h2>
 
             {/* Description */}

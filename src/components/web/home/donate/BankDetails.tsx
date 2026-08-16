@@ -38,7 +38,7 @@ export default function BankDetails({ donorType = 'indian' }: BankDetailsProps) 
   }, [donorType]);
 
   const indianBankDetails: IndianBankDetails = {
-    accountName: "Jagnanth Mandir Noida",
+    accountName: "jagannath Mandir Noida",
     accountNo: "083101002804",
     ifscCode: "ICIC0000831",
     accountType: "SAVING",
@@ -48,7 +48,7 @@ export default function BankDetails({ donorType = 'indian' }: BankDetailsProps) 
   };
 
   const internationalBankDetails: InternationalBankDetails = {
-    accountName: "Jagnanth Mandir Noida (FCRA)",
+    accountName: "jagannath Mandir Noida (FCRA)",
     accountNo: "40052522428",
     swiftCode: "SBININBB104",
     accountType: "SAVING",

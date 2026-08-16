@@ -106,7 +106,7 @@ export default function SplashScreen() {
           >
             <Image
               src="/mandir-logo.png"
-              alt="Jagnanth Mandir Noida"
+              alt="jagannath Mandir Noida"
               width={200}
               height={80}
               className="h-auto w-auto"
@@ -121,7 +121,7 @@ export default function SplashScreen() {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="mt-4 text-2xl font-bold text-[#0B3C5D]"
           >
-            Jagnanth Mandir
+            jagannath Mandir
           </motion.h1>
 
           <motion.p

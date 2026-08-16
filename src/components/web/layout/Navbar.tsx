@@ -89,14 +89,14 @@ export default function Navbar() {
     >
       <div className="max-w-8xl mx-auto px-3 sm:px-6 lg:px-10">
         <div className="flex justify-between items-center h-14 sm:h-16">
-          {/* Left: Jagnanth Mandir Logo + Divider + Parent Org Logo */}
+          {/* Left: jagannath Mandir Logo + Divider + Parent Org Logo */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Jagnanth Mandir Logo - Independent, no border */}
+            {/* jagannath Mandir Logo - Independent, no border */}
             <Link href="/" aria-label="Go to home page" className="flex-shrink-0 relative group cursor-pointer">
               <div className="w-26 h-26 md:w-30 md:h-30 relative transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src="/mandir-logo.png"
-                  alt="Jagnanth Mandir Noida Logo"
+                  alt="jagannath Mandir Noida Logo"
                   fill
                   className="object-contain"
                   priority

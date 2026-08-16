@@ -97,7 +97,7 @@ export default function UpcomingFestivals() {
             variants={fadeInUp}
             className="mt-3 text-sm sm:text-base text-[#555555] leading-relaxed"
           >
-            Join us in celebrating the divine festivals at Jagnanth Mandir. 
+            Join us in celebrating the divine festivals at jagannath Mandir. 
             Experience the joy, devotion, and cultural richness of these sacred occasions.
           </motion.p>
         </motion.div>

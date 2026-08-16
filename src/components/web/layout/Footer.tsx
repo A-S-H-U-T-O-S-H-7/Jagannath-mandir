@@ -85,7 +85,7 @@ export default function Footer() {
             <Link href="/" className="inline-block">
               <Image
                 src="/mandir-logo.png"
-                alt="Jagnanth Mandir Noida"
+                alt="jagannath Mandir Noida"
                 width={160}
                 height={50}
                 className="h-12 w-auto brightness-0 invert"
@@ -196,7 +196,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/40">
-            &copy; {currentYear} Jagnanth Mandir Noida. All rights reserved.
+            &copy; {currentYear} jagannath Mandir Noida. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-xs text-white/40">
             <Link href="/privacy" className="hover:text-[#D4AF37] transition-colors">

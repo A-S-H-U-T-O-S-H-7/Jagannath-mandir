@@ -39,7 +39,7 @@ export default function HeroContent() {
       >
         <span className="h-2 w-2 sm:h-3 sm:w-2.5 rounded-full bg-[#D4AF37]" />
         <span className="text-[12px] sm:text-sm font-semibold tracking-wide text-[#0B3C5D]">
-          Jagnanth Mandir Noida
+          jagannath Mandir Noida
         </span>
       </motion.div>
 
@@ -65,7 +65,7 @@ export default function HeroContent() {
         </span>
         <br />
         <span className="block mt-1 sm:mt-0 sm:inline whitespace-normal sm:whitespace-nowrap text-[#D4AF37]">
-          Jagnanth Mandir
+          jagannath Mandir
         </span>
       </motion.h1>
 
