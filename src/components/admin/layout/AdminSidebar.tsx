@@ -8,31 +8,38 @@ import Image from 'next/image';
 import {
   LayoutDashboard,
   CalendarDays,
-  Clock,
+  Image as ImageIcon,
   Mail,
   Users,
   UserCog,
   Settings,
   Menu,
   X,
-  Shield,
-  LogOut,
+  Heart,
+  Star,
+  Eye,
+  Home,
+  HelpCircle,
+  ClipboardList,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { IconBase } from 'react-icons';
 
 // Navigation items with permissions
 const navigationItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
   { name: 'Events', href: '/admin/events', icon: CalendarDays, permission: 'events' },
-  { name: 'Gallery', href: '/admin/gallery', icon: Image, permission: 'gallery' },
-  { name: 'Darshan Timings', href: '/admin/timings', icon: Clock, permission: 'timings' },
-  { name: 'Submissions', href: '/admin/submissions', icon: Mail, permission: 'submissions' },
+  { name: 'Gallery', href: '/admin/gallery', icon: ImageIcon, permission: 'gallery' },
+  { name: 'Darshan', href: '/admin/darshan', icon: Eye, permission: 'darshan' },
+  { name: 'Donations', href: '/admin/donation', icon: Heart, permission: 'donations' },
+  { name: 'Testimonials', href: '/admin/testimonials', icon: Star, permission: 'testimonials' },
+  { name: 'FAQs', href: '/admin/faq', icon: HelpCircle, permission: 'faq' },
+  { name: 'Contact', href: '/admin/contact', icon: Mail, permission: 'contact' },
   { name: 'Users', href: '/admin/users', icon: Users, permission: 'users' },
   { name: 'Admins', href: '/admin/admins', icon: UserCog, permission: 'admins' },
+  { name: 'Activity Logs', href: '/admin/activities', icon: ClipboardList, permission: 'activity' },
   { name: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings' },
 ];
 
@@ -42,9 +49,9 @@ export default function AdminSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>('admin');
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [userName, setUserName] = useState<string>('Admin');
 
   useEffect(() => {
-    // Get user role from Firestore
     const getUserData = async () => {
       const user = auth.currentUser;
       if (!user) return;
@@ -57,6 +64,7 @@ export default function AdminSidebar() {
           const data = userDoc.data();
           setUserRole(data.role || 'admin');
           setUserPermissions(data.permissions || []);
+          setUserName(data.displayName || user.displayName || 'Admin');
         }
       } catch (error) {
         console.error('Error getting user data:', error);
@@ -78,16 +86,15 @@ export default function AdminSidebar() {
   });
 
   const handleLogout = async () => {
-  try {
-    await signOut(auth);
-    // ✅ Clear the cookie
-    document.cookie = 'admin_session=; path=/; max-age=0';
-    toast.success('Logged out successfully');
-    router.push('/admin/login');
-  } catch (error) {
-    toast.error('Failed to logout');
-  }
-};
+    try {
+      await signOut(auth);
+      document.cookie = 'admin_session=; path=/; max-age=0';
+      toast.success('Logged out successfully');
+      router.push('/admin/login');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
+  };
 
   return (
     <>
@@ -114,7 +121,7 @@ export default function AdminSidebar() {
         } lg:translate-x-0`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E5E3DD]/50">
+        <div className="flex flex-col items-center gap-3 px-2 py-2 border-b border-[#E5E3DD]/50">
           <Link
             href="/admin/dashboard"
             onClick={() => setIsMobileOpen(false)}
@@ -123,40 +130,17 @@ export default function AdminSidebar() {
             <Image
               src="/mandir-logo.png"
               alt="Jagnanth Mandir"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain"
+              width={150}
+              height={130}
+              className="h-15 w-40 object-contain"
             />
-            <div>
-              <span className="text-sm font-bold text-[#0B3C5D] block">Jagnanth Mandir</span>
-              <span className="text-[10px] text-[#555555]">Admin Panel</span>
-            </div>
+            
           </Link>
+          
         </div>
+        
 
-        {/* User Info */}
-        <div className="px-5 py-3 border-b border-[#E5E3DD]/50 bg-[#D4AF37]/5">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#B8962E] flex items-center justify-center text-[#0B3C5D] text-sm font-bold">
-              {auth.currentUser?.displayName?.charAt(0) || 'A'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#0B3C5D] truncate">
-                {auth.currentUser?.displayName || 'Admin'}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-[#555555]">
-                  {isSuperAdmin ? 'Super Admin' : 'Admin'}
-                </span>
-                {isSuperAdmin && (
-                  <span className="text-[8px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded-full">
-                    ⭐
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-4 px-3">
@@ -176,30 +160,25 @@ export default function AdminSidebar() {
                       : 'text-[#555555] hover:bg-[#D4AF37]/5 hover:text-[#0B3C5D]'
                   }`}
                 >
-                  <IconBase className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#0B3C5D]' : ''}`} />
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#0B3C5D]' : 'text-[#555555]'}`} />
                   <span className="text-sm font-medium truncate">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
+        </div>
 
-          {/* Bottom */}
-          <div className="mt-4 pt-4 border-t border-[#E5E3DD]/50 space-y-1">
-            <Link
-              href="/"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#555555] hover:bg-[#D4AF37]/5 hover:text-[#0B3C5D] transition-all duration-200"
-            >
-              <Shield className="w-4 h-4" />
-              <span className="text-sm font-medium">Back to Site</span>
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 w-full"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-medium">Logout</span>
-            </button>
-          </div>
+        {/* Bottom - Back to Site + Logout */}
+        <div className="px-3 py-4 border-t border-[#E5E3DD]/50 space-y-1">
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#555555] hover:bg-[#D4AF37]/5 hover:text-[#0B3C5D] transition-all duration-200"
+            onClick={() => setIsMobileOpen(false)}
+          >
+            <Home className="w-4 h-4" />
+            <span className="text-sm font-medium">Back to Site</span>
+          </Link>
+          
         </div>
       </aside>
     </>

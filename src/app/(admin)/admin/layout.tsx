@@ -81,14 +81,14 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-[#F9F8F4]">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+      <div className="min-h-screen bg-[#FFF9F2]">
+        <AdminSidebar />
+        <div className="lg:pl-60">
+          <AdminHeader />
+          <main className="pt-2 px-4 sm:px-6 lg:px-8 pb-8">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
-  );
+  )
 }

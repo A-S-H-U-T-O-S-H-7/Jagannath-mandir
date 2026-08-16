@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Cinzel } from 'next/font/google';
-import { ArrowRight, Images } from 'lucide-react';
+import { ArrowRight, Images, Loader2 } from 'lucide-react';
+import { adminGalleryService } from '@/lib/services/adminGalleryService';
 
 const cinzel = Cinzel({ 
   subsets: ['latin'],
@@ -14,69 +15,40 @@ const cinzel = Cinzel({
 });
 
 interface GalleryImage {
-  id: number;
+  id: string;
   src: string;
   alt: string;
   title: string;
 }
 
 export default function GalleryPreview() {
-  const [images, setImages] = useState<GalleryImage[]>([
-    {
-      id: 1,
-      src: '/hero-desktop.png',
-      alt: 'Temple Exterior',
-      title: 'Jagnanth Mandir',
-    },
-    {
-      id: 2,
-      src: '/hero-desktop.png',
-      alt: 'Lord Jagannath Idol',
-      title: 'Lord Jagannath',
-    },
-    {
-      id: 3,
-      src: '/hero-desktop.png',
-      alt: 'Temple Interior',
-      title: 'Sanctum Sanctorum',
-    },
-    {
-      id: 4,
-      src: '/hero-desktop.png',
-      alt: 'Evening Aarti',
-      title: 'Evening Aarti',
-    },
-    {
-      id: 5,
-      src: '/hero-desktop.png',
-      alt: 'Rath Yatra',
-      title: 'Rath Yatra Festival',
-    },
-    {
-      id: 6,
-      src: '/hero-desktop.png',
-      alt: 'Devotees',
-      title: 'Devotee Gathering',
-    },
-    {
-      id: 7,
-      src: '/hero-desktop.png',
-      alt: 'Temple Flag',
-      title: 'Sacred Flag Hoisting',
-    },
-  ]);
-
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsInView(true); },
-      { threshold: 0.15, rootMargin: '120px 0px' }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => { if (sectionRef.current) observer.unobserve(sectionRef.current); };
+    const loadImages = async () => {
+      setLoading(true);
+      try {
+        // Home gallery: ONLY showcase-marked images from admin
+        const showcase = await adminGalleryService.getShowcaseImages();
+        const list = showcase.images || [];
+        setImages(
+          list.map((img) => ({
+            id: img.id,
+            src: img.url || img.thumbnailUrl || '/hero-desktop.png',
+            alt: img.title || 'Gallery image',
+            title: img.title || 'Untitled',
+          }))
+        );
+      } catch (error) {
+        console.error('Error loading gallery preview:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadImages();
   }, []);
 
   useEffect(() => {
@@ -94,6 +66,9 @@ export default function GalleryPreview() {
   }, [images.length, currentIndex]);
 
   const getCardStyle = (index: number) => {
+    if (images.length === 0) {
+      return { transform: 'translateX(0%) scale(1)', opacity: 0, zIndex: 10 };
+    }
     const diff = index - currentIndex;
     const normalizedDiff = ((diff + images.length) % images.length);
     const position = normalizedDiff > images.length / 2 
@@ -144,13 +119,11 @@ export default function GalleryPreview() {
       ref={sectionRef}
       className="relative w-full bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8] py-8  md:py-10 overflow-hidden"
     >
-      {/* Soft Decorative Elements - Gold & Blue Blends with more density */}
       <div className="absolute top-0 left-0 w-80 h-80 md:w-[500px] md:h-[500px] bg-[#D4AF37]/15 rounded-full blur-[120px] -z-10" />
       <div className="absolute bottom-0 right-0 w-80 h-80 md:w-[500px] md:h-[500px] bg-[#0B3C5D]/15 rounded-full blur-[120px] -z-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/8 rounded-full blur-[150px] -z-10" />
       <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-[#0B3C5D]/8 rounded-full blur-[100px] -z-10" />
 
-      {/* Decorative Border Elements - Soft Gold */}
       <div className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 z-20 pointer-events-none opacity-20">
         <div className="w-full h-full border-2 border-[#D4AF37]/40 rounded-full blur-sm" />
       </div>
@@ -160,7 +133,6 @@ export default function GalleryPreview() {
 
       <div className="relative z-10 container mx-auto px-4 max-w-6xl">
         
-        {/* Heading */}
         <div className="text-center mb-6 sm:mb-8 md:mb-10">
           <div className="flex items-center justify-center gap-3 mb-3">
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
@@ -178,63 +150,72 @@ export default function GalleryPreview() {
           </p>
         </div>
 
-        {/* 3D Coverflow Gallery */}
-        <div className="relative h-48 sm:h-64 md:h-72 lg:h-80 mb-5 sm:mb-6">
-          <div className="gallery-container">
-            {images.map((image, index) => {
-              const style = getCardStyle(index);
-              const isCenterCard = index === currentIndex;
-
-              return (
-                <div
-                  key={image.id}
-                  className="gallery-card"
-                  style={{ 
-                    transform: style.transform, 
-                    opacity: style.opacity, 
-                    zIndex: style.zIndex 
-                  }}
-                >
-                  <div className={`card-inner ${isCenterCard ? 'center-card' : ''}`}>
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      fill
-                      className="object-cover"
-                      priority={index < 3}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/80 via-[#0B3C5D]/20 to-transparent"></div>
-                    {isCenterCard && (
-                      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5 text-white">
-                        <h3 className={`${cinzel.className} text-sm md:text-lg lg:text-xl font-semibold drop-shadow-lg`}>
-                          {image.title}
-                        </h3>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
           </div>
-        </div>
+        ) : images.length === 0 ? (
+          <div className="text-center py-12 text-[#555555]">
+            Mark images as Showcase in Admin Gallery to show them here.
+          </div>
+        ) : (
+          <>
+            <div className="relative h-48 sm:h-64 md:h-72 lg:h-80 mb-5 sm:mb-6">
+              <div className="gallery-container">
+                {images.map((image, index) => {
+                  const style = getCardStyle(index);
+                  const isCenterCard = index === currentIndex;
 
-        {/* Progress Indicators */}
-        <div className="flex justify-center gap-1.5 mb-4 sm:mb-6">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`transition-all duration-300 rounded-full ${
-                index === currentIndex
-                  ? 'w-6 h-2 sm:w-8 sm:h-2.5 bg-[#D4AF37]'
-                  : 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#0B3C5D]/30 hover:bg-[#0B3C5D]/50'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+                  return (
+                    <div
+                      key={image.id}
+                      className="gallery-card"
+                      style={{ 
+                        transform: style.transform, 
+                        opacity: style.opacity, 
+                        zIndex: style.zIndex 
+                      }}
+                    >
+                      <div className={`card-inner ${isCenterCard ? 'center-card' : ''}`}>
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          fill
+                          className="object-cover"
+                          priority={index < 3}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/80 via-[#0B3C5D]/20 to-transparent"></div>
+                        {isCenterCard && (
+                          <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5 text-white">
+                            <h3 className={`${cinzel.className} text-sm md:text-lg lg:text-xl font-semibold drop-shadow-lg`}>
+                              {image.title}
+                            </h3>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* CTA Button */}
+            <div className="flex justify-center gap-1.5 mb-4 sm:mb-6">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`transition-all duration-300 rounded-full ${
+                    index === currentIndex
+                      ? 'w-6 h-2 sm:w-8 sm:h-2.5 bg-[#D4AF37]'
+                      : 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#0B3C5D]/30 hover:bg-[#0B3C5D]/50'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
         <div className="flex justify-center">
           <Link
             href="/gallery"

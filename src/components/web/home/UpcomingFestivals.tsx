@@ -1,13 +1,16 @@
 // components/home/UpcomingFestivals.tsx
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, MapPin, ArrowRight, Clock } from 'lucide-react';
+import { Calendar, ArrowRight, Clock, Loader2 } from 'lucide-react';
+import { adminEventService } from '@/lib/services/adminEventService';
+import { parseEventDate } from '@/lib/utils/displayHelpers';
 
 interface Festival {
-  id: number;
+  id: string;
   name: string;
   date: string;
   description: string;
@@ -17,35 +20,38 @@ interface Festival {
 }
 
 export default function UpcomingFestivals() {
-  const festivals: Festival[] = [
-    {
-      id: 1,
-      name: 'Rath Yatra',
-      date: 'July 7, 2026',
-      description: 'The grand chariot festival of Lord Jagannath, Balabhadra, and Subhadra. A spectacular procession with thousands of devotees pulling the chariots.',
-      image: '/hero-desktop.png',
-      month: 'JUL',
-      day: '07',
-    },
-    {
-      id: 2,
-      name: 'Janmashtami',
-      date: 'August 15, 2026',
-      description: 'Celebration of Lord Krishna\'s birth with midnight aarti, devotional singing, and traditional festivities.',
-      image: '/hero-desktop.png',
-      month: 'AUG',
-      day: '15',
-    },
-    {
-      id: 3,
-      name: 'Snana Purnima',
-      date: 'June 21, 2026',
-      description: 'The sacred bathing ceremony of Lord Jagannath on the full moon day. Special abhishekam with 108 pots of holy water.',
-      image: '/hero-desktop.png',
-      month: 'JUN',
-      day: '21',
-    },
-  ];
+  const [festivals, setFestivals] = useState<Festival[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadFestivals = async () => {
+      setLoading(true);
+      try {
+        const result = await adminEventService.getAllEvents();
+        if (result.success) {
+          // Latest 3 events from admin events collection (newest first)
+          const latest = result.events.slice(0, 3).map((event) => {
+            const { month, day, formatted } = parseEventDate(event.date);
+            return {
+              id: event.id,
+              name: event.title,
+              date: formatted || event.date,
+              description: event.description,
+              image: event.coverImage || '/hero-desktop.png',
+              month,
+              day,
+            };
+          });
+          setFestivals(latest);
+        }
+      } catch (error) {
+        console.error('Error loading festivals:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFestivals();
+  }, []);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
@@ -97,65 +103,75 @@ export default function UpcomingFestivals() {
         </motion.div>
 
         {/* Festivals Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {festivals.map((festival, index) => (
-            <motion.div
-              key={festival.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 hover:-translate-y-2"
-            >
-              {/* Image */}
-              <div className="relative h-52 overflow-hidden">
-                <Image
-                  src={festival.image}
-                  alt={festival.name}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                {/* Date Badge */}
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 text-center shadow-lg border border-[#D4AF37]/20">
-                  <p className="text-[10px] font-bold text-[#0B3C5D] uppercase tracking-wider">
-                    {festival.month}
-                  </p>
-                  <p className="text-xl font-bold text-[#D4AF37] leading-none">
-                    {festival.day}
-                  </p>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+          </div>
+        ) : festivals.length === 0 ? (
+          <div className="text-center py-12 text-[#555555]">
+            No upcoming festivals yet. Check back soon.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {festivals.map((festival, index) => (
+              <motion.div
+                key={festival.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 hover:-translate-y-2"
+              >
+                {/* Image */}
+                <div className="relative h-52 overflow-hidden">
+                  <Image
+                    src={festival.image}
+                    alt={festival.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {/* Date Badge */}
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 text-center shadow-lg border border-[#D4AF37]/20">
+                    <p className="text-[10px] font-bold text-[#0B3C5D] uppercase tracking-wider">
+                      {festival.month}
+                    </p>
+                    <p className="text-xl font-bold text-[#D4AF37] leading-none">
+                      {festival.day}
+                    </p>
+                  </div>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
 
-              {/* Content */}
-              <div className="p-5 sm:p-6">
-                <div className="flex items-center gap-2 text-xs text-[#555555] mb-2">
-                  <Clock className="h-3.5 w-3.5 text-[#D4AF37]" />
-                  <span>{festival.date}</span>
+                {/* Content */}
+                <div className="p-5 sm:p-6">
+                  <div className="flex items-center gap-2 text-xs text-[#555555] mb-2">
+                    <Clock className="h-3.5 w-3.5 text-[#D4AF37]" />
+                    <span>{festival.date}</span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-[#0B3C5D] mb-2 group-hover:text-[#D4AF37] transition-colors">
+                    {festival.name}
+                  </h3>
+
+                  <p className="text-sm text-[#555555] leading-relaxed line-clamp-3">
+                    {festival.description}
+                  </p>
+
+                  <Link href={`/events`}>
+                    <motion.button
+                      whileHover={{ x: 5 }}
+                      className="mt-4 inline-flex items-center gap-2 text-[#D4AF37] font-semibold text-sm hover:text-[#B8962E] transition-colors group/btn"
+                    >
+                      Learn More
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                    </motion.button>
+                  </Link>
                 </div>
-
-                <h3 className="text-lg font-bold text-[#0B3C5D] mb-2 group-hover:text-[#D4AF37] transition-colors">
-                  {festival.name}
-                </h3>
-
-                <p className="text-sm text-[#555555] leading-relaxed line-clamp-3">
-                  {festival.description}
-                </p>
-
-                <Link href={`/events/${festival.id}`}>
-                  <motion.button
-                    whileHover={{ x: 5 }}
-                    className="mt-4 inline-flex items-center gap-2 text-[#D4AF37] font-semibold text-sm hover:text-[#B8962E] transition-colors group/btn"
-                  >
-                    Learn More
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                  </motion.button>
-                </Link>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* View All Button */}
         <motion.div

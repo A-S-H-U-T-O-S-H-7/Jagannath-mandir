@@ -14,6 +14,7 @@ import {
   FaLinkedin,
   FaWhatsapp
 } from "react-icons/fa";
+import { getContactInfo } from '@/lib/services/settingsService';
 
 const footerLinks = {
   Temple: [
@@ -50,22 +51,11 @@ export default function Footer() {
 
   const fetchContactInfo = async () => {
     try {
-      // Mock data - replace with actual API
-      const mockData = {
-        contact: {
-          phone1: "+91 98765 43210",
-          phone2: "+91 98765 43211",
-          contactEmail: "info@jagnanthmandir.com",
-          address: "Sector 93A, Noida, Uttar Pradesh - 201301",
-        },
-        social: {
-          facebook: "https://facebook.com/jagnanthmandir",
-          instagram: "https://instagram.com/jagnanthmandir",
-          youtube: "https://youtube.com/jagnanthmandir",
-          whatsapp: "https://wa.me/919876543210",
-        }
-      };
-      setContactInfo(mockData);
+      const result = await getContactInfo();
+      setContactInfo({
+        contact: result.contact,
+        social: result.social,
+      });
     } catch (error) {
       console.error("Error fetching contact info:", error);
     } finally {

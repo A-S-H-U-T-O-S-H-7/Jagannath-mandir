@@ -81,7 +81,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     console.log('🎉 ALL CHECKS PASSED! Setting session cookie...');
 
     // ✅ SET THE COOKIE HERE
-    document.cookie = `admin_session=${firebaseUser.uid}; path=/; max-age=86400; secure; samesite=lax`;
+    document.cookie = `admin_session=${firebaseUser.uid}; path=/; max-age=86400; samesite=lax${typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; secure' : ''}`;
 
     toast.success(`Welcome back, ${userData.displayName || 'Admin'}! 🙏`);
     

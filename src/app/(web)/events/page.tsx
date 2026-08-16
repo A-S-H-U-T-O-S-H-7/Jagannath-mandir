@@ -13,124 +13,51 @@ import {
   ArrowLeft,
   MapPin,
   Clock,
-  Heart,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
+import { adminEventService, type Event as FirestoreEvent } from '@/lib/services/adminEventService';
+import { parseEventDate } from '@/lib/utils/displayHelpers';
 
 interface Event {
-  id: number;
+  id: string;
   title: string;
   date: string;
   time: string;
   location: string;
   city: string;
   description: string;
-  category: 'festival' | 'ritual' | 'community';
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   image: string;
   month: string;
   day: string;
   attendeeCount: number;
-  attendees?: string[];
+}
+
+function mapEvent(event: FirestoreEvent): Event {
+  const { month, day, formatted } = parseEventDate(event.date);
+  return {
+    id: event.id,
+    title: event.title,
+    date: formatted || event.date,
+    time: event.time,
+    location: event.location,
+    city: event.city,
+    description: event.description,
+    status: event.status,
+    image: event.coverImage || '/hero-desktop.png',
+    month,
+    day,
+    attendeeCount: event.attendeeCount || 0,
+  };
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: 1,
-      title: 'Rath Yatra',
-      date: 'July 7, 2026',
-      time: '7:00 AM - 9:00 PM',
-      location: 'Sector 93A',
-      city: 'Noida',
-      description: 'The grand chariot festival of Lord Jagannath, Balabhadra, and Subhadra. A spectacular procession with thousands of devotees pulling the chariots.',
-      category: 'festival',
-      status: 'upcoming',
-      image: '/hero-desktop.png',
-      month: 'JUL',
-      day: '07',
-      attendeeCount: 5000,
-    },
-    {
-      id: 2,
-      title: 'Janmashtami',
-      date: 'August 15, 2026',
-      time: '12:00 AM - 11:59 PM',
-      location: 'Sector 93A',
-      city: 'Noida',
-      description: 'Celebration of Lord Krishna\'s birth with midnight aarti, devotional singing, and traditional festivities.',
-      category: 'festival',
-      status: 'upcoming',
-      image: '/hero-desktop.png',
-      month: 'AUG',
-      day: '15',
-      attendeeCount: 2000,
-    },
-    {
-      id: 3,
-      title: 'Snana Purnima',
-      date: 'June 21, 2026',
-      time: '8:00 AM - 12:00 PM',
-      location: 'Sector 93A',
-      city: 'Noida',
-      description: 'The sacred bathing ceremony of Lord Jagannath on the full moon day. Special abhishekam with 108 pots of holy water.',
-      category: 'festival',
-      status: 'completed',
-      image: '/hero-desktop.png',
-      month: 'JUN',
-      day: '21',
-      attendeeCount: 1500,
-    },
-    {
-      id: 4,
-      title: 'Mangala Aarti',
-      date: 'Every Day',
-      time: '5:00 AM - 6:00 AM',
-      location: 'Sector 93A',
-      city: 'Noida',
-      description: 'The early morning wake-up ceremony of Lord Jagannath. Start your day with the divine presence and blessings of the Lord.',
-      category: 'ritual',
-      status: 'ongoing',
-      image: '/hero-desktop.png',
-      month: 'Daily',
-      day: '05',
-      attendeeCount: 200,
-    },
-    {
-      id: 5,
-      title: 'Evening Aarti',
-      date: 'Every Day',
-      time: '7:00 PM - 8:00 PM',
-      location: 'Sector 93A',
-      city: 'Noida',
-      description: 'The evening prayer ceremony with lamps, bhajans, and devotional singing. Experience the divine energy.',
-      category: 'ritual',
-      status: 'ongoing',
-      image: '/hero-desktop.png',
-      month: 'Daily',
-      day: '19',
-      attendeeCount: 300,
-    },
-    {
-      id: 6,
-      title: 'Community Bhajan',
-      date: 'Every Sunday',
-      time: '6:00 PM - 8:00 PM',
-      location: 'Sector 93A',
-      city: 'Noida',
-      description: 'Join our weekly community bhajan session. Sing devotional songs and experience the joy of collective worship.',
-      category: 'community',
-      status: 'upcoming',
-      image: '/hero-desktop.png',
-      month: 'Sun',
-      day: '18',
-      attendeeCount: 200,
-    },
-  ]);
-
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'completed' | 'cancelled'>('all');
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>(events);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -140,6 +67,23 @@ export default function EventsPage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      setLoading(true);
+      try {
+        const result = await adminEventService.getAllEvents();
+        if (result.success) {
+          setEvents(result.events.map(mapEvent));
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadEvents();
   }, []);
 
   useEffect(() => {
@@ -196,7 +140,7 @@ export default function EventsPage() {
           {/* Banner Background */}
           <div className="absolute inset-0 z-0">
             <Image
-              src={isMobile ? "/eventmob.png" : "/eventbg.png"}
+              src={isMobile ? "/hero-mobile.png" : "/hero-desktop.png"}
               alt="Events Banner"
               fill
               className="object-cover"
@@ -303,11 +247,15 @@ export default function EventsPage() {
 
         {/* Results Count */}
         <div className="text-xs md:text-sm text-[#555555] mb-4 md:mb-6">
-          Showing {filteredEvents.length} of {events.length} events
+          {loading ? 'Loading events…' : `Showing ${filteredEvents.length} of ${events.length} events`}
         </div>
 
         {/* Events Grid */}
-        {filteredEvents.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[#555555]">No events found matching your criteria.</p>
           </div>
@@ -373,7 +321,7 @@ export default function EventsPage() {
                       <Users className="h-3.5 w-3.5 text-[#D4AF37]" />
                       <span>{event.attendeeCount}+ devotees</span>
                     </div>
-                    <Link href={`/events/${event.id}`}>
+                    <Link href={`/events`}>
                       <button className="inline-flex items-center gap-1 text-[#D4AF37] font-semibold text-sm hover:text-[#B8962E] transition-colors group/btn">
                         Details
                         <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />

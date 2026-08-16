@@ -5,15 +5,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ChevronDown, LogOut, Shield, User } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/config';
 import { toast } from 'react-hot-toast';
 
 export default function AdminHeader() {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [admin, setAdmin] = useState<any>(null);
+  const [admin, setAdmin] = useState<{ name: string; email: string | null; role: string } | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -21,15 +22,40 @@ export default function AdminHeader() {
   }, []);
 
   useEffect(() => {
-    // Get user from Firebase Auth
-    const user = auth.currentUser;
-    if (user) {
-      setAdmin({
-        name: user.displayName || 'Admin',
-        email: user.email,
-        photoURL: user.photoURL,
-      });
-    }
+    let isMounted = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        if (isMounted) setAdmin(null);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!isMounted) return;
+
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        setAdmin({
+          name: userData.displayName || user.displayName || 'Admin',
+          email: user.email,
+          role: userData.role === 'super_admin' ? 'Super Admin' : 'Admin',
+        });
+      } catch (error) {
+        console.error('Error loading admin profile:', error);
+        if (isMounted) {
+          setAdmin({
+            name: user.displayName || 'Admin',
+            email: user.email,
+            role: 'Admin',
+          });
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -68,7 +94,7 @@ export default function AdminHeader() {
               <p className="text-sm font-semibold text-[#0B3C5D]">
                 {admin?.name || 'Admin'}
               </p>
-              <p className="text-xs text-[#555555]">Admin</p>
+              <p className="text-xs text-[#555555]">{admin?.role || 'Admin'}</p>
             </div>
             <ChevronDown
               className={`w-4 h-4 text-[#555555] transition-transform ${
@@ -88,7 +114,7 @@ export default function AdminHeader() {
                 <div className="flex items-center gap-1 mt-1">
                   <Shield className="w-3 h-3 text-[#D4AF37]" />
                   <span className="text-[10px] font-medium text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded-full">
-                    Admin
+                    {admin?.role || 'Admin'}
                   </span>
                 </div>
               </div>

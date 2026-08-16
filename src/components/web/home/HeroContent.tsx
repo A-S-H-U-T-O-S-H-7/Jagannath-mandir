@@ -1,11 +1,32 @@
 // components/home/HeroContent.tsx
 'use client';
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Heart, ArrowRight, Clock } from "lucide-react";
+import { getContactInfo } from '@/lib/services/settingsService';
 
 export default function HeroContent() {
+  const [morningTiming, setMorningTiming] = useState('5:00 AM - 12:00 PM');
+  const [eveningTiming, setEveningTiming] = useState('4:00 PM - 9:00 PM');
+
+  useEffect(() => {
+    const loadTimings = async () => {
+      try {
+        const result = await getContactInfo();
+        if (result.timings) {
+          const t = result.timings;
+          setMorningTiming(`${t.morningStart || '5:00 AM'} - ${t.morningEnd || '12:00 PM'}`);
+          setEveningTiming(`${t.eveningStart || '4:00 PM'} - ${t.eveningEnd || '9:00 PM'}`);
+        }
+      } catch (error) {
+        console.error('Error loading hero timings:', error);
+      }
+    };
+    loadTimings();
+  }, []);
+
   return (
     <div className="max-w-3xl py-4 sm:py-0">
       
@@ -139,7 +160,7 @@ export default function HeroContent() {
         </Link>
       </motion.div>
 
-      {/* Quick Info - Temple Timings */}
+      {/* Quick Info - Temple Timings from Settings */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -149,11 +170,11 @@ export default function HeroContent() {
         <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-[#555555]">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-[#D4AF37]" />
-            <span>Morning: <strong>5:00 AM - 12:00 PM</strong></span>
+            <span>Morning: <strong>{morningTiming}</strong></span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-[#D4AF37]" />
-            <span>Evening: <strong>4:00 PM - 9:00 PM</strong></span>
+            <span>Evening: <strong>{eveningTiming}</strong></span>
           </div>
         </div>
       </motion.div>

@@ -1,52 +1,55 @@
 // components/home/FAQ.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle, Mail, Phone, Clock } from 'lucide-react';
+import { ChevronDown, HelpCircle, Mail, Phone, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { adminFaqService } from '@/lib/services/adminFaqService';
+import { getContactInfo } from '@/lib/services/settingsService';
 
 interface FAQItem {
-  id: number;
+  id: string;
   question: string;
   answer: string;
 }
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [phone, setPhone] = useState('+919876543210');
 
-  const faqs: FAQItem[] = [
-    {
-      id: 1,
-      question: 'What are the temple visiting hours?',
-      answer: 'The temple is open for darshan from 5:00 AM to 12:00 PM in the morning and 4:00 PM to 9:00 PM in the evening. Special aartis and rituals are performed at specific times during these hours.',
-    },
-    {
-      id: 2,
-      question: 'How can I book a seva or puja?',
-      answer: 'You can book seva and puja by visiting our Seva section on the website or contacting the temple office directly. We offer various seva options including Annadan, Deepa Seva, and Pushpa Seva.',
-    },
-    {
-      id: 3,
-      question: 'Is there any dress code for visiting the temple?',
-      answer: 'Devotees are requested to dress modestly when visiting the temple. Traditional Indian attire is preferred. Avoid shorts, sleeveless tops, and revealing clothing as a mark of respect.',
-    },
-    {
-      id: 4,
-      question: 'Can I donate online?',
-      answer: 'Yes, we accept online donations through our secure payment gateway. You can donate using UPI, credit/debit cards, or net banking. Visit our Donation page to make a contribution.',
-    },
-    {
-      id: 5,
-      question: 'Does the temple organize festivals and events?',
-      answer: 'Yes, we celebrate all major festivals including Rath Yatra, Janmashtami, Snana Purnima, and many more. Check our Events section for upcoming festivals and celebrations.',
-    },
-    {
-      id: 6,
-      question: 'How can I volunteer at the temple?',
-      answer: 'We welcome volunteers for various activities including Annadan, event management, and temple maintenance. Visit our Volunteer page to register your interest.',
-    },
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [faqResult, settings] = await Promise.all([
+          adminFaqService.getPublishedFaqs(),
+          getContactInfo(),
+        ]);
+
+        if (faqResult.success) {
+          setFaqs(
+            faqResult.faqs.map((f) => ({
+              id: f.id,
+              question: f.question,
+              answer: f.answer,
+            }))
+          );
+        }
+
+        if (settings.contact?.phone1) {
+          setPhone(settings.contact.phone1.replace(/\s/g, ''));
+        }
+      } catch (error) {
+        console.error('Error loading FAQs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -59,15 +62,12 @@ export default function FAQ() {
 
   return (
     <section className="relative py-8 sm:py-10 overflow-hidden">
-      {/* Soft Rich Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8]" />
       
-      {/* Decorative Blur Elements */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#D4AF37]/15 rounded-full blur-[120px] -z-10" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#0B3C5D]/15 rounded-full blur-[120px] -z-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/8 rounded-full blur-[150px] -z-10" />
 
-      {/* Decorative Border Elements */}
       <div className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 z-20 pointer-events-none opacity-10">
         <div className="w-full h-full border-2 border-[#D4AF37]/40 rounded-full blur-sm" />
       </div>
@@ -76,7 +76,6 @@ export default function FAQ() {
       </div>
 
       <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
-        {/* Section Header */}
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -108,57 +107,65 @@ export default function FAQ() {
           </motion.p>
         </motion.div>
 
-        {/* FAQ List */}
         <div className="max-w-5xl mx-auto">
-          {faqs.map((faq, index) => (
-            <motion.div
-              key={faq.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05, duration: 0.4 }}
-              className="mb-3"
-            >
-              <button
-                onClick={() => toggleFAQ(index)}
-                className="w-full text-left bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all duration-300 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/20"
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+            </div>
+          ) : faqs.length === 0 ? (
+            <div className="text-center py-12 text-[#555555]">
+              FAQs will appear here once added from admin.
+            </div>
+          ) : (
+            faqs.map((faq, index) => (
+              <motion.div
+                key={faq.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05, duration: 0.4 }}
+                className="mb-3"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm sm:text-base font-medium text-[#0B3C5D]">
-                    {faq.question}
-                  </span>
-                  <motion.div
-                    animate={{ rotate: openIndex === index ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex-shrink-0"
-                  >
-                    <ChevronDown className="h-5 w-5 text-[#D4AF37]" />
-                  </motion.div>
-                </div>
-              </button>
+                <button
+                  onClick={() => toggleFAQ(index)}
+                  className="w-full text-left bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all duration-300 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/20"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm sm:text-base font-medium text-[#0B3C5D]">
+                      {faq.question}
+                    </span>
+                    <motion.div
+                      animate={{ rotate: openIndex === index ? 180 : 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex-shrink-0"
+                    >
+                      <ChevronDown className="h-5 w-5 text-[#D4AF37]" />
+                    </motion.div>
+                  </div>
+                </button>
 
-              <AnimatePresence>
-                {openIndex === index && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-1 ml-4 p-4 sm:p-5 bg-white/50 backdrop-blur-sm rounded-2xl border border-[#E5E3DD]/30">
-                      <p className="text-sm sm:text-base text-[#555555] leading-relaxed">
-                        {faq.answer}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
+                <AnimatePresence>
+                  {openIndex === index && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-1 ml-4 p-4 sm:p-5 bg-white/50 backdrop-blur-sm rounded-2xl border border-[#E5E3DD]/30">
+                        <p className="text-sm sm:text-base text-[#555555] leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))
+          )}
         </div>
 
-        {/* Still Have Questions */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -180,7 +187,7 @@ export default function FAQ() {
               </Link>
               <span className="text-[#E5E3DD]">|</span>
               <a
-                href="tel:+919876543210"
+                href={`tel:${phone}`}
                 className="inline-flex items-center gap-2 text-[#D4AF37] font-semibold text-sm hover:text-[#B8962E] transition-colors"
               >
                 <Phone className="h-4 w-4" />

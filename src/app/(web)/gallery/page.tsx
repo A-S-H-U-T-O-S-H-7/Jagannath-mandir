@@ -1,10 +1,9 @@
 // app/gallery/page.tsx
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import { 
   ArrowLeft, 
   X,
@@ -13,11 +12,13 @@ import {
   Images,
   Grid3x3,
   Grid2x2,
-  Heart
+  Heart,
+  Loader2
 } from "lucide-react";
+import { adminGalleryService } from '@/lib/services/adminGalleryService';
 
 interface GalleryImage {
-  id: number;
+  id: string;
   src: string;
   alt: string;
   title: string;
@@ -29,93 +30,8 @@ export default function GalleryPage() {
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
-
-  const galleryImages: GalleryImage[] = [
-    {
-      id: 1,
-      src: '/hero-desktop.png',
-      alt: 'Jagnanth Mandir Exterior',
-      title: 'Temple Exterior',
-      category: 'Exterior',
-    },
-    {
-      id: 2,
-      src: '/hero-desktop.png',
-      alt: 'Lord Jagannath Idol',
-      title: 'Lord Jagannath',
-      category: 'Deities',
-    },
-    {
-      id: 3,
-      src: '/hero-desktop.png',
-      alt: 'Temple Interior',
-      title: 'Sanctum Sanctorum',
-      category: 'Interior',
-    },
-    {
-      id: 4,
-      src: '/hero-desktop.png',
-      alt: 'Evening Aarti',
-      title: 'Evening Aarti Ceremony',
-      category: 'Rituals',
-    },
-    {
-      id: 5,
-      src: '/hero-desktop.png',
-      alt: 'Rath Yatra',
-      title: 'Rath Yatra Celebration',
-      category: 'Festivals',
-    },
-    {
-      id: 6,
-      src: '/hero-desktop.png',
-      alt: 'Devotees at Temple',
-      title: 'Devotee Gathering',
-      category: 'Community',
-    },
-    {
-      id: 7,
-      src: '/hero-desktop.png',
-      alt: 'Temple Flag',
-      title: 'Sacred Flag Hoisting',
-      category: 'Exterior',
-    },
-    {
-      id: 8,
-      src: '/hero-desktop.png',
-      alt: 'Mangala Aarti',
-      title: 'Mangala Aarti',
-      category: 'Rituals',
-    },
-    {
-      id: 9,
-      src: '/hero-desktop.png',
-      alt: 'Janmashtami Celebration',
-      title: 'Janmashtami Festival',
-      category: 'Festivals',
-    },
-    {
-      id: 10,
-      src: '/hero-desktop.png',
-      alt: 'Temple Carving',
-      title: 'Architectural Details',
-      category: 'Exterior',
-    },
-    {
-      id: 11,
-      src: '/hero-desktop.png',
-      alt: 'Abhishekam Ceremony',
-      title: 'Abhishekam Ritual',
-      category: 'Rituals',
-    },
-    {
-      id: 12,
-      src: '/hero-desktop.png',
-      alt: 'Community Bhajan',
-      title: 'Community Bhajan Session',
-      category: 'Community',
-    },
-  ];
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -124,6 +40,32 @@ export default function GalleryPage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const loadGallery = async () => {
+      setLoading(true);
+      try {
+        // Show ALL gallery images on the gallery page
+        const result = await adminGalleryService.getAllImages();
+        if (result.success) {
+          setGalleryImages(
+            result.images.map((img) => ({
+              id: img.id,
+              src: img.url || img.thumbnailUrl || '/hero-desktop.png',
+              alt: img.title || 'Gallery image',
+              title: img.title || 'Untitled',
+              category: img.description || undefined,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error('Error loading gallery:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadGallery();
   }, []);
 
   const openLightbox = (image: GalleryImage, index: number) => {
@@ -137,15 +79,17 @@ export default function GalleryPage() {
     document.body.style.overflow = 'auto';
   };
 
-  const navigateImage = (direction: 'prev' | 'next') => {
-    const newIndex = direction === 'next' 
-      ? (currentIndex + 1) % galleryImages.length
-      : (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-    setCurrentIndex(newIndex);
-    setSelectedImage(galleryImages[newIndex]);
-  };
+  const navigateImage = useCallback((direction: 'prev' | 'next') => {
+    if (galleryImages.length === 0) return;
+    setCurrentIndex((prev) => {
+      const newIndex = direction === 'next' 
+        ? (prev + 1) % galleryImages.length
+        : (prev - 1 + galleryImages.length) % galleryImages.length;
+      setSelectedImage(galleryImages[newIndex]);
+      return newIndex;
+    });
+  }, [galleryImages]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (selectedImage) {
@@ -156,7 +100,7 @@ export default function GalleryPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage, currentIndex]);
+  }, [selectedImage, navigateImage]);
 
   const totalImages = galleryImages.length;
 
@@ -176,7 +120,7 @@ export default function GalleryPage() {
         <div className="relative rounded-2xl md:rounded-3xl overflow-hidden mb-8 md:mb-12">
           <div className="absolute inset-0 z-0">
             <Image
-              src={isMobile ? "/eventmob.png" : "/eventbg.png"}
+              src={isMobile ? "/hero-mobile.png" : "/hero-desktop.png"}
               alt="Gallery Banner"
               fill
               className="object-cover"
@@ -244,54 +188,64 @@ export default function GalleryPage() {
         </div>
 
         {/* Gallery Grid */}
-        <div className={`grid gap-4 ${
-          viewMode === 'grid' 
-            ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
-            : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
-        }`}>
-          {galleryImages.map((image, index) => (
-            <motion.div
-              key={image.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.03, duration: 0.4 }}
-              onClick={() => openLightbox(image, index)}
-              className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 ${
-                viewMode === 'masonry' && index % 3 === 0 ? 'row-span-2' : ''
-              }`}
-            >
-              <div className={`relative ${
-                viewMode === 'masonry' && index % 3 === 0 
-                  ? 'h-80 sm:h-96' 
-                  : 'h-48 sm:h-52 lg:h-56'
-              }`}>
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                {/* Overlay Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <p className="text-xs sm:text-sm font-semibold line-clamp-1">{image.title}</p>
-                  {image.category && (
-                    <p className="text-[10px] sm:text-xs text-white/70">{image.category}</p>
-                  )}
-                </div>
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+          </div>
+        ) : galleryImages.length === 0 ? (
+          <div className="text-center py-16 text-[#555555]">
+            No gallery images yet. Check back soon.
+          </div>
+        ) : (
+          <div className={`grid gap-4 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
+              : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
+          }`}>
+            {galleryImages.map((image, index) => (
+              <motion.div
+                key={image.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.03, duration: 0.4 }}
+                onClick={() => openLightbox(image, index)}
+                className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 ${
+                  viewMode === 'masonry' && index % 3 === 0 ? 'row-span-2' : ''
+                }`}
+              >
+                <div className={`relative ${
+                  viewMode === 'masonry' && index % 3 === 0 
+                    ? 'h-80 sm:h-96' 
+                    : 'h-48 sm:h-52 lg:h-56'
+                }`}>
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <p className="text-xs sm:text-sm font-semibold line-clamp-1">{image.title}</p>
+                    {image.category && (
+                      <p className="text-[10px] sm:text-xs text-white/70">{image.category}</p>
+                    )}
+                  </div>
 
-                {/* Gold Border on Hover */}
-                <div className="absolute inset-0 border-2 border-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                  <div className="absolute inset-0 border-2 border-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Results Count */}
-        <div className="text-xs md:text-sm text-[#555555] mt-6">
-          Showing all {totalImages} photos
-        </div>
+        {!loading && (
+          <div className="text-xs md:text-sm text-[#555555] mt-6">
+            Showing all {totalImages} photos
+          </div>
+        )}
       </div>
 
       {/* Lightbox Modal */}
@@ -312,7 +266,6 @@ export default function GalleryPage() {
               className="relative max-w-5xl w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close Button */}
               <button
                 onClick={closeLightbox}
                 className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
@@ -320,7 +273,6 @@ export default function GalleryPage() {
                 <X className="h-8 w-8" />
               </button>
 
-              {/* Image */}
               <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#0B3C5D]">
                 <Image
                   src={selectedImage.src}
@@ -330,7 +282,6 @@ export default function GalleryPage() {
                 />
               </div>
 
-              {/* Title */}
               <div className="mt-4 text-center">
                 <h3 className="text-xl font-semibold text-white">{selectedImage.title}</h3>
                 {selectedImage.category && (
@@ -341,7 +292,6 @@ export default function GalleryPage() {
                 </p>
               </div>
 
-              {/* Navigation */}
               <button
                 onClick={() => navigateImage('prev')}
                 className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-3 text-white transition-colors backdrop-blur-sm"
@@ -355,7 +305,6 @@ export default function GalleryPage() {
                 <ChevronRight className="h-6 w-6" />
               </button>
 
-              {/* Counter */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-full px-4 py-1">
                 <span className="text-sm text-white">
                   {currentIndex + 1} / {galleryImages.length}

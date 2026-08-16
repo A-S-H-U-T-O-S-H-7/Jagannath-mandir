@@ -18,6 +18,9 @@ import {
   HelpCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from 'react-hot-toast';
+import { submitContactForm } from '@/lib/services/adminContactService';
+import { getContactInfo } from '@/lib/services/settingsService';
 
 const helpTypes = [
   { id: "general", label: "General Inquiry", icon: HelpCircle },
@@ -40,6 +43,85 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [contactItems, setContactItems] = useState([
+    {
+      icon: <Phone className="w-5 h-5" />,
+      label: "Phone",
+      value: "+91 98765 43210",
+      href: "tel:+919876543210" as string | null,
+    },
+    {
+      icon: <Mail className="w-5 h-5" />,
+      label: "Email",
+      value: "info@jagnanthmandir.com",
+      href: "mailto:info@jagnanthmandir.com" as string | null,
+    },
+    {
+      icon: <MapPin className="w-5 h-5" />,
+      label: "Address",
+      value: "Sector 93A, Noida, Uttar Pradesh - 201301",
+      href: null as string | null,
+    },
+  ]);
+  const [timings, setTimings] = useState({
+    morning: "5:00 AM - 12:00 PM",
+    evening: "4:00 PM - 9:00 PM",
+  });
+
+  useEffect(() => {
+    const loadContactInfo = async () => {
+      try {
+        const result = await getContactInfo();
+        if (result.contact) {
+          const c = result.contact;
+          const items = [];
+          if (c.phone1) {
+            items.push({
+              icon: <Phone className="w-5 h-5" />,
+              label: "Phone",
+              value: c.phone1,
+              href: `tel:${c.phone1.replace(/\s/g, '')}`,
+            });
+          }
+          if (c.phone2) {
+            items.push({
+              icon: <Phone className="w-5 h-5" />,
+              label: "Alt Phone",
+              value: c.phone2,
+              href: `tel:${c.phone2.replace(/\s/g, '')}`,
+            });
+          }
+          if (c.contactEmail) {
+            items.push({
+              icon: <Mail className="w-5 h-5" />,
+              label: "Email",
+              value: c.contactEmail,
+              href: `mailto:${c.contactEmail}`,
+            });
+          }
+          if (c.address) {
+            items.push({
+              icon: <MapPin className="w-5 h-5" />,
+              label: "Address",
+              value: c.address,
+              href: null,
+            });
+          }
+          if (items.length > 0) setContactItems(items);
+        }
+        if (result.timings) {
+          const t = result.timings;
+          setTimings({
+            morning: `${t.morningStart} - ${t.morningEnd}`,
+            evening: `${t.eveningStart} - ${t.eveningEnd}`,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading contact info:', error);
+      }
+    };
+    loadContactInfo();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,42 +138,27 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      // Handle contact form submission here
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await submitContactForm(formData);
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to send your message. Please try again.');
+      }
+
       setIsSuccess(true);
-      setFormData(prev => ({ ...prev, message: "", subject: "" }));
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        helpType: 'general',
+        subject: '',
+        message: '',
+      });
       setTimeout(() => setIsSuccess(false), 6000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
+      toast.error(error.message || 'Unable to send your message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const contactItems = [
-    {
-      icon: <Phone className="w-5 h-5" />,
-      label: "Phone",
-      value: "+91 98765 43210",
-      href: "tel:+919876543210",
-    },
-    {
-      icon: <Mail className="w-5 h-5" />,
-      label: "Email",
-      value: "info@jagnanthmandir.com",
-      href: "mailto:info@jagnanthmandir.com",
-    },
-    {
-      icon: <MapPin className="w-5 h-5" />,
-      label: "Address",
-      value: "Sector 93A, Noida, Uttar Pradesh - 201301",
-      href: null,
-    },
-  ];
-
-  const timings = {
-    morning: "5:00 AM - 12:00 PM",
-    evening: "4:00 PM - 9:00 PM",
   };
 
   return (

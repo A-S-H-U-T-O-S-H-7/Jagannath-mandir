@@ -4,32 +4,48 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
+import { getContactInfo } from '@/lib/services/settingsService';
 
-interface QuickInfoProps {
-  morningStart?: string;
-  morningEnd?: string;
-  eveningStart?: string;
-  eveningEnd?: string;
-  rituals?: string[];
-}
-
-export default function QuickInfoBar({
-  morningStart = '5:00 AM',
-  morningEnd = '12:00 PM',
-  eveningStart = '4:00 PM',
-  eveningEnd = '9:00 PM',
-  rituals = ['Mangala Aarti - 5:00 AM', 'Abhishekam - 8:00 AM', 'Evening Aarti - 7:00 PM'],
-}: QuickInfoProps) {
+export default function QuickInfoBar() {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [morningStart, setMorningStart] = useState('5:00 AM');
+  const [morningEnd, setMorningEnd] = useState('12:00 PM');
+  const [eveningStart, setEveningStart] = useState('4:00 PM');
+  const [eveningEnd, setEveningEnd] = useState('9:00 PM');
+  const [rituals, setRituals] = useState<string[]>([
+    'Mangala Aarti - 5:00 AM',
+    'Abhishekam - 8:00 AM',
+    'Evening Aarti - 7:00 PM',
+  ]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const result = await getContactInfo();
+        if (result.timings) {
+          const t = result.timings;
+          setMorningStart(t.morningStart || '5:00 AM');
+          setMorningEnd(t.morningEnd || '12:00 PM');
+          setEveningStart(t.eveningStart || '4:00 PM');
+          setEveningEnd(t.eveningEnd || '9:00 PM');
+          if (Array.isArray(t.rituals) && t.rituals.length > 0) {
+            setRituals(t.rituals);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading timings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
       const heroHeight = window.innerHeight * 0.75;
       const scrollPosition = window.scrollY;
       
-      // Show after hero section
       setIsVisible(scrollPosition > heroHeight - 100);
       setScrolled(scrollPosition > 100);
     };
@@ -57,7 +73,6 @@ export default function QuickInfoBar({
         >
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between py-2.5 sm:py-3 gap-2 sm:gap-4">
-              {/* Left - Timings */}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-6 w-full sm:w-auto">
                 <div className="flex items-center gap-2 text-white/90">
                   <Clock className="h-4 w-4 text-[#D4AF37] flex-shrink-0" />
@@ -78,7 +93,6 @@ export default function QuickInfoBar({
                 </div>
               </div>
 
-              {/* Right - Today's Rituals */}
               <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
                 <div className="flex items-center gap-2 text-white/70">
                   <Calendar className="h-4 w-4 text-[#D4AF37] flex-shrink-0" />
@@ -87,7 +101,6 @@ export default function QuickInfoBar({
                   </span>
                 </div>
 
-                {/* Expand/Collapse Button */}
                 {rituals.length > 1 && (
                   <button
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -103,7 +116,6 @@ export default function QuickInfoBar({
               </div>
             </div>
 
-            {/* Expanded Rituals List */}
             <AnimatePresence>
               {isExpanded && rituals.length > 1 && (
                 <motion.div
