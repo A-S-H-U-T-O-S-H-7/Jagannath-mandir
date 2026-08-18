@@ -44,6 +44,7 @@ export const ActivityEntityTypes = {
   RITUAL: 'ritual',
   VIDEO: 'video',
   FAQ: 'faq',
+  SONG: 'song',
 } as const;
 
 export type ActivityAction = typeof ActivityActions[keyof typeof ActivityActions];

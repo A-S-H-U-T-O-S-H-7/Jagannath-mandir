@@ -1,153 +1,114 @@
-// components/home/DonationCTA.tsx
 'use client';
 
-import { motion } from 'framer-motion';
+import { useEffect } from 'react';
+import { 
+  Heart, 
+  Sparkles, 
+  HandHeart, 
+  Building2, 
+  Users, 
+  Flower2,
+  Landmark,
+  TreePine,
+  Church
+} from 'lucide-react';
 import Link from 'next/link';
-import { Heart, ArrowRight, Sparkles, HandHeart, IndianRupee } from 'lucide-react';
+import useAuthStore from '@/lib/store/authStore';
 
 export default function DonationCTA() {
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  };
+  const { isAuthenticated, loading, initialize } = useAuthStore();
+  const donateHref = isAuthenticated ? '/donate' : '/signup';
+
+  useEffect(() => {
+    const unsubscribe = initialize();
+    return () => unsubscribe();
+  }, [initialize]);
 
   return (
-    <section className="relative py-8 sm:py-10 overflow-hidden">
-      {/* Soft Rich Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8]" />
-      
-      {/* Decorative Blur Elements */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#D4AF37]/20 rounded-full blur-[120px] -z-10" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#0B3C5D]/15 rounded-full blur-[120px] -z-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/10 rounded-full blur-[150px] -z-10" />
+    <div className="relative mt-5 mx-3 mb-2 overflow-hidden rounded-2xl border-2 border-[#D4AF37]/30 bg-gradient-to-br from-[#f6f3e8] via-[#e4eef8] to-[#d0c9b7] shadow-lg transition-all duration-300 hover:shadow-xl group md:mx-10 md:mb-10">
+      {/* Shine Effect */}
+      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-[#D4AF37]/10 to-transparent skew-x-12 pointer-events-none" />
 
-      {/* Decorative Border Elements */}
-      <div className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 z-20 pointer-events-none opacity-10">
-        <div className="w-full h-full border-2 border-[#D4AF37]/40 rounded-full blur-sm" />
-      </div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 z-20 pointer-events-none opacity-10">
-        <div className="w-full h-full border-2 border-[#0B3C5D]/30 rounded-full blur-sm" />
-      </div>
+      {/* Decorative Gold Orbs */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#0B3C5D]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0B3C5D] via-[#1A4A6A] to-[#062A42] p-8 sm:p-12 lg:p-16 shadow-2xl">
-          {/* Decorative Gold Orbs */}
-          <div className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-[#D4AF37]/10 rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-80px] left-[-80px] w-[300px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[80px]" />
-          
-          {/* Gold Sparkles */}
-          <div className="absolute top-10 right-10 opacity-20">
-            <Sparkles className="h-16 w-16 text-[#D4AF37]" />
-          </div>
-          <div className="absolute bottom-10 left-10 opacity-10">
-            <Sparkles className="h-12 w-12 text-[#D4AF37]" />
-          </div>
-
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <motion.div
-                variants={fadeInUp}
-                className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-white/10 backdrop-blur-sm px-4 py-1.5"
-              >
-                <Heart className="h-4 w-4 text-[#D4AF37]" />
-                <span className="text-xs font-semibold tracking-wide text-[#D4AF37] uppercase">
-                  Support Us
-                </span>
-              </motion.div>
-
-              <motion.h2
-                variants={fadeInUp}
-                className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
-              >
-                Support <span className="text-[#D4AF37]">jagannath Mandir</span>
-              </motion.h2>
-
-              <motion.p
-                variants={fadeInUp}
-                className="text-sm sm:text-base text-white/70 leading-relaxed max-w-lg"
-              >
-                Your generous donations help us maintain the temple, 
-                organize festivals, and serve the community. Every 
-                contribution, big or small, makes a difference.
-              </motion.p>
-
-              {/* Donation Amount Options */}
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-wrap gap-3 pt-2"
-              >
-                {['₹501', '₹1001', '₹5001', 'Custom'].map((amount, index) => (
-                  <button
-                    key={index}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      index === 0
-                        ? 'bg-[#D4AF37] text-[#0B3C5D] hover:bg-[#E8C84A] shadow-lg shadow-[#D4AF37]/30'
-                        : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
-                    }`}
-                  >
-                    {amount}
-                  </button>
-                ))}
-              </motion.div>
-
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-wrap items-center gap-4 pt-2"
-              >
-                <Link href="/donate">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#D4AF37] text-[#0B3C5D] font-semibold rounded-full shadow-lg shadow-[#D4AF37]/30 hover:shadow-xl hover:shadow-[#D4AF37]/50 transition-all duration-300"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Donate Now
-                    <ArrowRight className="h-4 w-4" />
-                  </motion.button>
-                </Link>
-                <span className="text-xs text-white/40">100% secure donations</span>
-              </motion.div>
-            </motion.div>
-
-            {/* Right - Stats / Impact */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
-                <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center mx-auto mb-3">
-                  <HandHeart className="h-6 w-6 text-[#D4AF37]" />
-                </div>
-                <p className="text-2xl font-bold text-white">24/7</p>
-                <p className="text-xs text-white/50">Temple Services</p>
-              </div>
-
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
-                <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center mx-auto mb-3">
-                  <IndianRupee className="h-6 w-6 text-[#D4AF37]" />
-                </div>
-                <p className="text-2xl font-bold text-white">100+</p>
-                <p className="text-xs text-white/50">Devotees Served Daily</p>
-              </div>
-
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10 col-span-2">
-                <p className="text-sm text-white/60">
-                  "Your donation helps preserve our heritage and spread the message of devotion."
-                </p>
-              </div>
-            </motion.div>
+      <div className="relative z-10 flex flex-col items-center gap-8 p-3 lg:flex-row lg:p-8">
+        {/* Image Section - Left Side */}
+        <div className="flex-shrink-0 order-2 lg:order-1">
+          <div className="relative group">
+            <div className="absolute -inset-3 bg-gradient-to-r from-[#D4AF37]/50 via-[#0B3C5D]/30 to-[#D4AF37]/40 rounded-2xl blur-lg opacity-25 group-hover:opacity-40 transition-opacity duration-300" />
+            <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-3 shadow-lg border border-[#D4AF37]/20">
+              <img
+                src="/donate.png"
+                alt="Support Jagnanth Mandir"
+                className="w-72 h-48 object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/30 to-transparent rounded-xl" />
+            </div>
           </div>
         </div>
+
+        {/* Content Section - Right Side */}
+        <div className="flex-1 order-1 lg:order-2 text-center lg:text-left space-y-4">
+          <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
+            <div className="p-1.5 bg-[#D4AF37]/20 rounded-full">
+              <Landmark className="w-4 h-4 text-[#D4AF37]" />
+            </div>
+            <div className="p-1.5 bg-[#0B3C5D]/10 rounded-full">
+              <HandHeart className="w-4 h-4 text-[#0B3C5D]" />
+            </div>
+            <div className="p-1.5 bg-[#D4AF37]/10 rounded-full">
+              <Flower2 className="w-4 h-4 text-[#D4AF37]" />
+            </div>
+          </div>
+
+          <h2 className="text-3xl md:text-4xl font-serif font-bold bg-gradient-to-r from-[#0B3C5D] via-[#1A4A6A] to-[#D4AF37] bg-clip-text text-transparent leading-tight">
+            Support <span className="text-[#D4AF37]">Jagnanth Mandir</span>
+          </h2>
+
+          <p className="text-lg font-medium text-[#555555] leading-relaxed">
+            Your donation helps maintain the temple, organize festivals, and serve the community.
+          </p>
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-[#D4AF37]/20 space-y-3">
+            <div className="pt-3">
+              <p className="text-sm text-[#555555] leading-relaxed mb-2">
+                Your generosity supports daily rituals, annadan seva, temple maintenance, and community outreach programs.
+              </p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="bg-[#D4AF37]/20 text-[#0B3C5D] px-2 py-1 rounded-full font-medium">Daily Rituals</span>
+                <span className="bg-[#0B3C5D]/10 text-[#0B3C5D] px-2 py-1 rounded-full font-medium">Annadan Seva</span>
+                <span className="bg-[#D4AF37]/20 text-[#0B3C5D] px-2 py-1 rounded-full font-medium">Temple Maintenance</span>
+                <span className="bg-[#0B3C5D]/10 text-[#0B3C5D] px-2 py-1 rounded-full font-medium">Festival Celebrations</span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href={donateHref}
+            aria-disabled={loading}
+            className="inline-flex items-center gap-2 rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-[#0B3C5D] shadow-lg shadow-[#D4AF37]/30 transition-all duration-300 hover:scale-105 hover:bg-[#E8C84A] hover:shadow-[#D4AF37]/50"
+          >
+            <Heart className="h-4 w-4" />
+            Donate Now
+          </Link>
+
+          <p className="text-xs text-[#555555]/60">
+            🔒 100% secure donation · 80G tax exemption available
+          </p>
+        </div>
       </div>
-    </section>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#D4AF37]/10 to-[#0B3C5D]/10 rounded-full -translate-y-12 translate-x-12 z-0" />
+      <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-[#D4AF37]/10 to-[#0B3C5D]/10 rounded-full translate-y-8 -translate-x-8 z-0" />
+
+      {/* Gold Corner Accents */}
+      <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-[#D4AF37]/20 rounded-tl-2xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-[#D4AF37]/20 rounded-tr-2xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-[#D4AF37]/20 rounded-bl-2xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-[#D4AF37]/20 rounded-br-2xl pointer-events-none" />
+    </div>
   );
 }

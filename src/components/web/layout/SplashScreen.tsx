@@ -106,7 +106,7 @@ export default function SplashScreen() {
           >
             <Image
               src="/mandir-logo.png"
-              alt="jagannath Mandir Noida"
+              alt="Swarna Khetra Jagannath Mandir Noida"
               width={200}
               height={80}
               className="h-auto w-auto"
@@ -114,24 +114,18 @@ export default function SplashScreen() {
             />
           </motion.div>
 
-          {/* Temple Name */}
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="mt-4 text-2xl font-bold text-[#0B3C5D]"
-          >
-            jagannath Mandir
-          </motion.h1>
-
           <motion.p
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            className="text-sm text-[#0B3C5D]/60"
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="font-hindi mt-3 text-lg font-semibold tracking-[0.28em] text-[#B8962E]"
           >
-            Noida
+            स्वर्णक्षेत्र
           </motion.p>
+
+          
+
+          
 
           {/* Gold Accent Line */}
           <motion.div
@@ -141,22 +135,7 @@ export default function SplashScreen() {
             className="h-0.5 mt-4 rounded-full bg-[#D4AF37]"
           />
 
-          {/* Loading Progress Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="mt-8 w-48"
-          >
-            <div className="h-1 bg-[#D4AF37]/20 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.2 }}
-                className="h-full rounded-full bg-[#D4AF37]"
-              />
-            </div>
-          </motion.div>
+          
 
           {/* Loading Dots */}
           <motion.div

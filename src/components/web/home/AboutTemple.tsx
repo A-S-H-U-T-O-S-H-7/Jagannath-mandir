@@ -1,32 +1,53 @@
 // components/home/AboutTemple.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Calendar, Users, Building2 } from 'lucide-react';
+import { ArrowRight, Calendar, Users, Building2, Clock } from 'lucide-react';
+import { getContactInfo } from '@/lib/services/settingsService';
+import { formatTimeRange } from '@/lib/utils/timingHelpers';
 
 export default function AboutTemple() {
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
+  
+  const [morningTiming, setMorningTiming] = useState('5:00 AM - 12:00 PM');
+  const [eveningTiming, setEveningTiming] = useState('4:00 PM - 9:00 PM');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const result = await getContactInfo();
+        if (!result.timings) return;
+        const t = result.timings;
+        setMorningTiming(formatTimeRange(t.morningStart, t.morningEnd, '5:00 AM', '12:00 PM'));
+        setEveningTiming(formatTimeRange(t.eveningStart, t.eveningEnd, '4:00 PM', '9:00 PM'));
+      } catch (error) {
+        console.error('Error loading about timings:', error);
+      }
+    };
+    load();
+  }, []);
 
   const features = [
     {
       icon: Calendar,
       title: 'Daily Rituals',
-      description: 'Mangala Aarti, Abhishekam, and Evening Aarti performed daily',
+      description: 'Mangala Aarti, Abhishekam, Madhyan Darshan, Evening Aarti & Shayan Aarti',
     },
     {
       icon: Users,
       title: 'Devotee Community',
-      description: 'A growing community of devotees connecting through faith',
+      description: 'A growing community of devotees connecting through faith and devotion',
     },
     {
       icon: Building2,
       title: 'Kalinga Architecture',
-      description: 'Traditional Odia temple design with modern amenities',
+      description: 'Traditional Odia temple design with modern amenities for devotees',
     },
   ];
 
@@ -45,8 +66,8 @@ export default function AboutTemple() {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/20 to-transparent z-10" />
               <Image
-                src="/hero-desktop.png"
-                alt="jagannath Mandir Noida - Temple Interior"
+                src="/homeabout2.jpeg"
+                alt="Jagannath Mandir Noida - Temple Interior"
                 width={600}
                 height={500}
                 className="w-full h-[350px] sm:h-[400px] lg:h-[450px] object-cover"
@@ -100,7 +121,7 @@ export default function AboutTemple() {
               className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#0B3C5D] leading-tight"
             >
               Welcome to{' '}
-              <span className="text-[#D4AF37]">jagannath Mandir</span>
+              <span className="text-[#D4AF37]">Jagannath Mandir</span>
             </motion.h2>
 
             {/* Description */}
@@ -123,6 +144,21 @@ export default function AboutTemple() {
               amenities, the temple provides a serene environment for 
               prayer, meditation, and spiritual growth.
             </motion.p>
+
+            {/* Temple Timings */}
+            <motion.div
+              variants={fadeInUp}
+              className="flex flex-wrap gap-3 text-sm text-[#555555]"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E3DD]/50 px-3 py-1.5">
+                <Clock className="h-4 w-4 text-[#D4AF37]" />
+                Morning: <strong className="text-[#0B3C5D]">{morningTiming}</strong>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E3DD]/50 px-3 py-1.5">
+                <Clock className="h-4 w-4 text-[#D4AF37]" />
+                Evening: <strong className="text-[#0B3C5D]">{eveningTiming}</strong>
+              </span>
+            </motion.div>
 
             {/* Features Grid */}
             <motion.div

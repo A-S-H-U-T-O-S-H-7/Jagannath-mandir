@@ -7,8 +7,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Menu, X, User, LogOut, ChevronDown, 
-  Home, Calendar, Users, HelpCircle, Image as GalleryIcon
+    Menu, X, User, LogOut, ChevronDown, 
+    Home, Calendar, Users, HelpCircle, Image as GalleryIcon, UserPlus
 } from 'lucide-react';
 import useAuthStore from '@/lib/store/authStore';
 
@@ -61,13 +61,14 @@ export default function Navbar() {
     { href: '/events', label: 'Events', icon: Calendar },
     { href: '/gallery', label: 'Gallery', icon: GalleryIcon },
     { href: '/darshan', label: 'Darshan' },
+    { href: '/join-as-member', label: 'Join as Member', icon: UserPlus },
   ];
 
   if (!mounted) {
     return (
       <nav className="fixed top-0 w-full z-50 bg-[#F0F4F8]/80 backdrop-blur-sm border-b border-[#B8D4E8]/50">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 sm:h-[72px]">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 relative bg-gray-200 rounded-full animate-pulse" />
               <div className="w-32 h-8 bg-gray-200 rounded-full animate-pulse" />
@@ -88,21 +89,24 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-8xl mx-auto px-3 sm:px-6 lg:px-10">
-        <div className="flex justify-between items-center h-14 sm:h-16">
+        <div className="flex justify-between items-center h-16 sm:h-[74px]">
           {/* Left: jagannath Mandir Logo + Divider + Parent Org Logo */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* jagannath Mandir Logo - Independent, no border */}
-            <Link href="/" aria-label="Go to home page" className="flex-shrink-0 relative group cursor-pointer">
-              <div className="w-26 h-26 md:w-30 md:h-30 relative transition-transform duration-300 group-hover:scale-105">
+            <Link href="/" aria-label="Go to home page" className="swarna-khetra-brand flex-shrink-0 relative group cursor-pointer flex flex-col items-center">
+              <div className="w-[92px] h-10 sm:w-[140px] sm:h-12 md:w-[176px] md:h-14 relative transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src="/mandir-logo.png"
-                  alt="jagannath Mandir Noida Logo"
+                  alt="Swarna Khetra Jagannath Mandir Noida Logo"
                   fill
                   className="object-contain"
                   priority
                 />
               </div>
-              <div className="absolute -inset-2 bg-[#0B3C5D]/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <span className="font-swarna-khetra swarna-khetra-title ml-10 text-[11px] sm:text-sm md:text-base lg:text-[20px] font-semibold -mt-0.5 whitespace-nowrap">
+                स्वर्णक्षेत्र
+              </span>
+              <div className="swarna-khetra-aura" aria-hidden="true" />
             </Link>
 
             {/* Divider — visible on all screen sizes */}

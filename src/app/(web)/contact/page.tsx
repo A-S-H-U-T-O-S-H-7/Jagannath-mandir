@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { toast } from 'react-hot-toast';
 import { submitContactForm } from '@/lib/services/adminContactService';
 import { getContactInfo } from '@/lib/services/settingsService';
+import { formatTimeRange, normalizeRituals } from '@/lib/utils/timingHelpers';
 
 const helpTypes = [
   { id: "general", label: "General Inquiry", icon: HelpCircle },
@@ -67,6 +68,7 @@ export default function ContactPage() {
     morning: "5:00 AM - 12:00 PM",
     evening: "4:00 PM - 9:00 PM",
   });
+  const [rituals, setRituals] = useState<{ name: string; time: string }[]>([]);
 
   useEffect(() => {
     const loadContactInfo = async () => {
@@ -112,9 +114,15 @@ export default function ContactPage() {
         if (result.timings) {
           const t = result.timings;
           setTimings({
-            morning: `${t.morningStart} - ${t.morningEnd}`,
-            evening: `${t.eveningStart} - ${t.eveningEnd}`,
+            morning: formatTimeRange(t.morningStart, t.morningEnd, '5:00 AM', '12:00 PM'),
+            evening: formatTimeRange(t.eveningStart, t.eveningEnd, '4:00 PM', '9:00 PM'),
           });
+          setRituals(
+            normalizeRituals(t.rituals).map((ritual) => ({
+              name: ritual.name,
+              time: `${ritual.time} ${ritual.period}`,
+            }))
+          );
         }
       } catch (error) {
         console.error('Error loading contact info:', error);
@@ -262,6 +270,16 @@ export default function ContactPage() {
                     <span className="text-[#D4AF37]">🌙</span>
                     <span className="text-[#0B3C5D]">Evening: <strong>{timings.evening}</strong></span>
                   </div>
+                  {rituals.length > 0 && (
+                    <div className="pt-2 space-y-1.5">
+                      {rituals.map((ritual) => (
+                        <div key={ritual.name + ritual.time} className="flex items-center justify-between gap-3 text-sm">
+                          <span className="text-[#0B3C5D]">{ritual.name}</span>
+                          <strong className="text-[#D4AF37] whitespace-nowrap">{ritual.time}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

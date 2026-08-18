@@ -1,6 +1,7 @@
 // app/about/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,16 +18,37 @@ import {
   Lamp,
   HandHeart
 } from 'lucide-react';
+import { getContactInfo } from '@/lib/services/settingsService';
+import { formatTimeRange, normalizeRituals, RitualEntry } from '@/lib/utils/timingHelpers';
 
 export default function AboutPage() {
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
+  const [rituals, setRituals] = useState<RitualEntry[]>([]);
+  const [morningTiming, setMorningTiming] = useState('5:00 AM - 12:00 PM');
+  const [eveningTiming, setEveningTiming] = useState('4:00 PM - 9:00 PM');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const result = await getContactInfo();
+        if (!result.timings) return;
+        const t = result.timings;
+        setMorningTiming(formatTimeRange(t.morningStart, t.morningEnd, '5:00 AM', '12:00 PM'));
+        setEveningTiming(formatTimeRange(t.eveningStart, t.eveningEnd, '4:00 PM', '9:00 PM'));
+        setRituals(normalizeRituals(t.rituals));
+      } catch (error) {
+        console.error('Error loading about timings:', error);
+      }
+    };
+    load();
+  }, []);
 
   const stats = [
     { label: 'Daily Devotees', value: '100+', icon: Users },
-    { label: 'Daily Rituals', value: '5', icon: Clock },
+    { label: 'Daily Rituals', value: rituals.length ? String(rituals.length) : '—', icon: Clock },
     { label: 'Festivals/Year', value: '12+', icon: Calendar },
     { label: 'Seva Options', value: '8+', icon: HandHeart },
   ];
@@ -40,7 +62,9 @@ export default function AboutPage() {
     {
       icon: Flower2,
       title: 'Daily Rituals',
-      description: 'Mangala Aarti, Abhishekam, Bhoga, Evening Aarti, and Shayan Aarti',
+      description: rituals.length
+        ? rituals.map((ritual) => ritual.name).join(', ')
+        : 'Mangala Aarti, Abhishekam, Bhoga, Evening Aarti, and Shayan Aarti',
     },
     {
       icon: Users,
@@ -263,6 +287,61 @@ export default function AboutPage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="relative py-16 sm:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]" />
+        <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-12"
+          >
+            <motion.div
+              variants={fadeInUp}
+              className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-white/80 backdrop-blur-sm px-4 py-1.5 shadow-sm mb-4"
+            >
+              <Clock className="h-4 w-4 text-[#D4AF37]" />
+              <span className="text-xs font-semibold tracking-wide text-[#0B3C5D] uppercase">
+                Visit Timings
+              </span>
+            </motion.div>
+            <motion.h2
+              variants={fadeInUp}
+              className="font-serif text-3xl sm:text-4xl font-bold text-[#0B3C5D]"
+            >
+              Darshan <span className="text-[#D4AF37]">Timings</span>
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 max-w-3xl mx-auto">
+            <div className="rounded-2xl bg-white/80 border border-[#E5E3DD]/50 p-5">
+              <p className="text-xs uppercase tracking-wide text-[#555555] mb-1">Morning Darshan</p>
+              <p className="text-lg font-semibold text-[#0B3C5D]">{morningTiming}</p>
+            </div>
+            <div className="rounded-2xl bg-white/80 border border-[#E5E3DD]/50 p-5">
+              <p className="text-xs uppercase tracking-wide text-[#555555] mb-1">Evening Darshan</p>
+              <p className="text-lg font-semibold text-[#0B3C5D]">{eveningTiming}</p>
+            </div>
+          </div>
+
+          {rituals.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {rituals.map((ritual) => (
+                <div
+                  key={ritual.id}
+                  className="rounded-2xl bg-white/80 border border-[#E5E3DD]/50 p-4 flex items-center justify-between gap-3"
+                >
+                  <p className="text-sm font-semibold text-[#0B3C5D]">{ritual.name}</p>
+                  <p className="text-sm font-medium text-[#D4AF37] whitespace-nowrap">
+                    {ritual.time} {ritual.period}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import HeroContent from "./HeroContent";
+import HeroMusicPlayer from "./HeroMusicPlayer";
 
 export default function Hero() {
   const [isMobile, setIsMobile] = useState(false);
@@ -49,6 +50,8 @@ export default function Hero() {
           </div>
         </div>
       </div>
+
+      <HeroMusicPlayer />
     </section>
   );
 }

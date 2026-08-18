@@ -1,0 +1,31 @@
+.membership-print-hidden {
+  display: contents;
+}
+
+@media print {
+  nav,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .membership-sheet {
+    box-shadow: none !important;
+    border-width: 1px !important;
+    page-break-after: always;
+    break-after: page;
+    width: 210mm !important;
+    max-width: none !important;
+    min-height: 277mm !important;
+    margin: 0 auto !important;
+  }
+
+  .membership-sheet:last-of-type {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}

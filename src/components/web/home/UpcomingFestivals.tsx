@@ -30,7 +30,7 @@ export default function UpcomingFestivals() {
         const result = await adminEventService.getAllEvents();
         if (result.success) {
           // Latest 3 events from admin events collection (newest first)
-          const latest = result.events.slice(0, 3).map((event) => {
+          const latest = result.events.slice(0, 4).map((event) => {
             const { month, day, formatted } = parseEventDate(event.date);
             return {
               id: event.id,
@@ -69,7 +69,7 @@ export default function UpcomingFestivals() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/3 rounded-full blur-[150px] -z-10" />
 
       <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
-        {/* Section Header */}
+        {/* Section Header - Removed "Upcoming" */}
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -82,7 +82,7 @@ export default function UpcomingFestivals() {
           >
             <Calendar className="h-4 w-4 text-[#D4AF37]" />
             <span className="text-xs font-semibold tracking-wide text-[#0B3C5D] uppercase">
-              Upcoming Events
+              Festivals & Events
             </span>
           </motion.div>
 
@@ -90,14 +90,14 @@ export default function UpcomingFestivals() {
             variants={fadeInUp}
             className="font-serif text-3xl sm:text-4xl font-bold text-[#0B3C5D]"
           >
-            Upcoming <span className="text-[#D4AF37]">Festivals</span>
+            <span className="text-[#D4AF37]">Festivals</span> & Celebrations
           </motion.h2>
 
           <motion.p
             variants={fadeInUp}
             className="mt-3 text-sm sm:text-base text-[#555555] leading-relaxed"
           >
-            Join us in celebrating the divine festivals at jagannath Mandir. 
+            Join us in celebrating the divine festivals at Jagannath Mandir. 
             Experience the joy, devotion, and cultural richness of these sacred occasions.
           </motion.p>
         </motion.div>
@@ -109,10 +109,10 @@ export default function UpcomingFestivals() {
           </div>
         ) : festivals.length === 0 ? (
           <div className="text-center py-12 text-[#555555]">
-            No upcoming festivals yet. Check back soon.
+            No festivals available. Check back soon.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {festivals.map((festival, index) => (
               <motion.div
                 key={festival.id}
@@ -122,8 +122,8 @@ export default function UpcomingFestivals() {
                 transition={{ delay: index * 0.1, duration: 0.5 }}
                 className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 hover:-translate-y-2"
               >
-                {/* Image */}
-                <div className="relative h-52 overflow-hidden">
+                {/* Image - Increased Height */}
+                <div className="relative h-42 sm:h-52 lg:h-62 overflow-hidden">
                   <Image
                     src={festival.image}
                     alt={festival.name}
@@ -143,18 +143,19 @@ export default function UpcomingFestivals() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
 
-                {/* Content */}
+                {/* Content - Only 2 lines for description */}
                 <div className="p-5 sm:p-6">
                   <div className="flex items-center gap-2 text-xs text-[#555555] mb-2">
                     <Clock className="h-3.5 w-3.5 text-[#D4AF37]" />
                     <span>{festival.date}</span>
                   </div>
 
-                  <h3 className="text-lg font-bold text-[#0B3C5D] mb-2 group-hover:text-[#D4AF37] transition-colors">
+                  <h3 className="text-lg font-bold text-[#0B3C5D] mb-2 group-hover:text-[#D4AF37] transition-colors line-clamp-1">
                     {festival.name}
                   </h3>
 
-                  <p className="text-sm text-[#555555] leading-relaxed line-clamp-3">
+                  {/* Description - Only 2 lines */}
+                  <p className="text-sm text-[#555555] leading-relaxed line-clamp-2">
                     {festival.description}
                   </p>
 
@@ -187,7 +188,7 @@ export default function UpcomingFestivals() {
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center gap-2 px-8 py-3 bg-[#D4AF37] text-[#0B3C5D] font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              View All Festivals
+              View All Events
               <ArrowRight className="h-4 w-4" />
             </motion.button>
           </Link>

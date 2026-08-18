@@ -28,6 +28,7 @@
   /* ===== Fonts ===== */
   --font-heading: var(--font-cinzel), serif;
   --font-body: var(--font-poppins), sans-serif;
+  --font-hindi: var(--font-devanagari), serif;
 
   /* ===== Typography ===== */
   --text-hero-desktop: 60px;
@@ -52,6 +53,7 @@
   --animate-scale-up: scaleUp 0.5s ease-out;
   --animate-float: float 3s ease-in-out infinite;
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-gold-shimmer: goldShimmer 3.5s ease-in-out infinite;
 
   @keyframes fadeIn {
     0% { opacity: 0; }
@@ -76,6 +78,11 @@
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
+  }
+
+  @keyframes goldShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
   }
 }
 
@@ -128,6 +135,82 @@
 
 /* ===== Utilities ===== */
 @layer utilities {
+  .font-devanagari {
+    font-family: var(--font-devanagari), serif;
+  }
+
+  .font-swarna-khetra {
+    font-family: var(--font-swarna-khetra), serif;
+  }
+
+  .swarna-khetra-brand {
+    isolation: isolate;
+  }
+
+  .swarna-khetra-title {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Tiro's upper matras need space above the glyph box. */
+    line-height: 1.4;
+    padding-block: 0.16em 0.1em;
+    background: linear-gradient(100deg, #b8962e 0%, #d4af37 35%, #f5e6b8 50%, #d4af37 65%, #b8962e 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: goldShimmer 3.5s ease-in-out infinite;
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 10px rgb(212 175 55 / 18%);
+  }
+
+  .swarna-khetra-title::after {
+    content: "";
+    width: 28%;
+    height: 1px;
+    margin-top: 2px;
+    background: linear-gradient(90deg, transparent, #d4af37, #b8962e, transparent);
+    transition: width 350ms ease, box-shadow 350ms ease;
+  }
+
+  .swarna-khetra-aura {
+    position: absolute;
+    inset: 38% -12% -18%;
+    z-index: -1;
+    border-radius: 9999px;
+    background: radial-gradient(ellipse, rgb(212 175 55 / 38%) 0%, rgb(212 175 55 / 12%) 42%, transparent 72%);
+    filter: blur(10px);
+    opacity: 0;
+    transform: scale(0.72);
+    transition: opacity 400ms ease, transform 500ms ease;
+    pointer-events: none;
+  }
+
+  .swarna-khetra-brand:hover .swarna-khetra-title::after,
+  .swarna-khetra-brand:focus-visible .swarna-khetra-title::after {
+    width: 82%;
+    box-shadow: 0 0 9px rgb(212 175 55 / 80%);
+  }
+
+  .swarna-khetra-brand:hover .swarna-khetra-aura,
+  .swarna-khetra-brand:focus-visible .swarna-khetra-aura {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .swarna-khetra-title {
+      animation: none;
+    }
+
+    .swarna-khetra-title::after,
+    .swarna-khetra-aura {
+      transition: none;
+    }
+  }
+
   .text-shadow {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -182,5 +265,9 @@
   .body-text {
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
+  }
+
+  .font-hindi {
+    font-family: var(--font-hindi);
   }
 }

@@ -18,6 +18,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const COLLECTION = 'gallery';
+const VIDEO_COLLECTION = 'galleryVideos';
 
 export interface GalleryImage {
   id: string;
@@ -27,6 +28,21 @@ export interface GalleryImage {
   thumbnailUrl: string;
   showcase: boolean;
   order: number;
+  uploadedBy: string;
+  uploadedByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GalleryVideo {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  thumbnailUrl: string;
+  fileName: string;
+  fileSize: number;
+  duration: string;
   uploadedBy: string;
   uploadedByName: string;
   createdAt: string;
@@ -220,6 +236,129 @@ export const adminGalleryService = {
     } catch (error) {
       console.error('Error getting gallery stats:', error);
       return { total: 0, showcase: 0 };
+    }
+  },
+
+  // ==================== GALLERY VIDEOS ====================
+
+  async uploadGalleryVideoFile(file: File, videoId: string): Promise<string> {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+    const path = `gallery-videos/${videoId}/video.${ext}`;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  },
+
+  async uploadGalleryVideoThumbnail(file: File | Blob, videoId: string): Promise<string> {
+    const path = `gallery-videos/${videoId}/thumbnail.jpg`;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  },
+
+  async createGalleryVideo(data: {
+    title: string;
+    description?: string;
+    videoFile: File;
+    thumbnailFile?: File | Blob | null;
+    duration?: string;
+    uploadedBy: string;
+    uploadedByName: string;
+  }) {
+    try {
+      const docRef = doc(collection(db, VIDEO_COLLECTION));
+      const now = new Date().toISOString();
+      const videoUrl = await this.uploadGalleryVideoFile(data.videoFile, docRef.id);
+
+      let thumbnailUrl = '';
+      if (data.thumbnailFile) {
+        thumbnailUrl = await this.uploadGalleryVideoThumbnail(data.thumbnailFile, docRef.id);
+      }
+
+      await setDoc(docRef, {
+        title: data.title.trim() || data.videoFile.name.replace(/\.[^/.]+$/, ''),
+        description: data.description || '',
+        videoUrl,
+        thumbnailUrl,
+        fileName: data.videoFile.name,
+        fileSize: data.videoFile.size,
+        duration: data.duration || '',
+        uploadedBy: data.uploadedBy,
+        uploadedByName: data.uploadedByName,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      return { success: true, id: docRef.id };
+    } catch (error: any) {
+      console.error('Error creating gallery video:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getAllGalleryVideos() {
+    try {
+      const snapshot = await getDocs(collection(db, VIDEO_COLLECTION));
+      const videos: GalleryVideo[] = [];
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        videos.push({
+          id: docSnap.id,
+          title: data.title || 'Untitled video',
+          description: data.description || '',
+          videoUrl: data.videoUrl || '',
+          thumbnailUrl: data.thumbnailUrl || '',
+          fileName: data.fileName || '',
+          fileSize: data.fileSize || 0,
+          duration: data.duration || '',
+          uploadedBy: data.uploadedBy || '',
+          uploadedByName: data.uploadedByName || '',
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString(),
+        });
+      });
+
+      videos.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return { success: true, videos };
+    } catch (error: any) {
+      console.error('Error getting gallery videos:', error);
+      return { success: false, error: error.message, videos: [] };
+    }
+  },
+
+  async updateGalleryVideo(id: string, data: Partial<Pick<GalleryVideo, 'title' | 'description'>>) {
+    try {
+      await updateDoc(doc(db, VIDEO_COLLECTION, id), {
+        ...data,
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error updating gallery video:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async deleteGalleryVideo(video: GalleryVideo) {
+    try {
+      const ext = video.fileName.split('.').pop()?.toLowerCase() || 'mp4';
+      try {
+        await deleteObject(ref(storage, `gallery-videos/${video.id}/video.${ext}`));
+      } catch {
+        try {
+          await deleteObject(ref(storage, `gallery-videos/${video.id}/video`));
+        } catch {}
+      }
+      try {
+        await deleteObject(ref(storage, `gallery-videos/${video.id}/thumbnail.jpg`));
+      } catch {}
+
+      await deleteDoc(doc(db, VIDEO_COLLECTION, video.id));
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting gallery video:', error);
+      return { success: false, error: error.message };
     }
   },
 };

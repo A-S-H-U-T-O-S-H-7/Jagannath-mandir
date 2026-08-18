@@ -9,18 +9,19 @@ import SevaRituals from '@/components/web/home/SevaRituals'
 import Testimonials from '@/components/web/home/Testimonials'
 import UpcomingFestivals from '@/components/web/home/UpcomingFestivals'
 import React from 'react'
+import DonationBanner from '../../components/web/home/DonationCTA'
 
 function page() {
   return (
     <div>
       <Hero/>
-     <QuickInfoBar/>
+     {/* <QuickInfoBar/> */}
      <AboutTemple/>
      <DailyDarshan/>
      <UpcomingFestivals/>
      <GalleryPreview/>
      {/* <SevaRituals/> */}
-     <DonationCTA/>
+     <DonationBanner/>
      <Testimonials/>
      <FAQ/>
     </div>

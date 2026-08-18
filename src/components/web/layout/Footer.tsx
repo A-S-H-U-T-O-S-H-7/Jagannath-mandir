@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Heart } from "lucide-react";
+import { Mail, MapPin, Phone, Heart, Clock } from "lucide-react";
 import { 
   FaFacebook, 
   FaInstagram, 
@@ -15,6 +15,7 @@ import {
   FaWhatsapp
 } from "react-icons/fa";
 import { getContactInfo } from '@/lib/services/settingsService';
+import { formatTimeRange } from '@/lib/utils/timingHelpers';
 
 const footerLinks = {
   Temple: [
@@ -26,7 +27,7 @@ const footerLinks = {
   Services: [
     { label: "Gallery", href: "/gallery" },
     { label: "Donate", href: "/donate" },
-    { label: "Volunteer", href: "/volunteer" },
+    { label: "Join as Member", href: "/join-as-member" },
     { label: "Contact", href: "/contact" },
   ],
 };
@@ -55,6 +56,7 @@ export default function Footer() {
       setContactInfo({
         contact: result.contact,
         social: result.social,
+        timings: result.timings,
       });
     } catch (error) {
       console.error("Error fetching contact info:", error);
@@ -78,18 +80,26 @@ export default function Footer() {
   return (
     <footer className="bg-[#0B3C5D] text-white/80">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-12">
-        {/* Desktop: 4 columns, Mobile: Brand first then 2 columns grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand - Full width on mobile */}
           <div className="md:col-span-1">
             <Link href="/" className="inline-block">
-              <Image
-                src="/mandir-logo.png"
-                alt="jagannath Mandir Noida"
-                width={160}
-                height={50}
-                className="h-12 w-auto brightness-0 invert"
-              />
+              {/* Logo with subtle light background to preserve details */}
+              <div className="relative inline-block p-2 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10">
+                <div className="w-[160px] h-[50px] relative transition-transform duration-300 hover:scale-105">
+                  <Image
+                    src="/mandir-logo.png"
+                    alt="Swarna Khetra Jagannath Mandir Noida"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </div>
+              {/* Swarna Khetra text - matching navbar */}
+              <span className="font-swarna-khetra swarna-khetra-title text-[#D4AF37] text-[11px] sm:text-sm md:text-base lg:text-[20px] font-semibold whitespace-nowrap block mt-2">
+                स्वर्णक्षेत्र
+              </span>
             </Link>
             <p className="text-sm text-white/50 mt-4 max-w-xs leading-relaxed">
               A divine abode of Lord Jagannath in Noida. 
@@ -102,7 +112,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links - Desktop: 2 columns, Mobile: 2 columns side by side */}
+          {/* Quick Links */}
           <div className="md:col-span-2">
             <div className="grid grid-cols-2 gap-6 md:gap-10">
               {Object.entries(footerLinks).map(([title, links]) => (
@@ -127,13 +137,12 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Contact - Desktop: 1 column, Mobile: full width */}
+          {/* Contact */}
           <div className="md:col-span-1">
             <h4 className="text-white font-semibold text-sm mb-4">
               Get in Touch
             </h4>
             <ul className="space-y-3">
-              {/* Phone 1 */}
               {contactInfo?.contact?.phone1 && (
                 <li className="flex items-center gap-3 text-sm text-white/50">
                   <Phone className="w-4 h-4 text-[#D4AF37]" />
@@ -142,7 +151,6 @@ export default function Footer() {
                   </a>
                 </li>
               )}
-              {/* Phone 2 */}
               {contactInfo?.contact?.phone2 && (
                 <li className="flex items-center gap-3 text-sm text-white/50 pl-7">
                   <span className="text-[#D4AF37] text-xs">Alt</span>
@@ -151,7 +159,6 @@ export default function Footer() {
                   </a>
                 </li>
               )}
-              {/* Email */}
               {contactInfo?.contact?.contactEmail && (
                 <li className="flex items-center gap-3 text-sm text-white/50">
                   <Mail className="w-4 h-4 text-[#D4AF37]" />
@@ -160,12 +167,26 @@ export default function Footer() {
                   </a>
                 </li>
               )}
-              {/* Address */}
               {contactInfo?.contact?.address && (
                 <li className="flex items-center gap-3 text-sm text-white/50">
                   <MapPin className="w-4 h-4 text-[#D4AF37]" />
                   <span>{contactInfo.contact.address}</span>
                 </li>
+              )}
+              {contactInfo?.timings && (
+                <>
+                  <li className="flex items-start gap-3 text-sm text-white/50">
+                    <Clock className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                    <span>
+                      Morning: {formatTimeRange(contactInfo.timings.morningStart, contactInfo.timings.morningEnd, '7:30 AM', '12:00 PM')}
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-white/50 pl-7">
+                    <span>
+                      Evening: {formatTimeRange(contactInfo.timings.eveningStart, contactInfo.timings.eveningEnd, '4:00 PM', '9:00 PM')}
+                    </span>
+                  </li>
+                </>
               )}
             </ul>
 
@@ -196,7 +217,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/40">
-            &copy; {currentYear} jagannath Mandir Noida. All rights reserved.
+            &copy; {currentYear} Jagannath Mandir Noida. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-xs text-white/40">
             <Link href="/privacy" className="hover:text-[#D4AF37] transition-colors">

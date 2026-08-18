@@ -18,6 +18,7 @@ import {
 import { adminDarshanService, type AartiVideo } from '@/lib/services/adminDarshanService';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { getRitualColor, getRitualIcon, parseEventDate } from '@/lib/utils/displayHelpers';
+import { formatTimeRange } from '@/lib/utils/timingHelpers';
 
 interface DarshanImage {
   id: string;
@@ -127,8 +128,8 @@ export default function DarshanPage() {
 
         if (settings.timings) {
           const t = settings.timings;
-          setMorningTiming(`${t.morningStart || '5:00 AM'} - ${t.morningEnd || '12:00 PM'}`);
-          setEveningTiming(`${t.eveningStart || '4:00 PM'} - ${t.eveningEnd || '9:00 PM'}`);
+          setMorningTiming(formatTimeRange(t.morningStart, t.morningEnd, '5:00 AM', '12:00 PM'));
+          setEveningTiming(formatTimeRange(t.eveningStart, t.eveningEnd, '4:00 PM', '9:00 PM'));
         }
       } catch (error) {
         console.error('Error loading darshan:', error);

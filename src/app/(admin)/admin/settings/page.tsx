@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Share2, Clock } from "lucide-react";
+import { ArrowLeft, Phone, Share2, Clock, Music } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { auth } from "@/lib/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
@@ -12,11 +12,13 @@ import { useActivityLogger } from "@/hooks/useActivityLogger";
 import SocialLinks from "@/components/admin/settings/SocialLinks";
 import ContactSettings from "@/components/admin/settings/ContactSettings";
 import TimingsSettings from "@/components/admin/settings/TimingsSettings";
+import SongManagement from "@/components/admin/settings/SongManagement";
 import { 
   getSettings, 
   updateSocialLinks, 
   updateContactSettings,
-  updateTimingsSettings
+  updateTimingsSettings,
+  updateSongSettings
 } from "@/lib/services/settingsService";
 import { ActivityActions, ActivityEntityTypes } from "@/lib/services/activityLogService";
 
@@ -24,6 +26,7 @@ const tabs = [
   { id: "social", name: "Social Links", icon: Share2 },
   { id: "contact", name: "Contact", icon: Phone },
   { id: "timings", name: "Darshan Timings", icon: Clock },
+  { id: "song", name: "Song Management", icon: Music },
 ];
 
 export default function SettingsPage() {
@@ -137,6 +140,23 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdateSong = async (data: any) => {
+    const result = await updateSongSettings(data);
+    if (result.success) {
+      await log({
+        action: ActivityActions.UPDATE,
+        entityType: ActivityEntityTypes.SETTINGS,
+        entityId: 'song',
+        entityTitle: 'Song Management',
+        details: 'Updated homepage song playback settings',
+      });
+      toast.success("Song settings updated successfully");
+      fetchSettings();
+    } else {
+      toast.error(result.error || "Failed to update song settings");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -175,14 +195,14 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-[#E5E3DD]/50">
+      <div className="flex gap-1 overflow-x-auto border-b border-[#E5E3DD]/50">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all duration-200 border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 ${
                 activeTab === tab.id
                   ? "border-[#D4AF37] text-[#D4AF37]"
                   : "border-transparent text-[#555555] hover:text-[#0B3C5D]"
@@ -215,6 +235,13 @@ export default function SettingsPage() {
           <TimingsSettings
             settings={settings.timings}
             onUpdate={handleUpdateTimings}
+          />
+        )}
+
+        {activeTab === "song" && (
+          <SongManagement
+            settings={settings?.song || { enabled: true, autoplay: true, loop: true }}
+            onUpdate={handleUpdateSong}
           />
         )}
       </div>

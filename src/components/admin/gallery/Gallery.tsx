@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Image as ImageIcon, Video } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { auth, db } from '@/lib/firebase/config';
@@ -12,11 +12,14 @@ import { useActivityLogger } from '@/hooks/useActivityLogger';
 import {
   adminGalleryService,
   GalleryImage,
+  GalleryVideo,
 } from '@/lib/services/adminGalleryService';
 import { ActivityActions, ActivityEntityTypes } from '@/lib/services/activityLogService';
 import GalleryStats from '@/components/admin/gallery/GalleryStats';
 import GalleryTable from '@/components/admin/gallery/GalleryTable';
+import GalleryVideoTable from '@/components/admin/gallery/GalleryVideoTable';
 import UploadModal from '@/components/admin/gallery/UploadModal';
+import UploadVideoModal from '@/components/admin/gallery/UploadVideoModal';
 import EditImageModal from '@/components/admin/gallery/EditImageModal';
 
 export default function GalleryPage() {
@@ -24,9 +27,13 @@ export default function GalleryPage() {
   const { log } = useActivityLogger();
 
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const [videos, setVideos] = useState<GalleryVideo[]>([]);
+  const [activeTab, setActiveTab] = useState<'photos' | 'videos'>('photos');
   const [loading, setLoading] = useState(true);
+  const [videosLoading, setVideosLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false);
   const [isBulkUpload, setIsBulkUpload] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
@@ -66,6 +73,7 @@ export default function GalleryPage() {
 
       setIsAdmin(true);
       await fetchImages();
+      await fetchVideos();
       await fetchStats();
     } catch (error) {
       console.error('Error checking user:', error);
@@ -103,6 +111,23 @@ export default function GalleryPage() {
       if (!isLoadMore) setLoading(false);
     }
   }, []);
+
+  const fetchVideos = async () => {
+    setVideosLoading(true);
+    try {
+      const result = await adminGalleryService.getAllGalleryVideos();
+      if (result.success) {
+        setVideos(result.videos);
+      } else {
+        toast.error(result.error || 'Failed to load videos');
+      }
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      toast.error('Failed to load videos');
+    } finally {
+      setVideosLoading(false);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -142,6 +167,44 @@ export default function GalleryPage() {
     } catch (error: any) {
       console.error('Error uploading:', error);
       toast.error(error.message || 'Failed to upload images');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleVideoUpload = async (data: {
+    title: string;
+    description: string;
+    videoFile: File;
+    thumbnailFile: Blob | null;
+    duration: string;
+  }) => {
+    setIsUploading(true);
+    try {
+      const user = auth.currentUser;
+      const result = await adminGalleryService.createGalleryVideo({
+        ...data,
+        uploadedBy: user?.uid || '',
+        uploadedByName: user?.displayName || 'Admin',
+      });
+
+      if (result.success) {
+        toast.success('Video uploaded successfully!');
+        await log({
+          action: ActivityActions.CREATE,
+          entityType: ActivityEntityTypes.VIDEO,
+          entityId: result.id || '',
+          entityTitle: data.title,
+          details: `Uploaded gallery video: ${data.title}`,
+        });
+        setIsVideoUploadOpen(false);
+        await fetchVideos();
+      } else {
+        toast.error(result.error || 'Failed to upload video');
+      }
+    } catch (error: any) {
+      console.error('Error uploading video:', error);
+      toast.error(error.message || 'Failed to upload video');
     } finally {
       setIsUploading(false);
     }
@@ -239,10 +302,48 @@ export default function GalleryPage() {
     }
   };
 
+  const handleDeleteVideo = async (video: GalleryVideo) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Delete "${video.title}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#0B3C5D',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      background: '#F9F8F4',
+      color: '#0B3C5D',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const deleteResult = await adminGalleryService.deleteGalleryVideo(video);
+        if (deleteResult.success) {
+          toast.success('Video deleted successfully 🗑️');
+          await log({
+            action: ActivityActions.DELETE,
+            entityType: ActivityEntityTypes.VIDEO,
+            entityId: video.id,
+            entityTitle: video.title,
+            details: `Deleted gallery video: ${video.title}`,
+          });
+          await fetchVideos();
+        } else {
+          toast.error(deleteResult.error || 'Failed to delete video');
+        }
+      } catch (error: any) {
+        console.error('Error deleting video:', error);
+        toast.error(error.message || 'Failed to delete video');
+      }
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     lastDocRef.current = null;
     await fetchImages();
+    await fetchVideos();
     await fetchStats();
     setRefreshing(false);
     toast.success('Refreshed!');
@@ -256,7 +357,8 @@ export default function GalleryPage() {
         document.documentElement.offsetHeight - 400 &&
         hasMore &&
         !isFetchingRef.current &&
-        !loading
+        !loading &&
+        activeTab === 'photos'
       ) {
         fetchImages(true);
       }
@@ -264,7 +366,7 @@ export default function GalleryPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loading, fetchImages]);
+  }, [hasMore, loading, fetchImages, activeTab]);
 
   if (loading && images.length === 0) {
     return (
@@ -295,7 +397,7 @@ export default function GalleryPage() {
               🖼️ Gallery
             </h1>
             <p className="text-sm text-[#555555] mt-1">
-              Manage temple gallery images
+              Manage temple gallery photos and videos
             </p>
           </div>
         </div>
@@ -309,8 +411,36 @@ export default function GalleryPage() {
         </button>
       </div>
 
-      {/* Stats */}
-      <GalleryStats
+      <div className="flex gap-1 overflow-x-auto border-b border-[#E5E3DD]/50">
+        {[
+          { id: 'photos' as const, name: 'Photos', icon: ImageIcon, count: stats.total },
+          { id: 'videos' as const, name: 'Videos', icon: Video, count: videos.length },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 cursor-pointer ${
+                activeTab === tab.id
+                  ? 'border-[#D4AF37] text-[#D4AF37]'
+                  : 'border-transparent text-[#555555] hover:text-[#0B3C5D]'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.name}
+              <span className="text-xs bg-[#F0EAE6] text-[#0B3C5D] px-1.5 py-0.5 rounded-full">
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeTab === 'photos' && (
+        <>
+          {/* Stats */}
+          <GalleryStats
         stats={stats}
         onUpload={() => {
           setIsBulkUpload(false);
@@ -340,6 +470,39 @@ export default function GalleryPage() {
           <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D4AF37] border-t-transparent" />
         </div>
       )}
+        </>
+      )}
+
+      {activeTab === 'videos' && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-[#E5E3DD]/50 p-4 shadow-sm min-w-[140px]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#D4AF37]/5 text-[#D4AF37]">
+                  <Video className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-[#0B3C5D]">{videos.length}</p>
+                  <p className="text-xs text-[#555555]">Total Videos</p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsVideoUploadOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-[#0B3C5D] font-semibold hover:bg-[#E8C84A] transition-all duration-200 shadow-lg shadow-[#D4AF37]/25 cursor-pointer text-sm"
+            >
+              <Video className="w-4 h-4" />
+              Upload Video
+            </button>
+          </div>
+
+          <GalleryVideoTable
+            videos={videos}
+            loading={videosLoading}
+            onDelete={handleDeleteVideo}
+          />
+        </>
+      )}
 
       {/* Upload Modal */}
       <UploadModal
@@ -350,6 +513,13 @@ export default function GalleryPage() {
         }}
         onUpload={handleUpload}
         isBulk={isBulkUpload}
+        isUploading={isUploading}
+      />
+
+      <UploadVideoModal
+        isOpen={isVideoUploadOpen}
+        onClose={() => setIsVideoUploadOpen(false)}
+        onUpload={handleVideoUpload}
         isUploading={isUploading}
       />
 

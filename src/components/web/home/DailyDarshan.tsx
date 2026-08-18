@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Clock, CalendarDays, Loader2 } from 'lucide-react';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { getRitualColor, getRitualIcon } from '@/lib/utils/displayHelpers';
+import { formatTimeRange, normalizeRituals } from '@/lib/utils/timingHelpers';
 
 interface DarshanSlot {
   id: string;
@@ -16,25 +17,17 @@ interface DarshanSlot {
   color: string;
 }
 
-/** Parse settings ritual string e.g. "Mangala Aarti - 5:00 AM" */
-function parseRitualString(ritual: string, index: number): DarshanSlot {
-  const separatorIndex = ritual.indexOf(' - ');
-  let name = ritual.trim();
-  let time = '';
-
-  if (separatorIndex !== -1) {
-    name = ritual.slice(0, separatorIndex).trim();
-    time = ritual.slice(separatorIndex + 3).trim();
-  }
-
+/** Map a settings ritual into a homepage darshan card */
+function toDarshanSlot(ritual: ReturnType<typeof normalizeRituals>[number], index: number): DarshanSlot {
   const icons = ['Sun', 'Star', 'Sun', 'Moon', 'Clock'] as const;
   const Icon = getRitualIcon(icons[index % icons.length]);
+  const time = `${ritual.time} ${ritual.period}`;
 
   return {
-    id: `settings-ritual-${index}`,
-    name: name || ritual,
+    id: ritual.id || `settings-ritual-${index}`,
+    name: ritual.name,
     time,
-    description: time ? `${name} at ${time}` : name,
+    description: `${ritual.name} at ${time}`,
     icon: <Icon className="h-5 w-5" />,
     color: getRitualColor(index),
   };
@@ -54,11 +47,9 @@ export default function DailyDarshan() {
 
         if (settingsResult.timings) {
           const t = settingsResult.timings;
-          setMorningTiming(`${t.morningStart || '5:00 AM'} - ${t.morningEnd || '12:00 PM'}`);
-          setEveningTiming(`${t.eveningStart || '4:00 PM'} - ${t.eveningEnd || '9:00 PM'}`);
-
-          const rituals: string[] = Array.isArray(t.rituals) ? t.rituals : [];
-          setDarshanSlots(rituals.map((ritual, index) => parseRitualString(ritual, index)));
+          setMorningTiming(formatTimeRange(t.morningStart, t.morningEnd, '5:00 AM', '12:00 PM'));
+          setEveningTiming(formatTimeRange(t.eveningStart, t.eveningEnd, '4:00 PM', '9:00 PM'));
+          setDarshanSlots(normalizeRituals(t.rituals).map((ritual, index) => toDarshanSlot(ritual, index)));
         }
       } catch (error) {
         console.error('Error loading darshan timings:', error);

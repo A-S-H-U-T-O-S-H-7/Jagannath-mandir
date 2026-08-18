@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
 import { getContactInfo } from '@/lib/services/settingsService';
+import { formatDisplayTime, formatRitualLabel, normalizeRituals } from '@/lib/utils/timingHelpers';
 
 export default function QuickInfoBar() {
   const [isVisible, setIsVisible] = useState(false);
@@ -26,13 +27,12 @@ export default function QuickInfoBar() {
         const result = await getContactInfo();
         if (result.timings) {
           const t = result.timings;
-          setMorningStart(t.morningStart || '5:00 AM');
-          setMorningEnd(t.morningEnd || '12:00 PM');
-          setEveningStart(t.eveningStart || '4:00 PM');
-          setEveningEnd(t.eveningEnd || '9:00 PM');
-          if (Array.isArray(t.rituals) && t.rituals.length > 0) {
-            setRituals(t.rituals);
-          }
+          setMorningStart(formatDisplayTime(t.morningStart, '5:00 AM'));
+          setMorningEnd(formatDisplayTime(t.morningEnd, '12:00 PM'));
+          setEveningStart(formatDisplayTime(t.eveningStart, '4:00 PM'));
+          setEveningEnd(formatDisplayTime(t.eveningEnd, '9:00 PM'));
+          const ritualList = normalizeRituals(t.rituals).map(formatRitualLabel);
+          if (ritualList.length > 0) setRituals(ritualList);
         }
       } catch (error) {
         console.error('Error loading timings:', error);

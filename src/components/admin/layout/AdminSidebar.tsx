@@ -21,6 +21,7 @@ import {
   Home,
   HelpCircle,
   ClipboardList,
+  BadgeCheck,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
@@ -37,6 +38,7 @@ const navigationItems = [
   { name: 'Testimonials', href: '/admin/testimonials', icon: Star, permission: 'testimonials' },
   { name: 'FAQs', href: '/admin/faq', icon: HelpCircle, permission: 'faq' },
   { name: 'Contact', href: '/admin/contact', icon: Mail, permission: 'contact' },
+  { name: 'Members', href: '/admin/members', icon: BadgeCheck, permission: 'users' },
   { name: 'Users', href: '/admin/users', icon: Users, permission: 'users' },
   { name: 'Admins', href: '/admin/admins', icon: UserCog, permission: 'admins' },
   { name: 'Activity Logs', href: '/admin/activities', icon: ClipboardList, permission: 'activity' },

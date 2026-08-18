@@ -12,7 +12,7 @@ export default function WebLayout({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <motion.main className="flex-1 pt-16">
+      <motion.main className="flex-1 pt-16 sm:pt-[72px]">
         {children}
       </motion.main>
       <Footer/>
