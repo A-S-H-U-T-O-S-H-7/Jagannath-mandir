@@ -18,7 +18,6 @@ import {
 import { submitMembershipApplication } from '@/lib/services/membershipService';
 import MembershipFormStep from './MembershipFormStep';
 import MembershipPreview from './MembershipPreview';
-import './membership-preview.css';
 
 function validateForm(data: MembershipFormData) {
   const errors: Record<string, string> = {};
@@ -32,12 +31,14 @@ function validateForm(data: MembershipFormData) {
   }
   if (!data.title) errors.title = 'Required';
   if (!data.gender) errors.gender = 'Required';
-  if (!data.firstName.trim()) errors.firstName = 'Required';
-  if (!data.lastName.trim()) errors.lastName = 'Required';
+  if (!data.fullName.trim()) errors.fullName = 'Required';
   if (!data.dateOfBirth) errors.dateOfBirth = 'Required';
-  if (!data.fatherFirstName.trim()) errors.fatherFirstName = 'Required';
-  if (!data.fatherLastName.trim()) errors.fatherLastName = 'Required';
+  if (!data.fatherName.trim()) errors.fatherName = 'Required';
+  if (!data.motherName.trim()) errors.motherName = 'Required';
   if (!data.address.trim()) errors.address = 'Required';
+  if (!data.country) errors.country = 'Required';
+  if (!data.state) errors.state = 'Required';
+  if (!data.city) errors.city = 'Required';
   if (!/^\d{6}$/.test(data.pinCode)) errors.pinCode = 'Enter a valid 6-digit pin code';
   if (!/^\d{12}$/.test(data.aadhaar)) errors.aadhaar = 'Enter a valid 12-digit Aadhaar number';
   if (!/^\d{10}$/.test(data.contactNo)) errors.contactNo = 'Enter a valid 10-digit mobile number';

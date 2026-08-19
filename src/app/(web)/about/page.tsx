@@ -16,7 +16,8 @@ import {
   CheckCircle,
   Flower2,
   Lamp,
-  HandHeart
+  HandHeart,
+  UserPlus
 } from 'lucide-react';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { formatTimeRange, normalizeRituals, RitualEntry } from '@/lib/utils/timingHelpers';
@@ -97,7 +98,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div >
+    <div>
       {/* Hero Section */}
       <section className="relative py-8 sm:py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8]" />
@@ -153,24 +154,15 @@ export default function AboutPage() {
                 variants={fadeInUp}
                 className="flex flex-wrap gap-3"
               >
-                <Link href="/darshan">
+                <Link href="/join-as-member">
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#D4AF37] text-[#0B3C5D] font-semibold rounded-full shadow-lg shadow-[#D4AF37]/30 hover:shadow-xl transition-all duration-300"
                   >
-                    Darshan Timings
+                    <UserPlus className="h-4 w-4" />
+                    Join as Member
                     <ArrowRight className="h-4 w-4" />
-                  </motion.button>
-                </Link>
-                <Link href="/contact">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/80 backdrop-blur-sm text-[#0B3C5D] font-semibold rounded-full border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 transition-all duration-300"
-                  >
-                    Visit Us
-                    <MapPin className="h-4 w-4" />
                   </motion.button>
                 </Link>
               </motion.div>
@@ -328,7 +320,7 @@ export default function AboutPage() {
           </div>
 
           {rituals.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {rituals.map((ritual) => (
                 <div
                   key={ritual.id}
@@ -401,56 +393,55 @@ export default function AboutPage() {
         </div>
       </section>
 
-      
+      {/* CTA Section - NEW COLOR */}
+      <section className="relative py-12 sm:py-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37] via-[#E8C84A] to-[#B8962E]" />
+        
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/20 rounded-full blur-[120px] -z-10" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#0B3C5D]/20 rounded-full blur-[120px] -z-10" />
 
-{/* CTA Section - NEW COLOR */}
-<section className="relative py-12 sm:py-16 overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37] via-[#E8C84A] to-[#B8962E]" />
-  
-  <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/20 rounded-full blur-[120px] -z-10" />
-  <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#0B3C5D]/20 rounded-full blur-[120px] -z-10" />
-
-  <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-      className="text-center"
-    >
-      <Heart className="h-12 w-12 text-white mx-auto mb-4" />
-      <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B3C5D] mb-3">
-        Become Part of Our <span className="text-white">Spiritual Family</span>
-      </h2>
-      <p className="text-[#0B3C5D]/80 text-sm sm:text-base max-w-2xl mx-auto mb-6">
-        Visit Jagnanth Mandir and experience the divine presence of Lord Jagannath. 
-        Join our community of devoted followers.
-      </p>
-      <div className="flex flex-wrap justify-center gap-3">
-        <Link href="/darshan">
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0B3C5D] text-white font-semibold rounded-full shadow-lg shadow-[#0B3C5D]/30 hover:shadow-xl transition-all duration-300"
+        <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
           >
-            Plan Your Visit
-            <ArrowRight className="h-4 w-4" />
-          </motion.button>
-        </Link>
-        <Link href="/contact">
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/20 backdrop-blur-sm text-[#0B3C5D] font-semibold rounded-full border border-white/30 hover:border-white/50 transition-all duration-300"
-          >
-            Contact Us
-            <MapPin className="h-4 w-4" />
-          </motion.button>
-        </Link>
-      </div>
-    </motion.div>
-  </div>
-</section>
+            <Heart className="h-12 w-12 text-white mx-auto mb-4" />
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B3C5D] mb-3">
+              Become Part of Our <span className="text-white">Spiritual Family</span>
+            </h2>
+            <p className="text-[#0B3C5D]/80 text-sm sm:text-base max-w-2xl mx-auto mb-6">
+              Join Jagnanth Mandir as a member and be part of our growing community. 
+              Experience the divine presence of Lord Jagannath through exclusive services and events.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link href="/join-as-member">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0B3C5D] text-white font-semibold rounded-full shadow-lg shadow-[#0B3C5D]/30 hover:shadow-xl transition-all duration-300"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Join as Member
+                  <ArrowRight className="h-4 w-4" />
+                </motion.button>
+              </Link>
+              <Link href="/contact">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/20 backdrop-blur-sm text-[#0B3C5D] font-semibold rounded-full border border-white/30 hover:border-white/50 transition-all duration-300"
+                >
+                  Contact Us
+                  <MapPin className="h-4 w-4" />
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 }

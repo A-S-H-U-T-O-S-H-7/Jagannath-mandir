@@ -11,11 +11,19 @@ import {
   type TitleOption,
   type GenderOption,
 } from '@/lib/constants/membership';
+import { useLocationData } from '@/hooks/useLocationData';
 
 const inputClass =
-  'w-full px-4 py-2.5 text-sm rounded-xl bg-white border border-[#E5E3DD]/50 text-[#0B3C5D] placeholder:text-[#555555]/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200 uppercase';
+  'w-full px-4 py-2.5 text-sm rounded-xl bg-white border border-[#E5E3DD]/50 text-[#0B3C5D] placeholder:text-[#555555]/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200';
 
 const labelClass = 'block text-xs font-semibold uppercase tracking-wider text-[#555555] mb-1.5';
+
+const selectClass = `${inputClass} appearance-none bg-[url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B5E5A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")] bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat pr-10`;
+
+// Shared card wrapper for every section — gives each block its own
+// visual boundary instead of everything running together.
+const cardClass =
+  'rounded-2xl border border-[#E5E3DD]/70 bg-white p-6 shadow-[0_1px_2px_rgba(11,60,93,0.04)]';
 
 interface MembershipFormStepProps {
   data: MembershipFormData;
@@ -47,6 +55,20 @@ function Field({
   );
 }
 
+// Consistent section header used at the top of every card:
+// gold bar + title, with an optional short description underneath.
+function SectionHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-5 flex items-start gap-3">
+      <div className="mt-1 h-5 w-1 shrink-0 rounded-full bg-[#D4AF37]" />
+      <div>
+        <h3 className="text-base font-semibold text-[#0B3C5D]">{title}</h3>
+        {description ? <p className="mt-0.5 text-xs text-[#555555]">{description}</p> : null}
+      </div>
+    </div>
+  );
+}
+
 export default function MembershipFormStep({
   data,
   onChange,
@@ -54,277 +76,302 @@ export default function MembershipFormStep({
   onAadhaarChange,
   errors,
 }: MembershipFormStepProps) {
+  const { countries, states, cities, loading } = useLocationData({
+    country: data.country,
+    state: data.state,
+  });
+
   const selected = getSelectedGrade(data.membershipType);
 
   const set = (key: keyof MembershipFormData, value: string) => {
     onChange({ [key]: value });
   };
 
-  return (
-    <div className="space-y-7">
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[180px_1fr]">
-        <div>
-          <label className={labelClass}>
-            Passport Photo <span className="text-[#D4AF37]">*</span>
-          </label>
-          <label className="flex h-[210px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#D4AF37]/40 bg-[#F9F8F4] text-center transition hover:border-[#D4AF37]">
-            {data.photoPreview ? (
-              <img src={data.photoPreview} alt="Preview" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center gap-2 px-3 text-[#555555]">
-                <Camera className="h-8 w-8 text-[#D4AF37]" />
-                <span className="text-xs font-medium">Upload photo</span>
-                <span className="text-[10px]">JPG or PNG, max 2MB</span>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) onPhotoChange(file);
-              }}
-            />
-          </label>
-          {errors.photoFile ? <p className="mt-1 text-xs text-red-500">{errors.photoFile}</p> : null}
-        </div>
+  const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const updates: Partial<MembershipFormData> = { [name]: value };
 
-        <div className="space-y-4">
-          <Field label="Grade of Membership" required error={errors.membershipType}>
-            <select
-              value={data.membershipType}
-              onChange={(e) => set('membershipType', e.target.value as MembershipGrade)}
-              className={`${inputClass} normal-case`}
-            >
-              <option value="">Select membership grade</option>
-              {MEMBERSHIP_GRADES.map((grade) => (
-                <option key={grade.sl} value={grade.grade}>
-                  {grade.grade} — Rs. {grade.amountLabel}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Amount (Rs.)">
+    if (name === 'country') {
+      updates.state = '';
+      updates.city = '';
+    } else if (name === 'state') {
+      updates.city = '';
+    }
+
+    onChange(updates);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Membership & Payment */}
+      <section className={cardClass}>
+        <SectionHeader title="Membership & Payment" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[180px_1fr]">
+          <div>
+            <label className={labelClass}>
+              Passport Photo <span className="text-[#D4AF37]">*</span>
+            </label>
+            <label className="flex h-[210px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#D4AF37]/40 bg-[#F9F8F4] text-center transition hover:border-[#D4AF37]">
+              {data.photoPreview ? (
+                <img src={data.photoPreview} alt="Preview" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center gap-2 px-3 text-[#555555]">
+                  <Camera className="h-8 w-8 text-[#D4AF37]" />
+                  <span className="text-xs font-medium">Upload photo</span>
+                  <span className="text-[10px]">JPG or PNG, max 2MB</span>
+                </div>
+              )}
               <input
-                value={selected?.amountLabel || ''}
-                readOnly
-                placeholder="Select grade first"
-                className={`${inputClass} bg-[#F9F8F4]`}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onPhotoChange(file);
+                }}
               />
-            </Field>
-            <Field label="Payment Method" required error={errors.paymentMethod}>
+            </label>
+            {errors.photoFile ? <p className="mt-1 text-xs text-red-500">{errors.photoFile}</p> : null}
+          </div>
+
+          <div className="space-y-4">
+            <Field label="Grade of Membership" required error={errors.membershipType}>
               <select
-                value={data.paymentMethod}
-                onChange={(e) => set('paymentMethod', e.target.value as PaymentMethod)}
-                className={`${inputClass} normal-case`}
+                value={data.membershipType}
+                onChange={(e) => set('membershipType', e.target.value as MembershipGrade)}
+                className={`${selectClass} normal-case`}
               >
-                <option value="">Select method</option>
-                <option value="Cash">Cash</option>
-                <option value="Cheque">Cheque</option>
-                <option value="DD">Demand Draft (DD)</option>
+                <option value="">Select membership grade</option>
+                {MEMBERSHIP_GRADES.map((grade) => (
+                  <option key={grade.sl} value={grade.grade}>
+                    {grade.grade} — Rs. {grade.amountLabel}
+                  </option>
+                ))}
               </select>
             </Field>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Amount (Rs.)">
+                <input
+                  value={selected?.amountLabel || ''}
+                  readOnly
+                  placeholder="Select grade first"
+                  className={`${inputClass} bg-[#F9F8F4] cursor-not-allowed`}
+                />
+              </Field>
+              <Field label="Payment Method" required error={errors.paymentMethod}>
+                <select
+                  value={data.paymentMethod}
+                  onChange={(e) => set('paymentMethod', e.target.value as PaymentMethod)}
+                  className={`${selectClass} normal-case`}
+                >
+                  <option value="">Select method</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="DD">Demand Draft (DD)</option>
+                </select>
+              </Field>
+            </div>
+
+            {data.paymentMethod && data.paymentMethod !== 'Cash' ? (
+              <div className="grid grid-cols-1 gap-4 rounded-xl bg-[#F9F8F4] p-4 sm:grid-cols-3">
+                <Field label={`${data.paymentMethod} No.`} required error={errors.chequeOrDdNo}>
+                  <input
+                    value={data.chequeOrDdNo}
+                    onChange={(e) => set('chequeOrDdNo', e.target.value.toUpperCase())}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Bank Name" required error={errors.bankName}>
+                  <input
+                    value={data.bankName}
+                    onChange={(e) => set('bankName', e.target.value.toUpperCase())}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Dated" required error={errors.paymentDate}>
+                  <input
+                    type="date"
+                    value={data.paymentDate}
+                    onChange={(e) => set('paymentDate', e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
+            ) : null}
           </div>
-          {data.paymentMethod && data.paymentMethod !== 'Cash' ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Field label={`${data.paymentMethod} No.`} required error={errors.chequeOrDdNo}>
-                <input
-                  value={data.chequeOrDdNo}
-                  onChange={(e) => set('chequeOrDdNo', e.target.value.toUpperCase())}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Bank Name" required error={errors.bankName}>
-                <input
-                  value={data.bankName}
-                  onChange={(e) => set('bankName', e.target.value.toUpperCase())}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Dated" required error={errors.paymentDate}>
-                <input
-                  type="date"
-                  value={data.paymentDate}
-                  onChange={(e) => set('paymentDate', e.target.value)}
-                  className={`${inputClass} normal-case`}
-                />
-              </Field>
-            </div>
-          ) : null}
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-1 rounded-full bg-[#D4AF37]" />
-          <h3 className="text-base font-semibold text-[#0B3C5D]">Personal Details</h3>
+      {/* Personal Details */}
+      <section className={cardClass}>
+        <SectionHeader title="Personal Details" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label="Title" required error={errors.title}>
+              <select
+                value={data.title}
+                onChange={(e) => set('title', e.target.value as TitleOption)}
+                className={selectClass}
+              >
+                <option value="">Select</option>
+                <option value="Mr">Mr.</option>
+                <option value="Ms">Ms.</option>
+                <option value="Mrs">Mrs.</option>
+                <option value="Dr">Dr.</option>
+                <option value="Prof">Prof.</option>
+              </select>
+            </Field>
+            <Field label="Gender" required error={errors.gender}>
+              <select
+                value={data.gender}
+                onChange={(e) => set('gender', e.target.value as GenderOption)}
+                className={selectClass}
+              >
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Others">Others</option>
+              </select>
+            </Field>
+            <Field label="Date of Birth" required error={errors.dateOfBirth}>
+              <input
+                type="date"
+                value={data.dateOfBirth}
+                onChange={(e) => set('dateOfBirth', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+
+          <Field label="Full Name (as per Aadhaar)" required error={errors.fullName}>
+            <input
+              value={data.fullName}
+              onChange={(e) => set('fullName', e.target.value.toUpperCase())}
+              className={inputClass}
+              placeholder="Enter your full name as per Aadhaar"
+            />
+          </Field>
         </div>
+      </section>
+
+      {/* Parents Details */}
+      <section className={cardClass}>
+        <SectionHeader title="Parents Details" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Title" required error={errors.title}>
-            <div className="flex gap-3">
-              {(['Mr', 'Ms'] as TitleOption[]).map((title) => (
-                <button
-                  key={title}
-                  type="button"
-                  onClick={() => set('title', title)}
-                  className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
-                    data.title === title
-                      ? 'border-[#D4AF37] bg-[#D4AF37]/15 text-[#0B3C5D]'
-                      : 'border-[#E5E3DD] bg-white text-[#555555]'
-                  }`}
-                >
-                  {title}.
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Gender" required error={errors.gender}>
-            <div className="flex gap-3">
-              {([
-                { id: 'M', label: 'Male' },
-                { id: 'F', label: 'Female' },
-              ] as { id: GenderOption; label: string }[]).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => set('gender', item.id)}
-                  className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
-                    data.gender === item.id
-                      ? 'border-[#D4AF37] bg-[#D4AF37]/15 text-[#0B3C5D]'
-                      : 'border-[#E5E3DD] bg-white text-[#555555]'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="First Name" required error={errors.firstName}>
+          <Field label="Father's Name" required error={errors.fatherName}>
             <input
-              value={data.firstName}
-              onChange={(e) => set('firstName', e.target.value.toUpperCase())}
+              value={data.fatherName}
+              onChange={(e) => set('fatherName', e.target.value.toUpperCase())}
               className={inputClass}
+              placeholder="Enter father's full name"
             />
           </Field>
-          <Field label="Middle Name">
+          <Field label="Mother's Name" required error={errors.motherName}>
             <input
-              value={data.middleName}
-              onChange={(e) => set('middleName', e.target.value.toUpperCase())}
+              value={data.motherName}
+              onChange={(e) => set('motherName', e.target.value.toUpperCase())}
               className={inputClass}
-            />
-          </Field>
-          <Field label="Last Name" required error={errors.lastName}>
-            <input
-              value={data.lastName}
-              onChange={(e) => set('lastName', e.target.value.toUpperCase())}
-              className={inputClass}
-            />
-          </Field>
-        </div>
-        <Field label="Date of Birth" required error={errors.dateOfBirth}>
-          <input
-            type="date"
-            value={data.dateOfBirth}
-            onChange={(e) => set('dateOfBirth', e.target.value)}
-            className={`${inputClass} max-w-xs normal-case`}
-          />
-        </Field>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-1 rounded-full bg-[#D4AF37]" />
-          <h3 className="text-base font-semibold text-[#0B3C5D]">Parent Details</h3>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Father First Name" required error={errors.fatherFirstName}>
-            <input
-              value={data.fatherFirstName}
-              onChange={(e) => set('fatherFirstName', e.target.value.toUpperCase())}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Father Middle Name">
-            <input
-              value={data.fatherMiddleName}
-              onChange={(e) => set('fatherMiddleName', e.target.value.toUpperCase())}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Father Last Name" required error={errors.fatherLastName}>
-            <input
-              value={data.fatherLastName}
-              onChange={(e) => set('fatherLastName', e.target.value.toUpperCase())}
-              className={inputClass}
-            />
-          </Field>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Mother First Name">
-            <input
-              value={data.motherFirstName}
-              onChange={(e) => set('motherFirstName', e.target.value.toUpperCase())}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Mother Middle Name">
-            <input
-              value={data.motherMiddleName}
-              onChange={(e) => set('motherMiddleName', e.target.value.toUpperCase())}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Mother Last Name">
-            <input
-              value={data.motherLastName}
-              onChange={(e) => set('motherLastName', e.target.value.toUpperCase())}
-              className={inputClass}
+              placeholder="Enter mother's full name"
             />
           </Field>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-1 rounded-full bg-[#D4AF37]" />
-          <h3 className="text-base font-semibold text-[#0B3C5D]">Address & Contact</h3>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px]">
+      {/* Address */}
+      <section className={cardClass}>
+        <SectionHeader title="Address" />
+        <div className="space-y-4">
           <Field label="Address" required error={errors.address}>
             <textarea
               rows={3}
               value={data.address}
               onChange={(e) => set('address', e.target.value.toUpperCase())}
               className={`${inputClass} resize-none`}
+              placeholder="Enter your complete address"
             />
           </Field>
-          <Field label="Pin Code" required error={errors.pinCode}>
-            <input
-              value={data.pinCode}
-              maxLength={6}
-              onChange={(e) => set('pinCode', e.target.value.replace(/\D/g, ''))}
-              className={`${inputClass} normal-case`}
-            />
-          </Field>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Field label="Country" required error={errors.country}>
+              <select
+                name="country"
+                value={data.country}
+                onChange={handleLocationChange}
+                className={selectClass}
+                disabled={loading.countries}
+              >
+                <option value="">Select</option>
+                {countries.map((country) => (
+                  <option key={country.iso2} value={country.name}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="State" required error={errors.state}>
+              <select
+                name="state"
+                value={data.state}
+                onChange={handleLocationChange}
+                className={selectClass}
+                disabled={!states.length || loading.states}
+              >
+                <option value="">Select</option>
+                {states.map((state) => (
+                  <option key={state.iso2} value={state.name}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="City" required error={errors.city}>
+              <select
+                name="city"
+                value={data.city}
+                onChange={handleLocationChange}
+                className={selectClass}
+                disabled={!cities.length || loading.cities}
+              >
+                <option value="">Select</option>
+                {cities.map((city) => (
+                  <option key={city.id} value={city.name}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Pin Code" required error={errors.pinCode}>
+              <input
+                value={data.pinCode}
+                maxLength={6}
+                onChange={(e) => set('pinCode', e.target.value.replace(/\D/g, ''))}
+                className={inputClass}
+                placeholder="6-digit"
+              />
+            </Field>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      </section>
+
+      {/* Identity & Contact */}
+      <section className={cardClass}>
+        <SectionHeader title="Identity & Contact" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Aadhaar No." required error={errors.aadhaar}>
             <input
               value={data.aadhaar}
               maxLength={12}
               onChange={(e) => set('aadhaar', e.target.value.replace(/\D/g, ''))}
-              className={`${inputClass} normal-case`}
+              className={inputClass}
+              placeholder="12-digit"
             />
           </Field>
           <Field label="Blood Group">
             <select
               value={data.bloodGroup}
               onChange={(e) => set('bloodGroup', e.target.value)}
-              className={`${inputClass} normal-case`}
+              className={selectClass}
             >
               <option value="">Select</option>
               {BLOOD_GROUPS.map((group) => (
@@ -339,7 +386,8 @@ export default function MembershipFormStep({
               value={data.contactNo}
               maxLength={10}
               onChange={(e) => set('contactNo', e.target.value.replace(/\D/g, ''))}
-              className={`${inputClass} normal-case`}
+              className={inputClass}
+              placeholder="10-digit"
             />
           </Field>
           <Field label="Email Id" required error={errors.email}>
@@ -347,56 +395,73 @@ export default function MembershipFormStep({
               type="email"
               value={data.email}
               onChange={(e) => set('email', e.target.value)}
-              className={`${inputClass} normal-case`}
-            />
-          </Field>
-          <Field label="Qualification">
-            <input
-              value={data.qualification}
-              onChange={(e) => set('qualification', e.target.value.toUpperCase())}
               className={inputClass}
-            />
-          </Field>
-          <Field label="Occupation">
-            <input
-              value={data.occupation}
-              onChange={(e) => set('occupation', e.target.value.toUpperCase())}
-              className={inputClass}
+              placeholder="your@email.com"
             />
           </Field>
         </div>
-        <Field label="Introducer Name & Details">
-          <input
-            value={data.introducer}
-            onChange={(e) => set('introducer', e.target.value.toUpperCase())}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Aadhaar Copy (optional)">
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37]">
-            <Upload className="h-4 w-4 text-[#D4AF37]" />
-            <span>{data.aadhaarFile ? data.aadhaarFile.name : 'Upload Aadhaar PDF or image'}</span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,application/pdf"
-              className="hidden"
-              onChange={(e) => onAadhaarChange(e.target.files?.[0] || null)}
-            />
-          </label>
-        </Field>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-1 rounded-full bg-[#D4AF37]" />
-          <h3 className="text-base font-semibold text-[#0B3C5D]">Declaration</h3>
+      {/* Additional Details */}
+      <section className={cardClass}>
+        <SectionHeader title="Additional Details" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Qualification">
+              <input
+                value={data.qualification}
+                onChange={(e) => set('qualification', e.target.value.toUpperCase())}
+                className={inputClass}
+                placeholder="e.g., B.Tech, M.A."
+              />
+            </Field>
+            <Field label="Occupation">
+              <input
+                value={data.occupation}
+                onChange={(e) => set('occupation', e.target.value.toUpperCase())}
+                className={inputClass}
+                placeholder="e.g., Engineer, Teacher"
+              />
+            </Field>
+          </div>
+
+          <Field label="Introducer Name & Details">
+            <input
+              value={data.introducer}
+              onChange={(e) => set('introducer', e.target.value.toUpperCase())}
+              className={inputClass}
+              placeholder="Name and membership details of introducer"
+            />
+          </Field>
+
+          <Field label="Aadhaar Copy (optional)">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37]">
+              <Upload className="h-4 w-4 text-[#D4AF37]" />
+              <span>{data.aadhaarFile ? data.aadhaarFile.name : 'Upload Aadhaar PDF or image'}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,application/pdf"
+                className="hidden"
+                onChange={(e) => onAadhaarChange(e.target.files?.[0] || null)}
+              />
+            </label>
+          </Field>
         </div>
+      </section>
+
+      {/* Declaration */}
+      <section className={cardClass}>
+        <SectionHeader
+          title="Declaration"
+          description="I hereby certify that the above information is correct and complete. If any information given is incorrect, I would be responsible for it."
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Place" required error={errors.place}>
             <input
               value={data.place}
               onChange={(e) => set('place', e.target.value.toUpperCase())}
               className={inputClass}
+              placeholder="City/Town"
             />
           </Field>
           <Field label="Date" required error={errors.declarationDate}>
@@ -404,14 +469,10 @@ export default function MembershipFormStep({
               type="date"
               value={data.declarationDate}
               onChange={(e) => set('declarationDate', e.target.value)}
-              className={`${inputClass} normal-case`}
+              className={inputClass}
             />
           </Field>
         </div>
-        <p className="text-sm leading-relaxed text-[#555555]">
-          I hereby certify that the above information is correct and complete. If any information
-          given is incorrect, I would be responsible for it.
-        </p>
       </section>
     </div>
   );

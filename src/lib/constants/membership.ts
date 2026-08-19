@@ -1,3 +1,4 @@
+// lib/constants/membership.ts
 export const MEMBERSHIP_GRADES = [
   { sl: '1', grade: 'Patron', amountLabel: '5,00,000/-', amount: 500000 },
   { sl: '4', grade: 'Life Member', amountLabel: '1,01,000/-', amount: 101000 },
@@ -16,23 +17,20 @@ export const MEMBERSHIP_INFO_POINTS = [
 
 export type MembershipGrade = (typeof MEMBERSHIP_GRADES)[number]['grade'];
 export type PaymentMethod = 'Cash' | 'Cheque' | 'DD';
-export type TitleOption = 'Mr' | 'Ms';
-export type GenderOption = 'M' | 'F';
+export type TitleOption = 'Mr' | 'Ms' | 'Mrs' | 'Dr' | 'Prof';
+export type GenderOption = 'Male' | 'Female' | 'Others';
 
 export interface MembershipFormData {
   title: TitleOption | '';
-  firstName: string;
-  middleName: string;
-  lastName: string;
+  fullName: string;
   gender: GenderOption | '';
   dateOfBirth: string;
-  fatherFirstName: string;
-  fatherMiddleName: string;
-  fatherLastName: string;
-  motherFirstName: string;
-  motherMiddleName: string;
-  motherLastName: string;
+  fatherName: string;
+  motherName: string;
   address: string;
+  country: string;
+  state: string;
+  city: string;
   pinCode: string;
   aadhaar: string;
   bloodGroup: string;
@@ -55,18 +53,15 @@ export interface MembershipFormData {
 
 export const emptyMembershipForm = (): MembershipFormData => ({
   title: '',
-  firstName: '',
-  middleName: '',
-  lastName: '',
+  fullName: '',
   gender: '',
   dateOfBirth: '',
-  fatherFirstName: '',
-  fatherMiddleName: '',
-  fatherLastName: '',
-  motherFirstName: '',
-  motherMiddleName: '',
-  motherLastName: '',
+  fatherName: '',
+  motherName: '',
   address: '',
+  country: '',
+  state: '',
+  city: '',
   pinCode: '',
   aadhaar: '',
   bloodGroup: '',
@@ -95,6 +90,3 @@ export const formatDateParts = (isoDate: string) => {
   const [yyyy, mm, dd] = isoDate.split('-');
   return { dd: dd || '', mm: mm || '', yyyy: yyyy || '' };
 };
-
-export const formatAmount = (amount: number) =>
-  amount.toLocaleString('en-IN');
