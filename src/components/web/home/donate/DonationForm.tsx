@@ -2,7 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { IndianRupee, User, Mail, Phone, MapPin, Heart, ArrowRight } from 'lucide-react';
+import { IndianRupee, User, Mail, Phone, MapPin, Heart, ArrowRight, Loader2 } from 'lucide-react';
+import { useLocationData } from '@/hooks/useLocationData';
 
 interface DonationFormProps {
   donorType: string;
@@ -14,6 +15,7 @@ interface FormData {
   email: string;
   mobile: string;
   address: string;
+  country: string;
   state: string;
   city: string;
   pincode: string;
@@ -25,6 +27,7 @@ interface FormErrors {
   email?: string;
   mobile?: string;
   address?: string;
+  country?: string;
   state?: string;
   city?: string;
   pincode?: string;
@@ -38,15 +41,26 @@ export default function DonationForm({ donorType }: DonationFormProps) {
     email: '',
     mobile: '',
     address: '',
+    country: 'India',
     state: '',
     city: '',
     pincode: ''
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
+  // Use the location data hook
+  const { countries, states, cities, loading } = useLocationData({
+    country: formData.country,
+    state: formData.state
+  });
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    // Clear error for this field when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors({ ...errors, [name]: undefined });
+    }
   };
 
   const validateForm = (): FormErrors => {
@@ -66,6 +80,9 @@ export default function DonationForm({ donorType }: DonationFormProps) {
     }
     if (!formData.address || formData.address.trim().length < 10) {
       newErrors.address = 'Please enter a complete address';
+    }
+    if (!formData.country) {
+      newErrors.country = 'Please select your country';
     }
     if (!formData.state) {
       newErrors.state = 'Please select your state';
@@ -212,34 +229,80 @@ export default function DonationForm({ donorType }: DonationFormProps) {
           {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
         </div>
 
-        {/* State, City, Pincode */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Country, State, City, Pincode */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-[#555555] mb-1">
+              Country <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="country"
+              value={formData.country}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2.5 border border-[#E5E3DD]/50 rounded-lg focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200 outline-none text-sm bg-white"
+            >
+              <option value="">Select Country</option>
+              {loading.countries ? (
+                <option disabled>Loading countries...</option>
+              ) : (
+                countries.map((country: any) => (
+                  <option key={country.iso2} value={country.name}>
+                    {country.name}
+                  </option>
+                ))
+              )}
+            </select>
+            {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
+          </div>
           <div>
             <label className="block text-xs font-semibold text-[#555555] mb-1">
               State <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               name="state"
               value={formData.state}
               onChange={handleInputChange}
-              placeholder="State"
-              className="w-full px-3 py-2.5 border border-[#E5E3DD]/50 rounded-lg focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200 outline-none text-sm"
-            />
+              className="w-full px-3 py-2.5 border border-[#E5E3DD]/50 rounded-lg focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200 outline-none text-sm bg-white"
+              disabled={!formData.country}
+            >
+              <option value="">Select State</option>
+              {loading.states ? (
+                <option disabled>Loading states...</option>
+              ) : (
+                states.map((state: any) => (
+                  <option key={state.iso2} value={state.name}>
+                    {state.name}
+                  </option>
+                ))
+              )}
+            </select>
             {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-[#555555] mb-1">
               City <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               name="city"
               value={formData.city}
               onChange={handleInputChange}
-              placeholder="City"
-              className="w-full px-3 py-2.5 border border-[#E5E3DD]/50 rounded-lg focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200 outline-none text-sm"
-            />
+              className="w-full px-3 py-2.5 border border-[#E5E3DD]/50 rounded-lg focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200 outline-none text-sm bg-white"
+              disabled={!formData.state}
+            >
+              <option value="">Select City</option>
+              {loading.cities ? (
+                <option disabled>Loading cities...</option>
+              ) : (
+                cities.map((city: any) => (
+                  <option key={city.id || city.name} value={city.name}>
+                    {city.name}
+                  </option>
+                ))
+              )}
+            </select>
             {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
           </div>
           <div>
@@ -272,10 +335,7 @@ export default function DonationForm({ donorType }: DonationFormProps) {
           <span className="flex items-center justify-center gap-2">
             {processing ? (
               <>
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Processing...
               </>
             ) : (

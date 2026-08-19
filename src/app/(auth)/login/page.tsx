@@ -20,6 +20,15 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+function getPostLoginRedirect() {
+  if (typeof window === 'undefined') return '/';
+  const redirect = new URLSearchParams(window.location.search).get('redirect');
+  if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+    return redirect;
+  }
+  return '/';
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, googleLogin } = useAuthStore();
@@ -45,7 +54,7 @@ export default function LoginPage() {
       const result = await signIn(data.email, data.password);
       if (result.success) {
         toast.success("Welcome back! 🙏");
-        router.push("/");
+        router.push(getPostLoginRedirect());
       } else {
         if (result.error?.toLowerCase().includes("password")) {
           setError("password", { message: result.error });
@@ -68,7 +77,7 @@ export default function LoginPage() {
       const result = await googleLogin();
       if (result.success) {
         toast.success("Signed in with Google successfully! 🙏");
-        router.push("/");
+        router.push(getPostLoginRedirect());
       } else {
         toast.error(result.error || "Google login failed. Please try again.");
       }

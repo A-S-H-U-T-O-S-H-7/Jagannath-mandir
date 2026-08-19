@@ -9,6 +9,7 @@ interface EventTableProps {
   events: Event[];
   loading?: boolean;
   onViewAttendees: (event: Event) => void;
+  onManageMedia: (event: Event) => void;
   onEdit: (event: Event) => void;
   onDelete: (event: Event) => void;
 }
@@ -17,6 +18,7 @@ export default function EventTable({
   events,
   loading = false,
   onViewAttendees,
+  onManageMedia,
   onEdit,
   onDelete,
 }: EventTableProps) {
@@ -49,7 +51,7 @@ export default function EventTable({
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Event</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Date</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Community</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Attendees</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Interested</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Actions</th>
             </tr>
@@ -61,6 +63,7 @@ export default function EventTable({
                 event={event}
                 index={index}
                 onViewAttendees={onViewAttendees}
+                onManageMedia={onManageMedia}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />

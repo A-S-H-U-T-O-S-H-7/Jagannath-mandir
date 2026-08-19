@@ -120,7 +120,7 @@ export default function SplashScreen() {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="font-hindi mt-3 text-lg font-semibold tracking-[0.28em] text-[#B8962E]"
           >
-            स्वर्णक्षेत्र
+            श्री स्वर्णक्षेत्र
           </motion.p>
 
           

@@ -2,10 +2,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Upload, Loader2, Calendar, Clock, MapPin } from 'lucide-react';
+import { X, Upload, Loader2, Calendar, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { Event } from '@/lib/services/adminEventService';
+import { slugify } from '@/lib/utils/displayHelpers';
+import TimeAmPmInput from '@/components/ui/TimeAmPmInput';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ export default function CreateEventModal({
 }: CreateEventModalProps) {
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
     description: '',
     date: '',
     time: '',
@@ -49,6 +52,7 @@ export default function CreateEventModal({
     if (editingEvent) {
       setFormData({
         title: editingEvent.title || '',
+        slug: editingEvent.slug || slugify(editingEvent.title || ''),
         description: editingEvent.description || '',
         date: editingEvent.date || '',
         time: editingEvent.time || '',
@@ -64,6 +68,7 @@ export default function CreateEventModal({
     } else {
       setFormData({
         title: '',
+        slug: '',
         description: '',
         date: '',
         time: '',
@@ -197,8 +202,32 @@ export default function CreateEventModal({
                   errors.title ? 'border-red-500' : 'border-[#E5E3DD]/50'
                 } bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none`}
                 placeholder="e.g. Rath Yatra Celebration"
+                onBlur={() => {
+                  if (!formData.slug.trim() && formData.title.trim()) {
+                    setFormData((prev) => ({ ...prev, slug: slugify(prev.title) }));
+                  }
+                }}
               />
               {errors.title && <p className="text-red-500 text-xs mt-1.5">{errors.title}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
+                Page URL
+              </label>
+              <div className="flex items-center rounded-xl border border-[#E5E3DD]/50 bg-white/50 overflow-hidden">
+                <span className="px-3 py-2.5 text-xs text-[#555555] bg-[#F9F8F4] border-r border-[#E5E3DD]/50 whitespace-nowrap">
+                  /events/
+                </span>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: slugify(e.target.value) })}
+                  className="w-full px-3 py-2.5 text-sm bg-transparent text-[#0B3C5D] outline-none"
+                  placeholder="janmastami"
+                />
+              </div>
+              <p className="text-xs text-[#555555] mt-1">Filled from the title if left empty. Example: janmastami</p>
             </div>
 
             {/* Description */}
@@ -242,17 +271,11 @@ export default function CreateEventModal({
                 <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
                   Time <span className="text-red-400">*</span>
                 </label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555555]/40" />
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 border ${
-                      errors.time ? 'border-red-500' : 'border-[#E5E3DD]/50'
-                    } bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none`}
-                  />
-                </div>
+                <TimeAmPmInput
+                  value={formData.time}
+                  onChange={(time) => setFormData({ ...formData, time })}
+                  error={Boolean(errors.time)}
+                />
                 {errors.time && <p className="text-red-500 text-xs mt-1.5">{errors.time}</p>}
               </div>
             </div>

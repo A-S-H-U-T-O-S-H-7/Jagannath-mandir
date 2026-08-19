@@ -77,7 +77,6 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
   const [isSaving, setIsSaving] = useState(false);
   const [songs, setSongs] = useState<HeroSong[]>([]);
   const [loadingSongs, setLoadingSongs] = useState(true);
-  const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -126,9 +125,6 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
     }
 
     setFile(selectedFile);
-    if (!title.trim()) {
-      setTitle(selectedFile.name.replace(/\.[^/.]+$/, ''));
-    }
   };
 
   const handleUpload = async () => {
@@ -141,14 +137,13 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
     try {
       const duration = await getAudioDuration(file);
       const result = await songService.createSong({
-        title: title.trim() || file.name,
+        title: file.name.replace(/\.[^/.]+$/, ''),
         file,
         duration,
       });
 
       if (result.success) {
-        toast.success('Song uploaded successfully');
-        setTitle('');
+        toast.success('Song uploaded. Click Play on Homepage below if this is the one visitors should hear.');
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
         await fetchSongs();
@@ -221,8 +216,146 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
 
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/8 p-4 sm:p-5">
+        <p className="text-sm font-semibold text-[#0B3C5D] mb-2">How to set homepage music</p>
+        <ol className="text-sm text-[#555555] space-y-1 list-decimal list-inside">
+          <li>Upload a bhajan file.</li>
+          <li>Click <span className="font-semibold text-[#0B3C5D]">Play on Homepage</span> on the song you want visitors to hear.</li>
+          <li>Choose playback options at the bottom, then click <span className="font-semibold text-[#0B3C5D]">Save Playback Settings</span>.</li>
+        </ol>
+      </div>
+
+      <div className="rounded-2xl border border-[#E5E3DD]/50 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0B3C5D] text-xs font-bold text-white">
+            1
+          </div>
+          <div className="p-2 rounded-xl bg-[#D4AF37]/10">
+            <Music className="w-5 h-5 text-[#D4AF37]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-serif font-bold text-[#0B3C5D]">
+              Upload a <span className="text-[#D4AF37]">Song</span>
+            </h2>
+            <p className="text-sm text-[#555555]">Select an audio file, then click Upload Song</p>
+          </div>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full rounded-xl border-2 border-dashed border-[#E5E3DD] hover:border-[#D4AF37] bg-white/50 p-6 cursor-pointer text-center transition-colors"
+          >
+            <Upload className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
+            <p className="text-sm font-medium text-[#0B3C5D]">
+              {file ? file.name : 'Click to select an audio file'}
+            </p>
+            <p className="text-xs text-[#555555]/70 mt-1">
+              {file ? formatFileSize(file.size) : 'MP3, WAV, OGG, M4A, MPEG (Max 20MB)'}
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,audio/mpeg3,audio/x-mpeg,audio/x-mpeg-3,audio/x-mpg,audio/x-mpegaudio,.mp3,.wav,.ogg,.m4a,.mpg,.mpeg,.mpga,.mp2,.mpa,.m2a"
+            onChange={(e) => handleFileChange(e.target.files)}
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={!file || isUploading}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B3C5D] text-white font-semibold transition-all duration-200 hover:bg-[#062A42] disabled:opacity-50 cursor-pointer"
+          >
+            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {isUploading ? 'Uploading...' : file ? 'Upload Song' : 'Select a file first'}
+          </button>
+        </div>
+
+        <div className="border-t border-[#E5E3DD]/50 pt-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0B3C5D] text-xs font-bold text-white">
+              2
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-[#0B3C5D]">Choose the homepage song</h3>
+              <p className="text-xs text-[#555555]">The song marked Active is what plays on the website</p>
+            </div>
+          </div>
+          {loadingSongs ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
+            </div>
+          ) : songs.length === 0 ? (
+            <p className="text-sm text-[#555555] py-6 text-center">
+              No songs uploaded yet. Upload a bhajan in step 1.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {songs.map((song) => (
+                <div
+                  key={song.id}
+                  className={`flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border ${
+                    song.isActive
+                      ? 'border-[#D4AF37] bg-[#D4AF37]/5'
+                      : 'border-[#E5E3DD]/50 bg-white/50'
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-[#0B3C5D] truncate">{song.fileName || song.title}</p>
+                      {song.isActive && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#B8962E] bg-[#D4AF37]/15 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Playing on homepage
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#555555] mt-1">
+                      {song.duration ? `${song.duration} · ` : ''}
+                      {formatFileSize(song.fileSize)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handlePreview(song)}
+                      className="p-2 rounded-lg border border-[#E5E3DD] text-[#0B3C5D] hover:bg-[#F9F8F4] cursor-pointer"
+                      title="Preview"
+                    >
+                      {previewId === song.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </button>
+                    {!song.isActive && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetActive(song)}
+                        className="px-3 py-2 rounded-lg text-xs font-semibold bg-[#D4AF37] text-[#0B3C5D] hover:bg-[#E8C84A] cursor-pointer"
+                      >
+                        Play on Homepage
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(song)}
+                      className="p-2 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 cursor-pointer"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <form onSubmit={handleSaveSettings} className="rounded-2xl border border-[#E5E3DD]/50 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0B3C5D] text-xs font-bold text-white">
+            3
+          </div>
           <div className="p-2 rounded-xl bg-[#D4AF37]/10">
             <Volume2 className="w-5 h-5 text-[#D4AF37]" />
           </div>
@@ -230,7 +363,7 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
             <h2 className="text-xl font-serif font-bold text-[#0B3C5D]">
               Playback <span className="text-[#D4AF37]">Settings</span>
             </h2>
-            <p className="text-sm text-[#555555]">Control how the homepage bhajan plays</p>
+            <p className="text-sm text-[#555555]">Turn these on or off, then save at the bottom</p>
           </div>
         </div>
 
@@ -271,6 +404,7 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
         </div>
 
         <div className="mt-6 pt-4 border-t border-[#E5E3DD]/50">
+          <p className="text-xs text-[#555555] mb-3">Changes above are not applied until you save.</p>
           <button
             type="submit"
             disabled={isSaving}
@@ -281,132 +415,6 @@ export default function SongManagement({ settings, onUpdate }: SongManagementPro
           </button>
         </div>
       </form>
-
-      <div className="rounded-2xl border border-[#E5E3DD]/50 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-xl bg-[#D4AF37]/10">
-            <Music className="w-5 h-5 text-[#D4AF37]" />
-          </div>
-          <div>
-            <h2 className="text-xl font-serif font-bold text-[#0B3C5D]">
-              Song <span className="text-[#D4AF37]">Management</span>
-            </h2>
-            <p className="text-sm text-[#555555]">Upload bhajans and choose which one plays on the homepage</p>
-          </div>
-        </div>
-
-        <div className="space-y-4 mb-8">
-          <div>
-            <label className="block text-sm font-medium text-[#0B3C5D] mb-2">Song Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl text-sm border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none"
-              placeholder="Mangala Aarti / Jagannath Bhajan"
-            />
-          </div>
-
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full rounded-xl border-2 border-dashed border-[#E5E3DD] hover:border-[#D4AF37] bg-white/50 p-6 cursor-pointer text-center transition-colors"
-          >
-            <Upload className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
-            <p className="text-sm font-medium text-[#0B3C5D]">
-              {file ? file.name : 'Click to select an audio file'}
-            </p>
-            <p className="text-xs text-[#555555]/70 mt-1">
-              {file ? formatFileSize(file.size) : 'MP3, WAV, OGG, M4A, MPEG (Max 20MB)'}
-            </p>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,audio/mpeg3,audio/x-mpeg,audio/x-mpeg-3,audio/x-mpg,audio/x-mpegaudio,.mp3,.wav,.ogg,.m4a,.mpg,.mpeg,.mpga,.mp2,.mpa,.m2a"
-            onChange={(e) => handleFileChange(e.target.files)}
-            className="hidden"
-          />
-
-          <button
-            type="button"
-            onClick={handleUpload}
-            disabled={!file || isUploading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B3C5D] text-white font-semibold transition-all duration-200 hover:bg-[#062A42] disabled:opacity-50 cursor-pointer"
-          >
-            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {isUploading ? 'Uploading...' : 'Upload Song'}
-          </button>
-        </div>
-
-        <div className="border-t border-[#E5E3DD]/50 pt-5">
-          <h3 className="text-sm font-semibold text-[#0B3C5D] mb-4">Uploaded Songs</h3>
-          {loadingSongs ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
-            </div>
-          ) : songs.length === 0 ? (
-            <p className="text-sm text-[#555555] py-6 text-center">
-              No songs uploaded yet. Upload a bhajan to play it on the homepage.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {songs.map((song) => (
-                <div
-                  key={song.id}
-                  className={`flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border ${
-                    song.isActive
-                      ? 'border-[#D4AF37] bg-[#D4AF37]/5'
-                      : 'border-[#E5E3DD]/50 bg-white/50'
-                  }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-[#0B3C5D] truncate">{song.title}</p>
-                      {song.isActive && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#B8962E] bg-[#D4AF37]/15 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Active
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-[#555555] mt-1">
-                      {song.duration ? `${song.duration} · ` : ''}
-                      {formatFileSize(song.fileSize)} · {song.fileName}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handlePreview(song)}
-                      className="p-2 rounded-lg border border-[#E5E3DD] text-[#0B3C5D] hover:bg-[#F9F8F4] cursor-pointer"
-                      title="Preview"
-                    >
-                      {previewId === song.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                    </button>
-                    {!song.isActive && (
-                      <button
-                        type="button"
-                        onClick={() => handleSetActive(song)}
-                        className="px-3 py-2 rounded-lg text-xs font-semibold bg-[#D4AF37] text-[#0B3C5D] hover:bg-[#E8C84A] cursor-pointer"
-                      >
-                        Set Active
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(song)}
-                      className="p-2 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 cursor-pointer"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import HeroContent from "./HeroContent";
 import HeroMusicPlayer from "./HeroMusicPlayer";
+import HeroTodaysDarshan from "./HeroTodaysDarshan";
 
 export default function Hero() {
   const [isMobile, setIsMobile] = useState(false);
@@ -44,10 +45,11 @@ export default function Hero() {
         <div className="absolute right-[-100px] bottom-[-100px] z-10 h-[400px] w-[400px] rounded-full bg-[#D4AF37]/10 blur-[120px] opacity-40" />
 
         {/* Content */}
-        <div className="relative z-20 w-full">
+        <div className="relative z-20 flex w-full flex-col md:block">
           <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
             <HeroContent />
           </div>
+          <HeroTodaysDarshan />
         </div>
       </div>
 

@@ -1,13 +1,14 @@
 // components/admin/events/EventTableRow.tsx
 'use client';
 
-import { Users, Edit, Trash2, Eye, Calendar, MapPin } from 'lucide-react';
+import { Users, Edit, Trash2, Eye, Calendar, MapPin, Images } from 'lucide-react';
 import { Event } from '@/lib/services/adminEventService';
 
 interface EventTableRowProps {
   event: Event;
   index: number;
   onViewAttendees: (event: Event) => void;
+  onManageMedia: (event: Event) => void;
   onEdit: (event: Event) => void;
   onDelete: (event: Event) => void;
 }
@@ -16,6 +17,7 @@ export default function EventTableRow({
   event,
   index,
   onViewAttendees,
+  onManageMedia,
   onEdit,
   onDelete,
 }: EventTableRowProps) {
@@ -86,9 +88,16 @@ export default function EventTableRow({
           <button
             onClick={() => onViewAttendees(event)}
             className="p-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer bg-blue-100 text-blue-600 hover:bg-blue-200"
-            title="View Attendees"
+            title="View interested"
           >
             <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onManageMedia(event)}
+            className="p-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+            title="Upload images & videos"
+          >
+            <Images className="w-4 h-4" />
           </button>
           <button
             onClick={() => onEdit(event)}

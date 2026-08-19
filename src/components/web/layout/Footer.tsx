@@ -20,7 +20,6 @@ import { formatTimeRange } from '@/lib/utils/timingHelpers';
 const footerLinks = {
   Temple: [
     { label: "About Us", href: "/about" },
-    { label: "Temple History", href: "/history" },
     { label: "Darshan", href: "/darshan" },
     { label: "Events", href: "/events" },
   ],
@@ -98,7 +97,7 @@ export default function Footer() {
               </div>
               {/* Swarna Khetra text - matching navbar */}
               <span className="font-swarna-khetra swarna-khetra-title text-[#D4AF37] text-[11px] sm:text-sm md:text-base lg:text-[20px] font-semibold whitespace-nowrap block mt-2">
-                स्वर्णक्षेत्र
+                श्री स्वर्णक्षेत्र
               </span>
             </Link>
             <p className="text-sm text-white/50 mt-4 max-w-xs leading-relaxed">

@@ -1,20 +1,56 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, BadgeCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  RefreshCw,
+  BadgeCheck,
+  Check,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Mail,
+  Phone,
+  User,
+  FileText,
+  ExternalLink,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import { auth, db } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   getAllMembershipApplications,
+  updateMembershipStatus,
   type MembershipApplication,
+  type MembershipStatus,
 } from '@/lib/services/membershipService';
+
+const statusStyles: Record<string, string> = {
+  pending: 'bg-amber-100 text-amber-800 border-amber-200',
+  approved: 'bg-green-100 text-green-800 border-green-200',
+  rejected: 'bg-red-100 text-red-800 border-red-200',
+};
+
+function Detail({ label, value }: { label: string; value?: string | number | null }) {
+  if (!value && value !== 0) return null;
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-[#555555]/70">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-[#0B3C5D] break-words">{String(value)}</p>
+    </div>
+  );
+}
 
 export default function MembersPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<MembershipApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | MembershipStatus>('pending');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -44,6 +80,46 @@ export default function MembersPage() {
     setLoading(false);
   };
 
+  const counts = useMemo(() => ({
+    all: applications.length,
+    pending: applications.filter((item) => (item.status || 'pending') === 'pending').length,
+    approved: applications.filter((item) => item.status === 'approved').length,
+    rejected: applications.filter((item) => item.status === 'rejected').length,
+  }), [applications]);
+
+  const visible = applications.filter((item) =>
+    filter === 'all' ? true : (item.status || 'pending') === filter
+  );
+
+  const handleStatus = async (item: MembershipApplication, status: MembershipStatus) => {
+    const actionLabel = status === 'approved' ? 'Approve' : 'Reject';
+    const result = await Swal.fire({
+      title: `${actionLabel} this application?`,
+      text:
+        status === 'approved'
+          ? `${item.fullName} will be marked as a temple member.`
+          : `${item.fullName}'s application will be declined.`,
+      icon: status === 'approved' ? 'question' : 'warning',
+      showCancelButton: true,
+      confirmButtonColor: status === 'approved' ? '#0B3C5D' : '#c2410c',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${actionLabel.toLowerCase()}`,
+    });
+
+    if (!result.isConfirmed) return;
+
+    setUpdatingId(item.id);
+    const updated = await updateMembershipStatus(item.id, status, auth.currentUser?.email || '');
+    setUpdatingId(null);
+
+    if (updated.success) {
+      toast.success(`Application ${status}`);
+      fetchData();
+    } else {
+      toast.error(updated.error || 'Unable to update application');
+    }
+  };
+
   return (
     <div className="py-4">
       <button
@@ -52,13 +128,16 @@ export default function MembersPage() {
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
-      <div className="mb-6 flex items-center justify-between">
+
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 font-serif text-2xl font-bold text-[#0B3C5D]">
             <BadgeCheck className="h-6 w-6 text-[#D4AF37]" />
             Membership Applications
           </h1>
-          <p className="mt-1 text-sm text-[#555555]">{applications.length} received</p>
+          <p className="mt-1 text-sm text-[#555555]">
+            Open a card to see full details. Pending applications can be approved or rejected here.
+          </p>
         </div>
         <button
           onClick={fetchData}
@@ -68,60 +147,184 @@ export default function MembersPage() {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#E5E3DD] bg-white">
-        {loading ? (
-          <p className="p-8 text-center text-sm text-[#555555]">Loading…</p>
-        ) : applications.length === 0 ? (
-          <p className="p-8 text-center text-sm text-[#555555]">No applications yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[#F9F8F4] text-xs uppercase tracking-wider text-[#555555]">
-                <tr>
-                  <th className="px-4 py-3">Applicant</th>
-                  <th className="px-4 py-3">Grade</th>
-                  <th className="px-4 py-3">Contact</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((item) => (
-                  <tr key={item.id} className="border-t border-[#E5E3DD]">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {item.photoUrl ? (
-                          <img
-                            src={item.photoUrl}
-                            alt=""
-                            className="h-10 w-10 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-lg bg-[#F5E6B8]" />
-                        )}
-                        <div>
-                          <p className="font-semibold text-[#0B3C5D]">{item.fullName || '—'}</p>
-                          <p className="text-xs text-[#555555]">{item.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-[#0B3C5D]">{item.membershipType}</td>
-                    <td className="px-4 py-3 text-[#0B3C5D]">{item.contactNo}</td>
-                    <td className="px-4 py-3 text-[#555555]">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN') : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-[#D4AF37]/20 px-2 py-1 text-xs font-semibold text-[#0B3C5D]">
-                        {item.status || 'pending'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="mb-5 flex flex-wrap gap-2">
+        {([
+          { id: 'pending', label: `Pending (${counts.pending})` },
+          { id: 'approved', label: `Approved (${counts.approved})` },
+          { id: 'rejected', label: `Rejected (${counts.rejected})` },
+          { id: 'all', label: `All (${counts.all})` },
+        ] as const).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setFilter(tab.id)}
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+              filter === tab.id
+                ? 'bg-[#0B3C5D] text-white'
+                : 'border border-[#E5E3DD] bg-white text-[#555555] hover:bg-[#F9F8F4]'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {loading ? (
+        <p className="rounded-2xl border border-[#E5E3DD] bg-white p-8 text-center text-sm text-[#555555]">
+          Loading…
+        </p>
+      ) : visible.length === 0 ? (
+        <p className="rounded-2xl border border-[#E5E3DD] bg-white p-8 text-center text-sm text-[#555555]">
+          No {filter === 'all' ? '' : filter} applications.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {visible.map((item) => {
+            const status = item.status || 'pending';
+            const isOpen = expandedId === item.id;
+            const amount = item.membershipAmount
+              ? `₹${Number(item.membershipAmount).toLocaleString('en-IN')}`
+              : '';
+
+            return (
+              <div
+                key={item.id}
+                className="overflow-hidden rounded-2xl border border-[#E5E3DD] bg-white shadow-sm"
+              >
+                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
+                  {item.photoUrl ? (
+                    <img
+                      src={item.photoUrl}
+                      alt=""
+                      className="h-16 w-16 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-[#F5E6B8] text-[#0B3C5D]">
+                      <User className="h-7 w-7" />
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-semibold text-[#0B3C5D]">
+                        {item.title ? `${item.title} ` : ''}
+                        {item.fullName || '—'}
+                      </h2>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase ${statusStyles[status] || statusStyles.pending}`}>
+                        {status}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#555555]">
+                      <span className="inline-flex items-center gap-1">
+                        <Mail className="h-3.5 w-3.5" /> {item.email || '—'}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Phone className="h-3.5 w-3.5" /> {item.contactNo || '—'}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN') : '—'}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-[#0B3C5D]">
+                      {item.membershipType || '—'} {amount ? `· ${amount}` : ''}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {status === 'pending' && (
+                      <>
+                        <button
+                          disabled={updatingId === item.id}
+                          onClick={() => handleStatus(item, 'approved')}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3C5D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#062A42] disabled:opacity-50"
+                        >
+                          <Check className="h-3.5 w-3.5" /> Approve
+                        </button>
+                        <button
+                          disabled={updatingId === item.id}
+                          onClick={() => handleStatus(item, 'rejected')}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          <X className="h-3.5 w-3.5" /> Reject
+                        </button>
+                      </>
+                    )}
+                    {status === 'rejected' && (
+                      <button
+                        disabled={updatingId === item.id}
+                        onClick={() => handleStatus(item, 'approved')}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3C5D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#062A42] disabled:opacity-50"
+                      >
+                        <Check className="h-3.5 w-3.5" /> Approve
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setExpandedId(isOpen ? null : item.id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] px-3 py-2 text-xs font-semibold text-[#0B3C5D] hover:bg-[#F9F8F4]"
+                    >
+                      {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      {isOpen ? 'Hide details' : 'View all details'}
+                    </button>
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="border-t border-[#E5E3DD] bg-[#F9F8F4] p-4 sm:p-5">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <Detail label="Gender" value={item.gender} />
+                      <Detail label="Date of birth" value={item.dateOfBirth} />
+                      <Detail label="Blood group" value={item.bloodGroup} />
+                      <Detail label="Father's name" value={item.fatherName} />
+                      <Detail label="Mother's name" value={item.motherName} />
+                      <Detail label="Aadhaar" value={item.aadhaar} />
+                      <Detail label="Qualification" value={item.qualification} />
+                      <Detail label="Occupation" value={item.occupation} />
+                      <Detail label="Introducer" value={item.introducer} />
+                      <Detail
+                        label="Address"
+                        value={[item.address, item.city, item.state, item.country, item.pinCode]
+                          .filter(Boolean)
+                          .join(', ')}
+                      />
+                      <Detail label="Payment method" value={item.paymentMethod} />
+                      <Detail label="Cheque / DD no." value={item.chequeOrDdNo} />
+                      <Detail label="Bank name" value={item.bankName} />
+                      <Detail label="Payment date" value={item.paymentDate} />
+                      <Detail label="Place" value={item.place} />
+                      <Detail label="Declaration date" value={item.declarationDate} />
+                    </div>
+
+                    {(item.photoUrl || item.aadhaarUrl) && (
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        {item.photoUrl && (
+                          <a
+                            href={item.photoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" /> Open photo
+                          </a>
+                        )}
+                        {item.aadhaarUrl && (
+                          <a
+                            href={item.aadhaarUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Open Aadhaar
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

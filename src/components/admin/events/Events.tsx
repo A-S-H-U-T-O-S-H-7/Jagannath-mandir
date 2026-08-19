@@ -19,6 +19,7 @@ import EventFilters from '@/components/admin/events/EventFilters';
 import EventTable from '@/components/admin/events/EventTable';
 import CreateEventModal from '@/components/admin/events/CreateEventModal';
 import EventAttendeesModal from '@/components/admin/events/EventAttendeesModal';
+import EventMediaModal from '@/components/admin/events/EventMediaModal';
 
 export default function EventsPage() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function EventsPage() {
   const [stats, setStats] = useState({ total: 0, upcoming: 0, ongoing: 0, completed: 0, cancelled: 0, totalAttendees: 0 });
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isAttendeesModalOpen, setIsAttendeesModalOpen] = useState(false);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -195,6 +197,11 @@ export default function EventsPage() {
     setIsAttendeesModalOpen(true);
   };
 
+  const handleManageMedia = (event: Event) => {
+    setSelectedEvent(event);
+    setIsMediaModalOpen(true);
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchData();
@@ -265,9 +272,18 @@ export default function EventsPage() {
 
       {/* Table */}
       <EventTable
-        events={events}
+        events={events.filter((event) => {
+          if (!searchTerm.trim()) return true;
+          const term = searchTerm.toLowerCase();
+          return (
+            event.title.toLowerCase().includes(term) ||
+            event.location.toLowerCase().includes(term) ||
+            event.city.toLowerCase().includes(term)
+          );
+        })}
         loading={loading}
         onViewAttendees={handleViewAttendees}
+        onManageMedia={handleManageMedia}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -293,6 +309,15 @@ export default function EventsPage() {
           setSelectedEvent(null);
         }}
         event={selectedEvent}
+      />
+
+      <EventMediaModal
+        isOpen={isMediaModalOpen}
+        event={selectedEvent}
+        onClose={() => {
+          setIsMediaModalOpen(false);
+          if (!isAttendeesModalOpen) setSelectedEvent(null);
+        }}
       />
     </div>
   );

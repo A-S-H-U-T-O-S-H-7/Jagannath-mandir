@@ -221,29 +221,11 @@ export default function JoinAsMember() {
                 </div>
               </div>
             ) : (
-              <div>
-                {!submittedId ? (
-                  <div className="no-print mx-auto mb-6 flex max-w-[820px] flex-wrap items-center justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      className="inline-flex items-center gap-2 rounded-xl border border-[#E5E3DD] bg-white px-5 py-2.5 text-sm font-semibold text-[#0B3C5D]"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Print
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={submitting}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#D4AF37] px-6 py-2.5 text-sm font-bold text-[#0B3C5D] disabled:opacity-60"
-                    >
-                      {submitting ? 'Submitting…' : 'Submit Application'}
-                    </button>
-                  </div>
-                ) : null}
-                <MembershipPreview data={form} />
-              </div>
+              <MembershipPreview
+                data={form}
+                onSubmit={handleSubmit}
+                submitting={submitting}
+              />
             )}
           </motion.div>
         </AnimatePresence>

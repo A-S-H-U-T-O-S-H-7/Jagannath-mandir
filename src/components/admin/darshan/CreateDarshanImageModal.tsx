@@ -27,7 +27,6 @@ export default function CreateDarshanImageModal({
 }: CreateDarshanImageModalProps) {
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     date: '',
     type: 'daily' as 'daily' | 'special',
     isSpecial: false,
@@ -42,7 +41,6 @@ export default function CreateDarshanImageModal({
     if (editingImage) {
       setFormData({
         title: editingImage.title || '',
-        description: editingImage.description || '',
         date: editingImage.date || '',
         type: editingImage.type || 'daily',
         isSpecial: editingImage.isSpecial || false,
@@ -54,7 +52,6 @@ export default function CreateDarshanImageModal({
       const today = new Date().toISOString().split('T')[0];
       setFormData({
         title: '',
-        description: '',
         date: today,
         type: 'daily',
         isSpecial: false,
@@ -168,20 +165,6 @@ export default function CreateDarshanImageModal({
                 placeholder="e.g. Today's Darshan"
               />
               {errors.title && <p className="text-red-500 text-xs mt-1.5">{errors.title}</p>}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={2}
-                className="w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none resize-none"
-                placeholder="Brief description"
-              />
             </div>
 
             {/* Date */}

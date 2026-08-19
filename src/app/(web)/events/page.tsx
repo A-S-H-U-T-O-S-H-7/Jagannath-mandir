@@ -18,9 +18,11 @@ import {
 } from "lucide-react";
 import { adminEventService, type Event as FirestoreEvent } from '@/lib/services/adminEventService';
 import { parseEventDate } from '@/lib/utils/displayHelpers';
+import InterestedToJoinButton from '@/components/web/events/InterestedToJoinButton';
 
 interface Event {
   id: string;
+  slug: string;
   title: string;
   date: string;
   time: string;
@@ -32,12 +34,14 @@ interface Event {
   month: string;
   day: string;
   attendeeCount: number;
+  attendees: string[];
 }
 
 function mapEvent(event: FirestoreEvent): Event {
   const { month, day, formatted } = parseEventDate(event.date);
   return {
     id: event.id,
+    slug: event.slug || event.id,
     title: event.title,
     date: formatted || event.date,
     time: event.time,
@@ -49,6 +53,7 @@ function mapEvent(event: FirestoreEvent): Event {
     month,
     day,
     attendeeCount: event.attendeeCount || 0,
+    attendees: event.attendees || [],
   };
 }
 
@@ -179,7 +184,7 @@ export default function EventsPage() {
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 md:px-5 md:py-2.5 rounded-full border border-white/10">
                 <Users className="w-4 h-4 md:w-5 md:h-5 text-[#D4AF37]" />
                 <span className="text-xs md:text-sm text-white/80">
-                  <span className="font-bold text-white">{totalAttendees}</span> Devotees
+                  <span className="font-bold text-white">{totalAttendees}</span> Interested
                 </span>
               </div>
             </div>
@@ -269,8 +274,9 @@ export default function EventsPage() {
                 transition={{ delay: index * 0.05, duration: 0.5 }}
                 className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 hover:-translate-y-1"
               >
+                <Link href={`/events/${event.slug}`} className="block">
                 {/* Image */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-56 sm:h-60 overflow-hidden">
                   <Image
                     src={event.image}
                     alt={event.title}
@@ -316,18 +322,34 @@ export default function EventsPage() {
                     {event.description}
                   </p>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-[#555555]">
-                      <Users className="h-3.5 w-3.5 text-[#D4AF37]" />
-                      <span>{event.attendeeCount}+ devotees</span>
-                    </div>
-                    <Link href={`/events`}>
-                      <button className="inline-flex items-center gap-1 text-[#D4AF37] font-semibold text-sm hover:text-[#B8962E] transition-colors group/btn">
-                        Details
-                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
-                      </button>
-                    </Link>
-                  </div>
+                  <span className="inline-flex items-center gap-1 text-[#D4AF37] font-semibold text-sm group-hover:text-[#B8962E] transition-colors">
+                    Details
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+                </Link>
+                <div className="px-5 pb-5 sm:px-6">
+                  <InterestedToJoinButton
+                    eventId={event.id}
+                    eventSlug={event.slug}
+                    status={event.status}
+                    attendees={event.attendees}
+                    attendeeCount={event.attendeeCount}
+                    variant="card"
+                    onCountChange={(count) => {
+                      setEvents((prev) =>
+                        prev.map((item) =>
+                          item.id === event.id
+                            ? {
+                                ...item,
+                                attendeeCount: count,
+                                attendees: item.attendees,
+                              }
+                            : item
+                        )
+                      );
+                    }}
+                  />
                 </div>
               </motion.div>
             ))}

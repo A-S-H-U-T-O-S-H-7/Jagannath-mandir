@@ -29,7 +29,6 @@ export default function CreateAartiVideoModal({
 }: CreateAartiVideoModalProps) {
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     date: '',
     duration: '',
     isActive: true,
@@ -47,7 +46,6 @@ export default function CreateAartiVideoModal({
     if (editingVideo) {
       setFormData({
         title: editingVideo.title || '',
-        description: editingVideo.description || '',
         date: editingVideo.date || '',
         duration: editingVideo.duration || '',
         isActive: editingVideo.isActive !== false,
@@ -60,7 +58,6 @@ export default function CreateAartiVideoModal({
       const today = new Date().toISOString().split('T')[0];
       setFormData({
         title: '',
-        description: '',
         date: today,
         duration: '',
         isActive: true,
@@ -208,20 +205,6 @@ export default function CreateAartiVideoModal({
                 placeholder="e.g. Evening Aarti"
               />
               {errors.title && <p className="text-red-500 text-xs mt-1.5">{errors.title}</p>}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={2}
-                className="w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none resize-none"
-                placeholder="Brief description of the aarti"
-              />
             </div>
 
             {/* Date */}

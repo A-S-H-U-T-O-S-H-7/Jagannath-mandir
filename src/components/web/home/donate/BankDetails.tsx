@@ -38,23 +38,23 @@ export default function BankDetails({ donorType = 'indian' }: BankDetailsProps) 
   }, [donorType]);
 
   const indianBankDetails: IndianBankDetails = {
-    accountName: "jagannath Mandir Noida",
+    accountName: "Samudayik Vikas Samiti",
     accountNo: "083101002804",
     ifscCode: "ICIC0000831",
     accountType: "SAVING",
     bankName: "ICICI BANK",
-    branch: "SECTOR 93A BRANCH",
-    city: "NOIDA"
+    branch: "LAXMI NAGAR BRANCH",
+    city: "DELHI"
   };
 
   const internationalBankDetails: InternationalBankDetails = {
-    accountName: "jagannath Mandir Noida (FCRA)",
+    accountName: "FCRA Samudayik Vikas Samiti",
     accountNo: "40052522428",
     swiftCode: "SBININBB104",
     accountType: "SAVING",
     bankName: "SBI BANK",
-    branch: "FCRA Cell, New Delhi Main Branch",
-    city: "NEW DELHI"
+    branch: "FCRA Cell, 4th Floor, State Bank of India, New Delhi Main Branch, 11, Sansad Marg, New Delhi-110001",
+    city: "DELHI"
   };
 
   const bankDetails = activeTab === 'indian' ? indianBankDetails : internationalBankDetails;
@@ -135,6 +135,10 @@ export default function BankDetails({ donorType = 'indian' }: BankDetailsProps) 
             <span className="col-span-2 text-[#555555] text-xs break-words">
               {bankDetails.branch}
             </span>
+          </div>
+          <div className="grid grid-cols-3 gap-1">
+            <span className="font-semibold text-[#0B3C5D]">CITY:</span>
+            <span className="col-span-2 text-[#555555]">{bankDetails.city}</span>
           </div>
         </div>
       </div>

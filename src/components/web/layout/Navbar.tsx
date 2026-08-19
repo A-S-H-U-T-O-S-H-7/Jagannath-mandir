@@ -104,7 +104,7 @@ export default function Navbar() {
                 />
               </div>
               <span className="font-swarna-khetra swarna-khetra-title ml-10 text-[11px] sm:text-sm md:text-base lg:text-[20px] font-semibold -mt-0.5 whitespace-nowrap">
-                स्वर्णक्षेत्र
+                श्री स्वर्णक्षेत्र
               </span>
               <div className="swarna-khetra-aura" aria-hidden="true" />
             </Link>
@@ -208,12 +208,12 @@ export default function Navbar() {
                       </div>
                       
                       <Link 
-                        href="/dashboard" 
+                        href="/profile" 
                         className="flex items-center gap-2 px-4 py-2 text-sm text-[#2C2420] hover:bg-[#E7D7E8]/30 transition-colors cursor-pointer"
                         onClick={() => setIsOpen(false)}
                       >
                         <User className="h-4 w-4" />
-                        Dashboard
+                        Profile
                       </Link>
                       
                       <hr className="my-1 border-[#E7D7E8]" />
@@ -319,12 +319,12 @@ export default function Navbar() {
                   </div>
                   
                   <Link
-                    href="/dashboard"
+                    href="/profile"
                     className="flex items-center gap-3 text-[#6B5E5A] hover:text-[#0B3C5D] transition-colors py-2 cursor-pointer"
                     onClick={() => setIsOpen(false)}
                   >
                     <User className="h-5 w-5" />
-                    <span>Dashboard</span>
+                    <span>Profile</span>
                   </Link>
                   
                   <button 

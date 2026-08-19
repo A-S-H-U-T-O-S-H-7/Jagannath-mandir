@@ -18,7 +18,7 @@ import {
 import { adminDarshanService, type AartiVideo } from '@/lib/services/adminDarshanService';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { getRitualColor, getRitualIcon, parseEventDate } from '@/lib/utils/displayHelpers';
-import { formatTimeRange } from '@/lib/utils/timingHelpers';
+import { formatDisplayTime, formatTimeRange } from '@/lib/utils/timingHelpers';
 
 interface DarshanImage {
   id: string;
@@ -27,14 +27,12 @@ interface DarshanImage {
   title: string;
   date: string;
   isSpecial: boolean;
-  description?: string;
 }
 
 interface Ritual {
   id: string;
   name: string;
   time: string;
-  description: string;
   icon: React.ReactNode;
   color: string;
 }
@@ -85,7 +83,6 @@ export default function DarshanPage() {
               weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
             }),
             isSpecial: false,
-            description: daily.image.description || 'Daily darshan of Lord Jagannath. May his blessings be with you.',
           });
         }
 
@@ -100,7 +97,6 @@ export default function DarshanPage() {
                 title: img.title,
                 date: formatted || img.date,
                 isSpecial: true,
-                description: img.description,
               };
             })
           );
@@ -113,8 +109,7 @@ export default function DarshanPage() {
               return {
                 id: ritual.id,
                 name: ritual.name,
-                time: ritual.time,
-                description: ritual.description,
+                time: formatDisplayTime(ritual.time, ritual.time),
                 icon: <Icon className="h-5 w-5" />,
                 color: getRitualColor(index),
               };
@@ -262,7 +257,6 @@ export default function DarshanPage() {
                     
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                       <h3 className="text-xl sm:text-2xl font-bold">{todayImage.title}</h3>
-                      <p className="text-sm text-white/80 mt-1">{todayImage.description}</p>
                       <div className="flex items-center gap-4 mt-3">
                         <span className="text-xs bg-[#D4AF37]/20 backdrop-blur-sm px-3 py-1 rounded-full border border-[#D4AF37]/30">
                           Daily Darshan
@@ -396,9 +390,6 @@ export default function DarshanPage() {
                       </div>
                       <div className="p-4">
                         <h4 className="font-semibold text-[#0B3C5D] line-clamp-1">{video.title}</h4>
-                        {video.description && (
-                          <p className="text-xs text-[#555555] mt-1 line-clamp-2">{video.description}</p>
-                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -441,11 +432,8 @@ export default function DarshanPage() {
                       <h4 className="text-sm font-bold text-[#0B3C5D] mb-1">
                         {ritual.name}
                       </h4>
-                      <p className="text-xs text-[#D4AF37] font-semibold mb-2">
+                      <p className="text-xs text-[#D4AF37] font-semibold">
                         {ritual.time}
-                      </p>
-                      <p className="text-xs text-[#555555] leading-relaxed">
-                        {ritual.description}
                       </p>
                     </motion.div>
                   ))}
@@ -511,11 +499,6 @@ export default function DarshanPage() {
               <div className="mt-4 text-center">
                 <h3 className="text-xl font-semibold text-white">{selectedImage.title}</h3>
                 <p className="text-sm text-white/60">{selectedImage.date}</p>
-                {selectedImage.description && (
-                  <p className="text-sm text-white/70 mt-2 max-w-2xl mx-auto">
-                    {selectedImage.description}
-                  </p>
-                )}
                 {selectedImage.isSpecial && (
                   <span className="inline-block mt-2 text-xs bg-[#D4AF37]/20 text-[#D4AF37] px-3 py-1 rounded-full border border-[#D4AF37]/30">
                     Special Moment
@@ -571,11 +554,6 @@ export default function DarshanPage() {
 
               <div className="mt-4 text-center">
                 <h3 className="text-xl font-semibold text-white">{selectedVideo.title}</h3>
-                {selectedVideo.description && (
-                  <p className="text-sm text-white/70 mt-2 max-w-2xl mx-auto">
-                    {selectedVideo.description}
-                  </p>
-                )}
               </div>
             </motion.div>
           </motion.div>

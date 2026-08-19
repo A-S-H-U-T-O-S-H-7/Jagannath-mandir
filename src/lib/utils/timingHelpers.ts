@@ -96,6 +96,38 @@ export function formatRitualLabel(ritual: RitualEntry | string): string {
   return time ? `${ritual.name} - ${time}` : ritual.name;
 }
 
+export function splitTimeAndPeriod(value?: string): { clock: string; period: AmPm } {
+  if (!value) return { clock: '7:00', period: 'AM' };
+  const trimmed = value.trim();
+  const match = trimmed.match(/(\d{1,2})[:.](\d{2})\s*(AM|PM)?/i);
+
+  if (match) {
+    const rawHour = parseInt(match[1], 10);
+    const minute = pad(parseInt(match[2], 10) || 0);
+    const explicitPeriod = match[3]?.toUpperCase() as AmPm | undefined;
+
+    if (explicitPeriod) {
+      const hour12 = rawHour % 12 || 12;
+      return { clock: `${hour12}:${minute}`, period: explicitPeriod };
+    }
+
+    const looksLike24Hour = /^\d{2}:\d{2}$/.test(trimmed) || rawHour > 12;
+    if (looksLike24Hour) {
+      const period: AmPm = rawHour >= 12 ? 'PM' : 'AM';
+      const hour12 = rawHour % 12 || 12;
+      return { clock: `${hour12}:${minute}`, period };
+    }
+
+    return { clock: sanitizeClockTime(`${rawHour}:${minute}`), period: 'AM' };
+  }
+
+  return { clock: '7:00', period: 'AM' };
+}
+
+export function combineTimeAndPeriod(clock: string, period: AmPm): string {
+  return `${sanitizeClockTime(clock || '7:00')} ${period}`;
+}
+
 export function parseRitualString(value: string, index = 0): RitualEntry {
   const separator = value.includes(' - ') ? ' - ' : value.includes('-') ? '-' : '';
   let name = value.trim();

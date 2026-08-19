@@ -45,7 +45,7 @@ export default function EventStats({ stats }: EventStatsProps) {
       bg: 'bg-green-50',
     },
     {
-      label: 'Total Attendees',
+      label: 'Total Interested',
       value: stats.totalAttendees,
       icon: Users,
       color: 'text-purple-600',

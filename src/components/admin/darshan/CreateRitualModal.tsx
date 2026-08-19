@@ -2,9 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, Clock, Sun, Moon, Star } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { X, Loader2 } from 'lucide-react';
 import { Ritual } from '@/lib/services/adminDarshanService';
+import TimeAmPmInput from '@/components/ui/TimeAmPmInput';
+import { combineTimeAndPeriod, splitTimeAndPeriod } from '@/lib/utils/timingHelpers';
 
 interface CreateRitualModalProps {
   isOpen: boolean;
@@ -30,8 +31,7 @@ export default function CreateRitualModal({
 }: CreateRitualModalProps) {
   const [formData, setFormData] = useState({
     name: '',
-    time: '',
-    description: '',
+    time: '7:00 AM',
     icon: 'Clock',
     isActive: true,
   });
@@ -39,18 +39,17 @@ export default function CreateRitualModal({
 
   useEffect(() => {
     if (editingRitual) {
+      const parsed = splitTimeAndPeriod(editingRitual.time || '7:00 AM');
       setFormData({
         name: editingRitual.name || '',
-        time: editingRitual.time || '',
-        description: editingRitual.description || '',
+        time: combineTimeAndPeriod(parsed.clock, parsed.period),
         icon: editingRitual.icon || 'Clock',
         isActive: editingRitual.isActive !== false,
       });
     } else {
       setFormData({
         name: '',
-        time: '',
-        description: '',
+        time: '7:00 AM',
         icon: 'Clock',
         isActive: true,
       });
@@ -61,7 +60,6 @@ export default function CreateRitualModal({
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.time.trim()) newErrors.time = 'Time is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -115,14 +113,10 @@ export default function CreateRitualModal({
               <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
                 Time <span className="text-red-400">*</span>
               </label>
-              <input
-                type="text"
+              <TimeAmPmInput
                 value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                className={`w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 border ${
-                  errors.time ? 'border-red-500' : 'border-[#E5E3DD]/50'
-                } bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none`}
-                placeholder="e.g. 5:00 AM"
+                onChange={(time) => setFormData({ ...formData, time })}
+                error={Boolean(errors.time)}
               />
               {errors.time && <p className="text-red-500 text-xs mt-1.5">{errors.time}</p>}
             </div>
@@ -143,23 +137,6 @@ export default function CreateRitualModal({
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
-                Description <span className="text-red-400">*</span>
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={2}
-                className={`w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 border resize-none ${
-                  errors.description ? 'border-red-500' : 'border-[#E5E3DD]/50'
-                } bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none`}
-                placeholder="Brief description of the ritual"
-              />
-              {errors.description && <p className="text-red-500 text-xs mt-1.5">{errors.description}</p>}
             </div>
 
             {/* Active Toggle */}

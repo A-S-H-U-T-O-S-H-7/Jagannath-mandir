@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, CalendarDays, Loader2 } from 'lucide-react';
 import { getContactInfo } from '@/lib/services/settingsService';
+import { adminDarshanService, type Ritual } from '@/lib/services/adminDarshanService';
 import { getRitualColor, getRitualIcon } from '@/lib/utils/displayHelpers';
-import { formatTimeRange, normalizeRituals } from '@/lib/utils/timingHelpers';
+import { formatDisplayTime, formatTimeRange } from '@/lib/utils/timingHelpers';
 
 interface DarshanSlot {
   id: string;
@@ -17,14 +18,13 @@ interface DarshanSlot {
   color: string;
 }
 
-/** Map a settings ritual into a homepage darshan card */
-function toDarshanSlot(ritual: ReturnType<typeof normalizeRituals>[number], index: number): DarshanSlot {
-  const icons = ['Sun', 'Star', 'Sun', 'Moon', 'Clock'] as const;
-  const Icon = getRitualIcon(icons[index % icons.length]);
-  const time = `${ritual.time} ${ritual.period}`;
+/** Map an Admin Darshan ritual into a homepage darshan card. */
+function toDarshanSlot(ritual: Ritual, index: number): DarshanSlot {
+  const Icon = getRitualIcon(ritual.icon);
+  const time = formatDisplayTime(ritual.time, ritual.time);
 
   return {
-    id: ritual.id || `settings-ritual-${index}`,
+    id: ritual.id,
     name: ritual.name,
     time,
     description: `${ritual.name} at ${time}`,
@@ -43,13 +43,19 @@ export default function DailyDarshan() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const settingsResult = await getContactInfo();
+        const [settingsResult, ritualsResult] = await Promise.all([
+          getContactInfo(),
+          adminDarshanService.getActiveRituals(),
+        ]);
 
         if (settingsResult.timings) {
           const t = settingsResult.timings;
           setMorningTiming(formatTimeRange(t.morningStart, t.morningEnd, '5:00 AM', '12:00 PM'));
           setEveningTiming(formatTimeRange(t.eveningStart, t.eveningEnd, '4:00 PM', '9:00 PM'));
-          setDarshanSlots(normalizeRituals(t.rituals).map((ritual, index) => toDarshanSlot(ritual, index)));
+        }
+
+        if (ritualsResult.success) {
+          setDarshanSlots(ritualsResult.rituals.map(toDarshanSlot));
         }
       } catch (error) {
         console.error('Error loading darshan timings:', error);
@@ -112,7 +118,7 @@ export default function DailyDarshan() {
           </div>
         ) : darshanSlots.length === 0 ? (
           <div className="text-center py-12 text-[#555555]">
-            Ritual timings will appear here once added in Admin Settings.
+            Ritual timings will appear here once added in Admin → Darshan.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">

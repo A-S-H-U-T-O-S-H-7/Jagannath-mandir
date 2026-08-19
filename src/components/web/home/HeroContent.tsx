@@ -108,7 +108,7 @@ export default function HeroContent() {
               paddingBottom: '0.05em',
             }}
           >
-            स्वर्णक्षेत्र
+            श्री स्वर्णक्षेत्र
           </span>
           
           {/* "Jagannath Mandir" - Same size as "स्वर्णक्षेत्र" */}

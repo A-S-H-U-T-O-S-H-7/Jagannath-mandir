@@ -8,6 +8,7 @@ import {
   setDoc, 
   updateDoc, 
   deleteDoc,
+  deleteField,
   query,
   orderBy,
   where,
@@ -24,7 +25,6 @@ export interface DarshanImage {
   title: string;
   date: string;
   isSpecial: boolean;
-  description?: string;
   type: 'daily' | 'special';
   order: number;
   createdAt: string;
@@ -34,7 +34,6 @@ export interface DarshanImage {
 export interface AartiVideo {
   id: string;
   title: string;
-  description: string;
   videoUrl: string;
   thumbnailUrl: string;
   date: string;
@@ -48,7 +47,6 @@ export interface Ritual {
   id: string;
   name: string;
   time: string;
-  description: string;
   icon: string;
   order: number;
   isActive: boolean;
@@ -58,6 +56,22 @@ export interface Ritual {
 
 const RITUALS_COLLECTION = 'rituals';
 const VIDEOS_COLLECTION = 'aartiVideos';
+
+/** Convert a stored ritual time (for example, "8:30 AM") into a sortable value. */
+function getRitualTimeSortValue(time: string): number {
+  const match = time.trim().match(/^(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)?$/i);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2] || 0);
+  const period = match[3]?.toUpperCase();
+
+  if (minute > 59 || hour > 23) return Number.MAX_SAFE_INTEGER;
+  if (period === 'PM' && hour < 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
+
+  return hour * 60 + minute;
+}
 
 export const adminDarshanService = {
   // ==================== DARSHAN IMAGES ====================
@@ -87,7 +101,6 @@ export const adminDarshanService = {
         title: data.title || 'Darshan',
         date: data.date || new Date().toISOString().split('T')[0],
         isSpecial: data.isSpecial || false,
-        description: data.description || '',
         type: data.type || (data.isSpecial ? 'special' : 'daily'),
         order: data.order || 0,
         createdAt: now,
@@ -117,7 +130,6 @@ export const adminDarshanService = {
           title: data.title || 'Darshan',
           date: data.date || '',
           isSpecial: data.isSpecial || false,
-          description: data.description || '',
           type: data.type || 'daily',
           order: data.order || 0,
           createdAt: data.createdAt || new Date().toISOString(),
@@ -184,7 +196,8 @@ export const adminDarshanService = {
       const docRef = doc(db, COLLECTION, id);
       const updateData: any = {
         title: data.title,
-        description: data.description,
+        // Clear the legacy field when an existing record is edited.
+        description: deleteField(),
         date: data.date,
         isSpecial: data.isSpecial || false,
         type: data.type || (data.isSpecial ? 'special' : 'daily'),
@@ -270,7 +283,6 @@ export const adminDarshanService = {
       
       const videoData = {
         title: data.title || 'Aarti Video',
-        description: data.description || '',
         videoUrl,
         thumbnailUrl,
         date: data.date || new Date().toISOString().split('T')[0],
@@ -299,7 +311,6 @@ export const adminDarshanService = {
         videos.push({
           id: docSnap.id,
           title: data.title || 'Aarti Video',
-          description: data.description || '',
           videoUrl: data.videoUrl || '',
           thumbnailUrl: data.thumbnailUrl || '',
           date: data.date || '',
@@ -342,7 +353,8 @@ export const adminDarshanService = {
       const docRef = doc(db, VIDEOS_COLLECTION, id);
       const updateData: any = {
         title: data.title,
-        description: data.description,
+        // Clear the legacy field when an existing record is edited.
+        description: deleteField(),
         date: data.date,
         duration: data.duration || '',
         isActive: data.isActive !== false,
@@ -410,7 +422,6 @@ export const adminDarshanService = {
       const ritualData = {
         name: data.name,
         time: data.time,
-        description: data.description,
         icon: data.icon || 'Clock',
         order: data.order || 0,
         isActive: data.isActive !== false,
@@ -438,7 +449,6 @@ export const adminDarshanService = {
           id: docSnap.id,
           name: data.name || '',
           time: data.time || '',
-          description: data.description || '',
           icon: data.icon || 'Clock',
           order: data.order || 0,
           isActive: data.isActive !== false,
@@ -448,6 +458,8 @@ export const adminDarshanService = {
       });
 
       rituals.sort((a, b) => {
+        const timeDifference = getRitualTimeSortValue(a.time) - getRitualTimeSortValue(b.time);
+        if (timeDifference !== 0) return timeDifference;
         if (a.order !== b.order) return a.order - b.order;
         return a.name.localeCompare(b.name);
       });
@@ -483,7 +495,8 @@ export const adminDarshanService = {
       await updateDoc(docRef, {
         name: data.name,
         time: data.time,
-        description: data.description,
+        // Clear the legacy field when an existing record is edited.
+        description: deleteField(),
         icon: data.icon || 'Clock',
         order: data.order || 0,
         isActive: data.isActive !== false,
