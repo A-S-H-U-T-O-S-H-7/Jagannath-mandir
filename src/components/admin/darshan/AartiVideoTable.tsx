@@ -81,14 +81,7 @@ export default function AartiVideoTable({
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
-                  <p className="text-sm font-medium text-[#0B3C5D] truncate max-w-xs">
-                    {video.title}
-                  </p>
-                  {video.duration && (
-                    <p className="text-xs text-[#555555]">{video.duration}</p>
-                  )}
-                </td>
+                
                 <td className="px-4 py-3">
                   <span className="text-sm text-[#555555]">
                     {video.date ? new Date(video.date).toLocaleDateString() : '-'}
