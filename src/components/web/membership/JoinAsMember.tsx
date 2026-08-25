@@ -1,3 +1,5 @@
+// app/join-as-member/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -41,6 +43,10 @@ function validateForm(data: MembershipFormData) {
   if (!data.city) errors.city = 'Required';
   if (!/^\d{6}$/.test(data.pinCode)) errors.pinCode = 'Enter a valid 6-digit pin code';
   if (!/^\d{12}$/.test(data.aadhaar)) errors.aadhaar = 'Enter a valid 12-digit Aadhaar number';
+  // ✅ PAN Number validation
+  if (!data.panNumber || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(data.panNumber)) {
+    errors.panNumber = 'Enter a valid PAN number (e.g., ABCDE1234F)';
+  }
   if (!/^\d{10}$/.test(data.contactNo)) errors.contactNo = 'Enter a valid 10-digit mobile number';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = 'Enter a valid email';
   if (!data.place.trim()) errors.place = 'Required';
@@ -74,6 +80,11 @@ export default function JoinAsMember() {
     if (form.photoPreview) URL.revokeObjectURL(form.photoPreview);
     patchForm({ photoFile: file, photoPreview: URL.createObjectURL(file) });
     setErrors((prev) => ({ ...prev, photoFile: '' }));
+  };
+
+  // ✅ NEW: Handle PAN Card upload
+  const handlePanChange = (file: File | null) => {
+    patchForm({ panFile: file });
   };
 
   const goNext = () => {
@@ -123,7 +134,7 @@ export default function JoinAsMember() {
         <div className="no-print mb-8 text-center">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-white/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#0B3C5D] shadow-sm backdrop-blur-sm">
             <Users className="h-3.5 w-3.5 text-[#D4AF37]" />
-            Sri Jagannath Samiti
+            Samudayik Vikas Samiti
           </span>
           <h1 className="mb-3 font-serif text-3xl font-bold leading-tight text-[#0B3C5D] md:text-5xl">
             Join as <span className="text-[#D4AF37]">Member</span>
@@ -178,7 +189,7 @@ export default function JoinAsMember() {
                   Application Submitted
                 </h3>
                 <p className="mb-2 text-sm leading-relaxed text-[#555555]">
-                  Thank you for applying to Sri Jagannath Samiti. Our office will review your
+                  Thank you for applying to Samudayik Vikas Samiti. Our office will review your
                   membership form and contact you.
                 </p>
                 <p className="mb-6 text-xs text-[#555555]">Reference ID: {submittedId}</p>
@@ -208,6 +219,7 @@ export default function JoinAsMember() {
                   onChange={patchForm}
                   onPhotoChange={handlePhoto}
                   onAadhaarChange={(file) => patchForm({ aadhaarFile: file })}
+                  onPanChange={handlePanChange} // ✅ Added missing prop
                 />
                 <div className="mt-8 flex justify-end">
                   <button

@@ -177,13 +177,13 @@ export default function AboutPage() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/hero-desktop.png"
+                  src="/aboutmain.png"
                   alt="Jagnanth Mandir Noida"
                   width={600}
                   height={500}
                   className="w-full h-[350px] sm:h-[400px] lg:h-[450px] object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/40 to-transparent" />
+                {/* <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/40 to-transparent" /> */}
               </div>
               <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#D4AF37]/20 rounded-full blur-2xl -z-10" />
               <div className="absolute -top-4 -left-4 w-32 h-32 bg-[#0B3C5D]/10 rounded-full blur-2xl -z-10" />

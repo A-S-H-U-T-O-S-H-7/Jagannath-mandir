@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Share2, Clock, Music } from "lucide-react";
+import { ArrowLeft, Phone, Share2, Clock, Music, ImageIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { auth } from "@/lib/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
@@ -13,6 +13,8 @@ import SocialLinks from "@/components/admin/settings/SocialLinks";
 import ContactSettings from "@/components/admin/settings/ContactSettings";
 import TimingsSettings from "@/components/admin/settings/TimingsSettings";
 import SongManagement from "@/components/admin/settings/SongManagement";
+import HeroImagesSettings from "@/components/admin/settings/HeroImagesSettings";
+
 import { 
   getSettings, 
   updateSocialLinks, 
@@ -26,6 +28,7 @@ const tabs = [
   { id: "social", name: "Social Links", icon: Share2 },
   { id: "contact", name: "Contact", icon: Phone },
   { id: "timings", name: "Darshan Timings", icon: Clock },
+  { id: "hero", name: "Hero Images", icon: ImageIcon },
   { id: "song", name: "Song Management", icon: Music },
 ];
 
@@ -237,6 +240,10 @@ export default function SettingsPage() {
             onUpdate={handleUpdateTimings}
           />
         )}
+
+        {activeTab === "hero" && (
+        <HeroImagesSettings />
+         )}
 
         {activeTab === "song" && (
           <SongManagement

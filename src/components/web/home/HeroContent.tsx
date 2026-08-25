@@ -98,13 +98,20 @@ export default function HeroContent() {
             Welcome to
           </span>
           
-          {/* "स्वर्णक्षेत्र" - Same size as "Jagannath Mandir" */}
+          {/* ✅ "श्री स्वर्णक्षेत्र" - Deep Rich Golden Gradient with Shine Animation - FIXED CROPPING */}
           <span 
-            className="font-devanagari block text-[26px] sm:text-[40px] lg:text-[56px] xl:text-[64px] text-[#D4AF37] leading-[1.2] tracking-normal mt-3 sm:mt-4"
+            className="font-devanagari block text-[26px] sm:text-[40px] lg:text-[56px] xl:text-[64px] leading-[1.2] tracking-normal mt-3 sm:mt-4"
             style={{
               fontFeatureSettings: '"ss01" 1, "ss02" 1, "cv01" 1',
-              lineHeight: '1.2',
-              paddingTop: '0.05em',
+              lineHeight: '1.3',
+              background: 'linear-gradient(135deg, #8B6914 0%, #B8860B 25%, #D4AF37 50%, #F5D76E 65%, #D4AF37 80%, #B8860B 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              backgroundSize: '200% 200%',
+              animation: 'shineGold 3s ease-in-out infinite',
+              filter: 'drop-shadow(0 2px 8px rgba(184, 134, 11, 0.4))',
+              paddingTop: '0.15em',
               paddingBottom: '0.05em',
             }}
           >
@@ -112,7 +119,7 @@ export default function HeroContent() {
           </span>
           
           {/* "Jagannath Mandir" - Same size as "स्वर्णक्षेत्र" */}
-          <span className="block text-[26px] sm:text-[40px] lg:text-[56px] xl:text-[64px] leading-[1.1] text-[#D4AF37] -mt-1 md:-mt-5 ">
+          <span className="block text-[26px] sm:text-[40px] lg:text-[56px] xl:text-[64px] leading-[1.1] text-[#D4AF37] -mt-1 md:-mt-5">
             Jagannath Mandir
           </span>
         </motion.h1>

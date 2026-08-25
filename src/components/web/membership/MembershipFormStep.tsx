@@ -1,6 +1,8 @@
+// components/join/MembershipFormStep.tsx
+
 'use client';
 
-import { Camera, Upload } from 'lucide-react';
+import { Camera, Upload, Info } from 'lucide-react';
 import {
   BLOOD_GROUPS,
   MEMBERSHIP_GRADES,
@@ -14,22 +16,22 @@ import {
 import { useLocationData } from '@/hooks/useLocationData';
 
 const inputClass =
-  'w-full px-4 py-2.5 text-sm rounded-xl bg-white border border-[#E5E3DD]/50 text-[#0B3C5D] placeholder:text-[#555555]/30 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200';
+  'w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#E5E3DD]/50 text-[#0B3C5D] placeholder:text-[#555555]/40 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-200';
 
 const labelClass = 'block text-xs font-semibold uppercase tracking-wider text-[#555555] mb-1.5';
 
 const selectClass = `${inputClass} appearance-none bg-[url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B5E5A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")] bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat pr-10`;
 
-// Shared card wrapper for every section — gives each block its own
-// visual boundary instead of everything running together.
+// ✅ Soft warm gradient card background
 const cardClass =
-  'rounded-2xl border border-[#E5E3DD]/70 bg-white p-6 shadow-[0_1px_2px_rgba(11,60,93,0.04)]';
+  'rounded-2xl border border-[#E5E3DD]/60 bg-gradient-to-br from-white via-[#FDF8F2] to-[#FFF9F2] p-6 shadow-[0_1px_3px_rgba(11,60,93,0.06)]';
 
 interface MembershipFormStepProps {
   data: MembershipFormData;
   onChange: (patch: Partial<MembershipFormData>) => void;
   onPhotoChange: (file: File) => void;
   onAadhaarChange: (file: File | null) => void;
+  onPanChange: (file: File | null) => void; // ✅ NEW
   errors: Record<string, string>;
 }
 
@@ -55,8 +57,6 @@ function Field({
   );
 }
 
-// Consistent section header used at the top of every card:
-// gold bar + title, with an optional short description underneath.
 function SectionHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-5 flex items-start gap-3">
@@ -69,11 +69,37 @@ function SectionHeader({ title, description }: { title: string; description?: st
   );
 }
 
+// ✅ Grade Details Component
+function GradeDetails({ grade }: { grade: string }) {
+  const selected = getSelectedGrade(grade);
+  if (!selected) return null;
+
+  return (
+    <div className="mt-2 rounded-xl bg-amber-50/70 border border-amber-200/50 p-3">
+      <div className="flex items-start gap-2">
+        <Info className="w-4 h-4 text-[#D4AF37] mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-xs font-medium text-[#0B3C5D]">Benefits included:</p>
+          <ul className="mt-1 space-y-0.5">
+            {selected.details.map((detail, idx) => (
+              <li key={idx} className="text-xs text-[#555555] flex items-start gap-1.5">
+                <span className="text-[#D4AF37]">•</span>
+                {detail}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MembershipFormStep({
   data,
   onChange,
   onPhotoChange,
   onAadhaarChange,
+  onPanChange,
   errors,
 }: MembershipFormStepProps) {
   const { countries, states, cities, loading } = useLocationData({
@@ -150,6 +176,9 @@ export default function MembershipFormStep({
               </select>
             </Field>
 
+            {/* ✅ Grade Details */}
+            {data.membershipType && <GradeDetails grade={data.membershipType} />}
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Amount (Rs.)">
                 <input
@@ -203,11 +232,12 @@ export default function MembershipFormStep({
         </div>
       </section>
 
-      {/* Personal Details */}
+      {/* Personal Details - Updated Layout */}
       <section className={cardClass}>
         <SectionHeader title="Personal Details" />
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* Title + Full Name in one row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <Field label="Title" required error={errors.title}>
               <select
                 value={data.title}
@@ -222,6 +252,20 @@ export default function MembershipFormStep({
                 <option value="Prof">Prof.</option>
               </select>
             </Field>
+            <div className="sm:col-span-3">
+              <Field label="Full Name (as per Aadhaar)" required error={errors.fullName}>
+                <input
+                  value={data.fullName}
+                  onChange={(e) => set('fullName', e.target.value.toUpperCase())}
+                  className={inputClass}
+                  placeholder="Enter your full name as per Aadhaar"
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Gender + DOB in one row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Gender" required error={errors.gender}>
               <select
                 value={data.gender}
@@ -244,51 +288,39 @@ export default function MembershipFormStep({
             </Field>
           </div>
 
-          <Field label="Full Name (as per Aadhaar)" required error={errors.fullName}>
-            <input
-              value={data.fullName}
-              onChange={(e) => set('fullName', e.target.value.toUpperCase())}
-              className={inputClass}
-              placeholder="Enter your full name as per Aadhaar"
-            />
-          </Field>
+          {/* Father + Mother in one row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Father's Name" required error={errors.fatherName}>
+              <input
+                value={data.fatherName}
+                onChange={(e) => set('fatherName', e.target.value.toUpperCase())}
+                className={inputClass}
+                placeholder="Enter father's full name"
+              />
+            </Field>
+            <Field label="Mother's Name" required error={errors.motherName}>
+              <input
+                value={data.motherName}
+                onChange={(e) => set('motherName', e.target.value.toUpperCase())}
+                className={inputClass}
+                placeholder="Enter mother's full name"
+              />
+            </Field>
+          </div>
         </div>
       </section>
 
-      {/* Parents Details */}
+      {/* Complete Address */}
       <section className={cardClass}>
-        <SectionHeader title="Parents Details" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Father's Name" required error={errors.fatherName}>
-            <input
-              value={data.fatherName}
-              onChange={(e) => set('fatherName', e.target.value.toUpperCase())}
-              className={inputClass}
-              placeholder="Enter father's full name"
-            />
-          </Field>
-          <Field label="Mother's Name" required error={errors.motherName}>
-            <input
-              value={data.motherName}
-              onChange={(e) => set('motherName', e.target.value.toUpperCase())}
-              className={inputClass}
-              placeholder="Enter mother's full name"
-            />
-          </Field>
-        </div>
-      </section>
-
-      {/* Address */}
-      <section className={cardClass}>
-        <SectionHeader title="Address" />
+        <SectionHeader title="Complete Address" />
         <div className="space-y-4">
-          <Field label="Address" required error={errors.address}>
+          <Field label="Complete Address" required error={errors.address}>
             <textarea
               rows={3}
               value={data.address}
               onChange={(e) => set('address', e.target.value.toUpperCase())}
               className={`${inputClass} resize-none`}
-              placeholder="Enter your complete address"
+              placeholder="Enter your complete address with House No., Street, Area, Landmark"
             />
           </Field>
 
@@ -354,7 +386,7 @@ export default function MembershipFormStep({
         </div>
       </section>
 
-      {/* Identity & Contact */}
+      {/* Identity & Contact - Added PAN Number */}
       <section className={cardClass}>
         <SectionHeader title="Identity & Contact" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -364,7 +396,15 @@ export default function MembershipFormStep({
               maxLength={12}
               onChange={(e) => set('aadhaar', e.target.value.replace(/\D/g, ''))}
               className={inputClass}
-              placeholder="12-digit"
+              placeholder="12-digit Aadhaar"
+            />
+          </Field>
+          <Field label="PAN No." required error={errors.panNumber}>
+            <input
+              value={data.panNumber}
+              onChange={(e) => set('panNumber', e.target.value.toUpperCase())}
+              className={inputClass}
+              placeholder="ABCDE1234F"
             />
           </Field>
           <Field label="Blood Group">
@@ -402,7 +442,7 @@ export default function MembershipFormStep({
         </div>
       </section>
 
-      {/* Additional Details */}
+      {/* Additional Details - Added PAN Card Upload */}
       <section className={cardClass}>
         <SectionHeader title="Additional Details" />
         <div className="space-y-4">
@@ -434,18 +474,32 @@ export default function MembershipFormStep({
             />
           </Field>
 
-          <Field label="Aadhaar Copy (optional)">
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37]">
-              <Upload className="h-4 w-4 text-[#D4AF37]" />
-              <span>{data.aadhaarFile ? data.aadhaarFile.name : 'Upload Aadhaar PDF or image'}</span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,application/pdf"
-                className="hidden"
-                onChange={(e) => onAadhaarChange(e.target.files?.[0] || null)}
-              />
-            </label>
-          </Field>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Aadhaar Copy (optional)">
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white/80 px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37] transition-colors">
+                <Upload className="h-4 w-4 text-[#D4AF37]" />
+                <span>{data.aadhaarFile ? data.aadhaarFile.name : 'Upload Aadhaar'}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,application/pdf"
+                  className="hidden"
+                  onChange={(e) => onAadhaarChange(e.target.files?.[0] || null)}
+                />
+              </label>
+            </Field>
+            <Field label="PAN Card Copy (optional)">
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white/80 px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37] transition-colors">
+                <Upload className="h-4 w-4 text-[#D4AF37]" />
+                <span>{data.panFile ? data.panFile.name : 'Upload PAN Card'}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,application/pdf"
+                  className="hidden"
+                  onChange={(e) => onPanChange(e.target.files?.[0] || null)}
+                />
+              </label>
+            </Field>
+          </div>
         </div>
       </section>
 

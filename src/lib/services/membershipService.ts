@@ -1,3 +1,5 @@
+// lib/services/membershipService.ts
+
 import { auth, db, storage } from '@/lib/firebase/config';
 import {
   collection,
@@ -37,6 +39,7 @@ export interface MembershipApplication {
   city?: string;
   pinCode?: string;
   aadhaar?: string;
+  panNumber?: string; // ✅ NEW
   bloodGroup?: string;
   contactNo: string;
   email: string;
@@ -53,6 +56,7 @@ export interface MembershipApplication {
   declarationDate?: string;
   photoUrl?: string;
   aadhaarUrl?: string;
+  panUrl?: string; // ✅ NEW
   userId?: string;
   status: MembershipStatus | string;
   reviewedAt?: string;
@@ -70,6 +74,7 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
 
     let photoUrl = '';
     let aadhaarUrl = '';
+    let panUrl = ''; // ✅ NEW
 
     if (data.photoFile) {
       try {
@@ -83,6 +88,14 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
         aadhaarUrl = await uploadFile(data.aadhaarFile, `membership/${docRef.id}/aadhaar`);
       } catch (error) {
         console.error('Aadhaar upload failed:', error);
+      }
+    }
+    // ✅ NEW: Upload PAN Card
+    if (data.panFile) {
+      try {
+        panUrl = await uploadFile(data.panFile, `membership/${docRef.id}/pan`);
+      } catch (error) {
+        console.error('PAN upload failed:', error);
       }
     }
 
@@ -99,6 +112,7 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
       city: data.city,
       pinCode: data.pinCode,
       aadhaar: data.aadhaar,
+      panNumber: data.panNumber, // ✅ NEW
       bloodGroup: data.bloodGroup,
       contactNo: data.contactNo,
       email: data.email,
@@ -115,6 +129,7 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
       declarationDate: data.declarationDate,
       photoUrl,
       aadhaarUrl,
+      panUrl, // ✅ NEW
       userId: currentUser?.uid || '',
       status: 'pending' as MembershipStatus,
       createdAt: new Date().toISOString(),
@@ -137,6 +152,7 @@ const mapApplication = (id: string, data: Record<string, unknown>): MembershipAp
     fullName: (data.fullName as string) || '',
     email: (data.email as string) || '',
     contactNo: (data.contactNo as string) || '',
+    panNumber: (data.panNumber as string) || '', // ✅ NEW
     membershipType: (data.membershipType as string) || '',
     membershipAmount: (data.membershipAmount as number) || 0,
     status: (data.status as string) || 'pending',

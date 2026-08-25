@@ -1,17 +1,70 @@
 // lib/constants/membership.ts
+
 export const MEMBERSHIP_GRADES = [
-  { sl: '1', grade: 'Patron', amountLabel: '5,00,000/-', amount: 500000 },
-  { sl: '4', grade: 'Life Member', amountLabel: '1,01,000/-', amount: 101000 },
-  { sl: '5', grade: 'Life Associate', amountLabel: '25,000/-', amount: 25000 },
-  { sl: '6', grade: 'Annual Member', amountLabel: '2,100/-', amount: 2100 },
-  { sl: '7', grade: 'Annual Associate', amountLabel: '1,100/-', amount: 1100 },
+  { 
+    sl: '1', 
+    grade: 'Patron', 
+    amountLabel: '5,00,000/-', 
+    amount: 500000,
+    details: [
+      'Priority in Puja booking',
+      'Information on all programmes',
+      'Puja in the name of their family two times in a year',
+      'Free Anniversary Puja',
+      'Birthday Puja',
+      'Puja for their parents Shradha (if dead)'
+    ]
+  },
+  { 
+    sl: '2', 
+    grade: 'Life Time Member', 
+    amountLabel: '1,01,000/- (One Time) + 11,000/- p.a', 
+    amount: 101000,
+    details: [
+      'Priority in Puja booking',
+      'Information on all programmes',
+      'Puja in the name of their family once in a year',
+      'Free Anniversary Puja',
+      'Birthday Puja'
+    ]
+  },
+  { 
+    sl: '3', 
+    grade: 'Life Associate', 
+    amountLabel: '25,000/-', 
+    amount: 25000,
+    details: [
+      'Priority in Puja booking',
+      'Information on all programmes',
+      'Puja in the name of their family once in a year'
+    ]
+  },
+  { 
+    sl: '4', 
+    grade: 'Annual Associate', 
+    amountLabel: '2,100/- p.a', 
+    amount: 2100,
+    details: [
+      'Information on all programmes',
+      'Puja in the name of their family'
+    ]
+  },
+  { 
+    sl: '5', 
+    grade: 'Annual Member', 
+    amountLabel: '1,100/- p.a', 
+    amount: 1100,
+    details: [
+      'Information on all major programmes'
+    ]
+  },
 ] as const;
 
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as const;
 
 export const MEMBERSHIP_INFO_POINTS = [
-  'Anyone can become Sri Jagannath Samiti member who has desire to improve Jagannath culture and believes in Sanatan Dharm.',
-  'On becoming member in any grade of membership, the individual helps in rendering service to Mandir at the time of need through Jagannath Samiti.',
+  'Anyone can become Samudayik Vikas Samiti member who has desire to improve Jagannath culture and believes in Sanatan Dharm.',
+  'On becoming member in any grade of membership, the individual helps in rendering service to Mandir at the time of need through Samudayik Vikas Samiti.',
   'Association, Club, Firms, Societies and Organization etc. can take membership from serial no. 1 only.',
 ] as const;
 
@@ -33,6 +86,7 @@ export interface MembershipFormData {
   city: string;
   pinCode: string;
   aadhaar: string;
+  panNumber: string; // ✅ NEW
   bloodGroup: string;
   contactNo: string;
   email: string;
@@ -49,6 +103,7 @@ export interface MembershipFormData {
   photoPreview: string;
   photoFile: File | null;
   aadhaarFile: File | null;
+  panFile: File | null; // ✅ NEW
 }
 
 export const emptyMembershipForm = (): MembershipFormData => ({
@@ -64,6 +119,7 @@ export const emptyMembershipForm = (): MembershipFormData => ({
   city: '',
   pinCode: '',
   aadhaar: '',
+  panNumber: '', // ✅ NEW
   bloodGroup: '',
   contactNo: '',
   email: '',
@@ -80,6 +136,7 @@ export const emptyMembershipForm = (): MembershipFormData => ({
   photoPreview: '',
   photoFile: null,
   aadhaarFile: null,
+  panFile: null, 
 });
 
 export const getSelectedGrade = (type: string) =>

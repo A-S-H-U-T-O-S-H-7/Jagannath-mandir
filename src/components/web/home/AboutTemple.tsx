@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { ArrowRight, Calendar, Users, Building2, Clock } from 'lucide-react';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { formatTimeRange } from '@/lib/utils/timingHelpers';
+import AboutTempleCarousel from './AboutTempleCarousel';
 
 export default function AboutTemple() {
   const fadeInUp = {
@@ -55,7 +56,7 @@ export default function AboutTemple() {
     <section className="py-8 sm:py-10 bg-[#F9F8F4]">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left - Image */}
+          {/* Left - Carousel */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -63,17 +64,7 @@ export default function AboutTemple() {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/20 to-transparent z-10" />
-              <Image
-                src="/homeabout2.jpeg"
-                alt="Jagannath Mandir Noida - Temple Interior"
-                width={600}
-                height={500}
-                className="w-full h-[350px] sm:h-[400px] lg:h-[450px] object-cover"
-                priority
-              />
-            </div>
+            <AboutTempleCarousel />
 
             {/* Decorative Elements */}
             <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#D4AF37]/20 rounded-full blur-2xl -z-10" />
@@ -115,13 +106,36 @@ export default function AboutTemple() {
               </span>
             </motion.div>
 
-            {/* Heading */}
+            {/* ✅ Heading with fixed Devanagari cropping */}
             <motion.h2
               variants={fadeInUp}
               className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#0B3C5D] leading-tight"
             >
-              Welcome to{' '}
-              <span className="text-[#D4AF37]">Jagannath Mandir</span>
+              <span className="block leading-[1.4]">
+                Welcome to{' '}
+                <span 
+                  className="font-devanagari inline-block"
+                  style={{
+                    fontFeatureSettings: '"ss01" 1, "ss02" 1, "cv01" 1',
+                    background: 'linear-gradient(90deg, #B8860B 0%, #D4AF37 25%, #F5D76E 50%, #D4AF37 75%, #B8860B 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    backgroundSize: '200% 100%',
+                    animation: 'navbarShine 3s ease-in-out infinite',
+                    filter: 'drop-shadow(0 2px 8px rgba(184, 134, 11, 0.3))',
+                    paddingTop: '0.2em',
+                    paddingBottom: '0.1em',
+                    lineHeight: '1.4',
+                    display: 'inline-block',
+                  }}
+                >
+                  श्री स्वर्णक्षेत्र
+                </span>
+              </span>
+              <span className="block text-[#D4AF37] leading-[1.2]">
+                Jagannath Mandir
+              </span>
             </motion.h2>
 
             {/* Description */}
