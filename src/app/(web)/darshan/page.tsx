@@ -63,7 +63,6 @@ export default function DarshanPage() {
     const loadDarshan = async () => {
       setLoading(true);
       try {
-        // All content from Admin Darshan + morning/evening from Settings
         const [daily, special, ritualsResult, videosResult, settings] = await Promise.all([
           adminDarshanService.getDailyDarshan(),
           adminDarshanService.getSpecialDarshanImages(),
@@ -164,7 +163,7 @@ export default function DarshanPage() {
   };
 
   return (
-    <div className=" min-h-screen bg-gradient-to-b from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]">
+    <div className="min-h-screen bg-gradient-to-b from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-4 md:py-8">
         <button
           onClick={() => window.history.back()}
@@ -335,67 +334,82 @@ export default function DarshanPage() {
               </motion.div>
             )}
 
-            {/* Aarti Videos - Admin videos */}
-            {videos.length > 0 && (
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="mb-12"
-              >
-                <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-4">
-                  <Video className="h-5 w-5 text-[#D4AF37]" />
-                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#0B3C5D]">
-                    Aarti <span className="text-[#D4AF37]">Videos</span>
-                  </h2>
-                  <span className="text-xs text-[#555555] ml-2">
-                    {videos.length} videos
-                  </span>
-                </motion.div>
+{/* ✅ Aarti Videos - Improved: Show video directly if no thumbnail */}
+{videos.length > 0 && (
+  <motion.div
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true }}
+    className="mb-12"
+  >
+    <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-4">
+      <Video className="h-5 w-5 text-[#D4AF37]" />
+      <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#0B3C5D]">
+        Aarti <span className="text-[#D4AF37]">Videos</span>
+      </h2>
+      <span className="text-xs text-[#555555] ml-2">
+        {videos.length} videos
+      </span>
+    </motion.div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {videos.map((video, index) => (
-                    <motion.div
-                      key={video.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.05, duration: 0.4 }}
-                      onClick={() => openVideoModal(video)}
-                      className="group bg-white/80 rounded-2xl overflow-hidden border border-[#E5E3DD]/50 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/30 cursor-pointer transition-all hover:-translate-y-1"
-                    >
-                      <div className="relative h-44 bg-[#0B3C5D]/10">
-                        {video.thumbnailUrl ? (
-                          <Image
-                            src={video.thumbnailUrl}
-                            alt={video.title}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Video className="w-12 h-12 text-[#D4AF37]/40" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
-                          <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                            <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
-                          </div>
-                        </div>
-                        {video.duration && (
-                          <span className="absolute bottom-2 right-2 text-[10px] bg-black/60 text-white px-2 py-0.5 rounded">
-                            {video.duration}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-[#0B3C5D] line-clamp-1">{video.title}</h4>
-                      </div>
-                    </motion.div>
-                  ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {videos.map((video, index) => (
+        <motion.div
+          key={video.id}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: index * 0.05, duration: 0.4 }}
+          onClick={() => openVideoModal(video)}
+          className="group bg-white/80 rounded-2xl overflow-hidden border border-[#E5E3DD]/50 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/30 cursor-pointer transition-all hover:-translate-y-1"
+        >
+          <div className="relative h-44 bg-[#0B3C5D]/10">
+            {video.thumbnailUrl ? (
+              // ✅ Show thumbnail if available
+              <>
+                <Image
+                  src={video.thumbnailUrl}
+                  alt={video.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
+                  </div>
                 </div>
-              </motion.div>
+              </>
+            ) : (
+              // ✅ No thumbnail - Show video directly with play button overlay
+              <>
+                <video
+                  src={video.videoUrl}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                  loop
+                  autoPlay
+                  preload="metadata"
+                />
+                <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
+                  </div>
+                </div>
+                {/* ✅ Subtle gradient overlay for better text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              </>
             )}
+          </div>
+          <div className="p-4">
+            <h4 className="font-semibold text-[#0B3C5D] line-clamp-1">{video.title}</h4>
+            <p className="text-xs text-[#555555] mt-1">{video.date}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  </motion.div>
+)}
 
             {/* Daily Rituals - Admin rituals */}
             <motion.div
@@ -554,6 +568,7 @@ export default function DarshanPage() {
 
               <div className="mt-4 text-center">
                 <h3 className="text-xl font-semibold text-white">{selectedVideo.title}</h3>
+                <p className="text-sm text-white/60">{selectedVideo.date}</p>
               </div>
             </motion.div>
           </motion.div>

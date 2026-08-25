@@ -30,7 +30,6 @@ export default function CreateAartiVideoModal({
   const [formData, setFormData] = useState({
     title: '',
     date: '',
-    duration: '',
     isActive: true,
     videoFile: null as File | null,
     videoPreview: '',
@@ -47,7 +46,6 @@ export default function CreateAartiVideoModal({
       setFormData({
         title: editingVideo.title || '',
         date: editingVideo.date || '',
-        duration: editingVideo.duration || '',
         isActive: editingVideo.isActive !== false,
         videoFile: null,
         videoPreview: '',
@@ -59,7 +57,6 @@ export default function CreateAartiVideoModal({
       setFormData({
         title: '',
         date: today,
-        duration: '',
         isActive: true,
         videoFile: null,
         videoPreview: '',
@@ -152,7 +149,7 @@ export default function CreateAartiVideoModal({
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.videoFile && !editingVideo) newErrors.videoFile = 'Video is required';
-    if (!formData.thumbnailPreview && !editingVideo) newErrors.thumbnailFile = 'Thumbnail is required';
+    // Thumbnail is now optional - no validation
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -226,20 +223,6 @@ export default function CreateAartiVideoModal({
               {errors.date && <p className="text-red-500 text-xs mt-1.5">{errors.date}</p>}
             </div>
 
-            {/* Duration */}
-            <div>
-              <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
-                Duration
-              </label>
-              <input
-                type="text"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none"
-                placeholder="e.g. 5:30"
-              />
-            </div>
-
             {/* Video Upload */}
             <div>
               <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
@@ -301,10 +284,10 @@ export default function CreateAartiVideoModal({
               )}
             </div>
 
-            {/* Thumbnail Upload */}
+            {/* ✅ Thumbnail Upload - Optional */}
             <div>
               <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
-                Thumbnail {!editingVideo && <span className="text-red-400">*</span>}
+                Thumbnail <span className="text-[#555555]/60 text-xs font-normal">(Optional)</span>
               </label>
 
               {formData.thumbnailPreview ? (
@@ -333,7 +316,8 @@ export default function CreateAartiVideoModal({
                   }`}
                 >
                   <ImageIcon className="w-5 h-5 text-[#555555]/40" />
-                  <p className="text-[10px] text-[#555555]/60 mt-1">Thumbnail</p>
+                  <p className="text-[10px] text-[#555555]/60 mt-1">Add Thumbnail</p>
+                  <p className="text-[8px] text-[#555555]/40">(Optional)</p>
                 </div>
               )}
 

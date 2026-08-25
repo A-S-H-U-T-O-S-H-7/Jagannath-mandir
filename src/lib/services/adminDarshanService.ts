@@ -37,7 +37,7 @@ export interface AartiVideo {
   videoUrl: string;
   thumbnailUrl: string;
   date: string;
-  duration?: string;
+  // ✅ duration removed
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -196,7 +196,6 @@ export const adminDarshanService = {
       const docRef = doc(db, COLLECTION, id);
       const updateData: any = {
         title: data.title,
-        // Clear the legacy field when an existing record is edited.
         description: deleteField(),
         date: data.date,
         isSpecial: data.isSpecial || false,
@@ -205,14 +204,11 @@ export const adminDarshanService = {
         updatedAt: new Date().toISOString(),
       };
 
-      // Upload new image if provided
       if (data.imageFile && data.imageFile instanceof File) {
-        // Delete old image
         try {
           const oldDoc = await getDoc(docRef);
           if (oldDoc.exists() && oldDoc.data().src) {
-            const oldPath = oldDoc.data().src;
-            // Extract path from URL if needed
+            // Old image will be overwritten
           }
         } catch (e) {}
         
@@ -232,7 +228,6 @@ export const adminDarshanService = {
   // Delete darshan image
   async deleteDarshanImage(id: string) {
     try {
-      // Delete from storage
       try {
         const storageRef = ref(storage, `darshan/${id}/image`);
         await deleteObject(storageRef);
@@ -264,7 +259,7 @@ export const adminDarshanService = {
     return await getDownloadURL(storageRef);
   },
 
-  // Create aarti video
+  // ✅ Create aarti video - duration removed
   async createAartiVideo(data: any) {
     try {
       const docRef = doc(collection(db, VIDEOS_COLLECTION));
@@ -286,7 +281,7 @@ export const adminDarshanService = {
         videoUrl,
         thumbnailUrl,
         date: data.date || new Date().toISOString().split('T')[0],
-        duration: data.duration || '',
+        // ✅ duration removed
         isActive: data.isActive !== false,
         createdAt: now,
         updatedAt: now,
@@ -300,7 +295,7 @@ export const adminDarshanService = {
     }
   },
 
-  // Get all aarti videos
+  // ✅ Get all aarti videos - duration removed from interface
   async getAllAartiVideos() {
     try {
       const snapshot = await getDocs(collection(db, VIDEOS_COLLECTION));
@@ -314,7 +309,7 @@ export const adminDarshanService = {
           videoUrl: data.videoUrl || '',
           thumbnailUrl: data.thumbnailUrl || '',
           date: data.date || '',
-          duration: data.duration || '',
+          // ✅ duration removed
           isActive: data.isActive !== false,
           createdAt: data.createdAt || new Date().toISOString(),
           updatedAt: data.updatedAt || new Date().toISOString(),
@@ -347,16 +342,15 @@ export const adminDarshanService = {
     }
   },
 
-  // Update aarti video
+  // ✅ Update aarti video - duration removed
   async updateAartiVideo(id: string, data: any) {
     try {
       const docRef = doc(db, VIDEOS_COLLECTION, id);
       const updateData: any = {
         title: data.title,
-        // Clear the legacy field when an existing record is edited.
         description: deleteField(),
         date: data.date,
-        duration: data.duration || '',
+        // ✅ duration removed
         isActive: data.isActive !== false,
         updatedAt: new Date().toISOString(),
       };
@@ -495,7 +489,6 @@ export const adminDarshanService = {
       await updateDoc(docRef, {
         name: data.name,
         time: data.time,
-        // Clear the legacy field when an existing record is edited.
         description: deleteField(),
         icon: data.icon || 'Clock',
         order: data.order || 0,
