@@ -50,6 +50,7 @@ export default function GalleryTable({
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">#</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Image</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Title</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Type</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Showcase</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Uploaded</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Actions</th>

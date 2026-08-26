@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight, Camera } from 'lucide-react';
 import { adminDarshanService } from '@/lib/services/adminDarshanService';
-import { parseEventDate } from '@/lib/utils/displayHelpers';
 
 export default function HeroTodaysDarshan() {
   const [image, setImage] = useState<{ src: string; title: string; date: string } | null>(null);
@@ -17,11 +16,16 @@ export default function HeroTodaysDarshan() {
       try {
         const result = await adminDarshanService.getDailyDarshan();
         if (result.success && result.image?.src) {
-          const { formatted } = parseEventDate(result.image.date);
           setImage({
             src: result.image.src,
             title: result.image.title || "Today's Darshan",
-            date: formatted || result.image.date || '',
+            // ✅ Always show today's date, not the uploaded date
+            date: new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
           });
         }
       } catch (error) {

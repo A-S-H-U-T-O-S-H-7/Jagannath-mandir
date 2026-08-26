@@ -1,20 +1,22 @@
+// components/admin/gallery/UploadVideoModal.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { X, Upload, Loader2, Video } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { MEDIA_TYPES, MediaType } from '@/lib/constants/media';
 
 interface UploadVideoModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (data: {
-    title: string;
-    description: string;
     videoFile: File;
     thumbnailFile: Blob | null;
     duration: string;
+    mediaType: MediaType;
   }) => Promise<void>;
   isUploading?: boolean;
+  isBulk?: boolean;
 }
 
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
@@ -74,24 +76,22 @@ export default function UploadVideoModal({
   onClose,
   onUpload,
   isUploading = false,
+  isBulk = false,
 }: UploadVideoModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [thumbnail, setThumbnail] = useState<Blob | null>(null);
-  const [duration, setDuration] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [thumbnails, setThumbnails] = useState<Blob[]>([]);
+  const [durations, setDurations] = useState<string[]>([]);
+  const [mediaType, setMediaType] = useState<MediaType>('normal');
   const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
-      setTitle('');
-      setDescription('');
-      setFile(null);
-      setPreviewUrl('');
-      setThumbnail(null);
-      setDuration('');
+      setFiles([]);
+      setPreviews([]);
+      setThumbnails([]);
+      setDurations([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, [isOpen]);
@@ -113,29 +113,58 @@ export default function UploadVideoModal({
       return;
     }
 
-    setFile(selected);
-    setPreviewUrl(URL.createObjectURL(selected));
-    if (!title.trim()) {
-      setTitle(selected.name.replace(/\.[^/.]+$/, ''));
-    }
+    setFiles([...files, selected]);
+    setPreviews([...previews, URL.createObjectURL(selected)]);
 
     const captured = await captureThumbnail(selected);
-    setThumbnail(captured.blob);
-    setDuration(captured.duration);
+    setThumbnails([...thumbnails, captured.blob || new Blob()]);
+    setDurations([...durations, captured.duration]);
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
+    const newPreviews = previews.filter((_, i) => i !== index);
+    const newThumbnails = thumbnails.filter((_, i) => i !== index);
+    const newDurations = durations.filter((_, i) => i !== index);
+    setFiles(newFiles);
+    setPreviews(newPreviews);
+    setThumbnails(newThumbnails);
+    setDurations(newDurations);
+    URL.revokeObjectURL(previews[index]);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    droppedFiles.forEach((file) => handleFile(file));
   };
 
   const handleSubmit = async () => {
-    if (!file) {
-      toast.error('Please select a video');
+    if (files.length === 0) {
+      toast.error('Please select at least one video');
       return;
     }
-    await onUpload({
-      title: title.trim() || file.name,
-      description: description.trim(),
-      videoFile: file,
-      thumbnailFile: thumbnail,
-      duration,
-    });
+
+    if (isBulk) {
+      // Bulk upload - upload each video one by one
+      for (let i = 0; i < files.length; i++) {
+        await onUpload({
+          videoFile: files[i],
+          thumbnailFile: thumbnails[i] || null,
+          duration: durations[i] || '',
+          mediaType,
+        });
+      }
+    } else {
+      // Single upload
+      await onUpload({
+        videoFile: files[0],
+        thumbnailFile: thumbnails[0] || null,
+        duration: durations[0] || '',
+        mediaType,
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -144,7 +173,14 @@ export default function UploadVideoModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col bg-white/95 border border-[#E5E3DD]/50 shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-[#E5E3DD]/50">
-          <h2 className="text-lg font-serif font-bold text-[#0B3C5D]">Upload Gallery Video</h2>
+          <div>
+            <h2 className="text-lg font-serif font-bold text-[#0B3C5D]">
+              {isBulk ? '📤 Bulk Upload Videos' : '📤 Upload Video'}
+            </h2>
+            <p className="text-sm text-[#555555]">
+              {isBulk ? 'Select multiple videos to upload' : 'Select a video to upload'}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-[#D4AF37]/5 text-[#555555] cursor-pointer"
@@ -154,67 +190,76 @@ export default function UploadVideoModal({
         </div>
 
         <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          {/* ✅ Media Type Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+            <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
+              Media Type <span className="text-red-400">*</span>
+            </label>
+            <select
+              value={mediaType}
+              onChange={(e) => setMediaType(e.target.value as MediaType)}
               className="w-full px-4 py-2.5 rounded-xl text-sm border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none"
-              placeholder="Rath Yatra procession"
-            />
+            >
+              {MEDIA_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              className="w-full px-4 py-2.5 rounded-xl text-sm border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none resize-none"
-              placeholder="Optional short description"
-            />
-          </div>
-
-          {!file ? (
+          {files.length === 0 ? (
             <div
               onDragEnter={() => setDragActive(true)}
               onDragLeave={() => setDragActive(false)}
               onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragActive(false);
-                handleFile(e.dataTransfer.files[0]);
-              }}
+              onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               className={`w-full h-44 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center ${
                 dragActive ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-[#E5E3DD] bg-white/50 hover:border-[#D4AF37]'
               }`}
             >
               <Upload className="w-8 h-8 text-[#D4AF37] mb-2" />
-              <p className="text-sm font-medium text-[#0B3C5D]">Click or drop a video</p>
-              <p className="text-xs text-[#555555]/70 mt-1">MP4, WEBM, MOV (Max 100MB)</p>
+              <p className="text-sm font-medium text-[#0B3C5D]">
+                {isBulk ? 'Click or drop videos' : 'Click or drop a video'}
+              </p>
+              <p className="text-xs text-[#555555]/70 mt-1">MP4, WEBM, MOV (Max 100MB each)</p>
             </div>
           ) : (
-            <div className="rounded-xl overflow-hidden border border-[#E5E3DD]/50 bg-black">
-              <video src={previewUrl} controls className="w-full max-h-56 object-contain" />
-              <div className="flex items-center justify-between px-3 py-2 bg-white">
-                <p className="text-xs text-[#555555] truncate">
-                  {file.name} {duration ? `· ${duration}` : ''}
-                </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[#555555]">
+                  {files.length} video{files.length > 1 ? 's' : ''} selected
+                </span>
                 <button
-                  type="button"
-                  onClick={() => {
-                    setFile(null);
-                    setPreviewUrl('');
-                    setThumbnail(null);
-                    setDuration('');
-                    if (fileInputRef.current) fileInputRef.current.value = '';
-                  }}
-                  className="text-xs text-red-600 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-sm text-[#D4AF37] hover:text-[#B8962E] transition-colors"
                 >
-                  Remove
+                  Add more
                 </button>
+              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {files.map((file, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl border border-[#E5E3DD]/50 bg-white/50">
+                    <video
+                      src={previews[index]}
+                      className="w-16 h-12 rounded-lg object-cover"
+                      muted
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#0B3C5D] truncate">{file.name}</p>
+                      <p className="text-xs text-[#555555]">
+                        {durations[index] || '—'} · {(file.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="p-1 rounded-full hover:bg-red-100 text-red-500 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -223,7 +268,13 @@ export default function UploadVideoModal({
             ref={fileInputRef}
             type="file"
             accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.mov"
-            onChange={(e) => handleFile(e.target.files?.[0])}
+            multiple={isBulk}
+            onChange={(e) => {
+              const selectedFiles = e.target.files;
+              if (selectedFiles) {
+                Array.from(selectedFiles).forEach((file) => handleFile(file));
+              }
+            }}
             className="hidden"
           />
         </div>
@@ -237,7 +288,7 @@ export default function UploadVideoModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!file || isUploading}
+            disabled={files.length === 0 || isUploading}
             className="flex-1 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-[#0B3C5D] text-sm font-semibold disabled:opacity-50 cursor-pointer"
           >
             {isUploading ? (
@@ -248,7 +299,7 @@ export default function UploadVideoModal({
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <Video className="w-4 h-4" />
-                Upload Video
+                {isBulk ? `Upload ${files.length} Videos` : 'Upload Video'}
               </span>
             )}
           </button>

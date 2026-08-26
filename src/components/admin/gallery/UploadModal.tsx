@@ -4,11 +4,12 @@
 import { useState, useRef } from 'react';
 import { X, Upload, Image as ImageIcon, Loader2, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { MEDIA_TYPES, MediaType } from '@/lib/constants/media';
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (files: File[]) => Promise<void>;
+  onUpload: (files: File[], mediaType: MediaType) => Promise<void>;
   isBulk?: boolean;
   isUploading?: boolean;
 }
@@ -23,6 +24,7 @@ export default function UploadModal({
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [mediaType, setMediaType] = useState<MediaType>('normal');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (selectedFiles: FileList | null) => {
@@ -46,7 +48,6 @@ export default function UploadModal({
     const newFiles = [...files, ...validFiles];
     setFiles(newFiles);
 
-    // Generate previews
     const newPreviews = validFiles.map(file => URL.createObjectURL(file));
     setPreviews([...previews, ...newPreviews]);
   };
@@ -70,7 +71,7 @@ export default function UploadModal({
       toast.error('Please select at least one image');
       return;
     }
-    await onUpload(files);
+    await onUpload(files, mediaType);
   };
 
   if (!isOpen) return null;
@@ -98,6 +99,24 @@ export default function UploadModal({
 
         {/* Body */}
         <div className="overflow-y-auto flex-1 p-5">
+          {/* ✅ Media Type Dropdown */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-[#0B3C5D] mb-1.5">
+              Media Type <span className="text-red-400">*</span>
+            </label>
+            <select
+              value={mediaType}
+              onChange={(e) => setMediaType(e.target.value as MediaType)}
+              className="w-full px-4 py-2.5 rounded-xl text-sm border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none"
+            >
+              {MEDIA_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Drop Zone */}
           {files.length === 0 ? (
             <div

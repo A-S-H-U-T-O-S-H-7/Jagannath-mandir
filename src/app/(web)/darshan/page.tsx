@@ -72,14 +72,17 @@ export default function DarshanPage() {
         ]);
 
         if (daily.success && daily.image) {
-          const { formatted } = parseEventDate(daily.image.date);
+          // ✅ Always show today's date, not the uploaded date
           setTodayImage({
             id: daily.image.id,
             src: daily.image.src || '/hero-desktop.png',
             alt: daily.image.alt || "Today's Darshan",
             title: daily.image.title || "Today's Darshan",
-            date: formatted || daily.image.date || new Date().toLocaleDateString('en-US', {
-              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            date: new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
             }),
             isSpecial: false,
           });
@@ -233,10 +236,16 @@ export default function DarshanPage() {
                 <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-4">
                   <Camera className="h-5 w-5 text-[#D4AF37]" />
                   <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#0B3C5D]">
-                    Today&apos;s <span className="text-[#D4AF37]">Darshan</span>
+                    Today's <span className="text-[#D4AF37]">Darshan</span>
                   </h2>
+                  {/* ✅ Today's date displayed properly */}
                   <span className="text-xs text-[#555555] ml-2">
-                    {todayImage.date}
+                    {new Date().toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                   </span>
                 </motion.div>
 
@@ -246,13 +255,30 @@ export default function DarshanPage() {
                   className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
                 >
                   <div className="relative h-[300px] sm:h-[400px] lg:h-[500px]">
-                    <Image
-                      src={todayImage.src}
-                      alt={todayImage.alt}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/60 via-transparent to-transparent" />
+                    {/* ✅ Blurred background layer (repeats image, blurred) */}
+                    <div className="absolute inset-0">
+                      <Image
+                        src={todayImage.src}
+                        alt=""
+                        fill
+                        className="object-cover blur-xs scale-110"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    
+                    {/* ✅ Main sharp image centered with object-contain */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Image
+                        src={todayImage.src}
+                        alt={todayImage.alt}
+                        fill
+                        className="object-contain"
+                        priority
+                      />
+                    </div>
+                    
+                    {/* ✅ Clean gradient overlay at bottom only (no blur) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/60 via-transparent to-transparent pointer-events-none" />
                     
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                       <h3 className="text-xl sm:text-2xl font-bold">{todayImage.title}</h3>
@@ -275,7 +301,7 @@ export default function DarshanPage() {
               </motion.div>
             ) : (
               <div className="mb-12 text-center py-8 text-[#555555] bg-white/60 rounded-2xl border border-[#E5E3DD]/50">
-                Today&apos;s darshan image will appear here once uploaded from Admin → Darshan.
+                Today's darshan image will appear here once uploaded from Admin → Darshan.
               </div>
             )}
 
@@ -315,7 +341,8 @@ export default function DarshanPage() {
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        {/* ✅ No blur, clean gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                         
                         <div className="absolute top-3 left-3 bg-[#D4AF37] text-[#0B3C5D] text-[10px] font-bold px-2 py-0.5 rounded-full">
                           SPECIAL
@@ -333,85 +360,83 @@ export default function DarshanPage() {
                 </div>
               </motion.div>
             )}
+            
+            {/* Aarti Videos */}
+            {videos.length > 0 && (
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="mb-12"
+              >
+                <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-4">
+                  <Video className="h-5 w-5 text-[#D4AF37]" />
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#0B3C5D]">
+                    Aarti <span className="text-[#D4AF37]">Videos</span>
+                  </h2>
+                  <span className="text-xs text-[#555555] ml-2">
+                    {videos.length} videos
+                  </span>
+                </motion.div>
 
-{/* ✅ Aarti Videos - Improved: Show video directly if no thumbnail */}
-{videos.length > 0 && (
-  <motion.div
-    initial="hidden"
-    whileInView="visible"
-    viewport={{ once: true }}
-    className="mb-12"
-  >
-    <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-4">
-      <Video className="h-5 w-5 text-[#D4AF37]" />
-      <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#0B3C5D]">
-        Aarti <span className="text-[#D4AF37]">Videos</span>
-      </h2>
-      <span className="text-xs text-[#555555] ml-2">
-        {videos.length} videos
-      </span>
-    </motion.div>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {videos.map((video, index) => (
-        <motion.div
-          key={video.id}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.05, duration: 0.4 }}
-          onClick={() => openVideoModal(video)}
-          className="group bg-white/80 rounded-2xl overflow-hidden border border-[#E5E3DD]/50 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/30 cursor-pointer transition-all hover:-translate-y-1"
-        >
-          <div className="relative h-44 bg-[#0B3C5D]/10">
-            {video.thumbnailUrl ? (
-              // ✅ Show thumbnail if available
-              <>
-                <Image
-                  src={video.thumbnailUrl}
-                  alt={video.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {videos.map((video, index) => (
+                    <motion.div
+                      key={video.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05, duration: 0.4 }}
+                      onClick={() => openVideoModal(video)}
+                      className="group bg-white/80 rounded-2xl overflow-hidden border border-[#E5E3DD]/50 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/30 cursor-pointer transition-all hover:-translate-y-1"
+                    >
+                      <div className="relative h-44 bg-[#0B3C5D]/10">
+                        {video.thumbnailUrl ? (
+                          <>
+                            <Image
+                              src={video.thumbnailUrl}
+                              alt={video.title}
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
+                              <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <video
+                              src={video.videoUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                              playsInline
+                              loop
+                              autoPlay
+                              preload="metadata"
+                            />
+                            <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
+                              <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
+                              </div>
+                            </div>
+                            {/* ✅ No blur, clean gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                          </>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-semibold text-[#0B3C5D] line-clamp-1">{video.title}</h4>
+                        <p className="text-xs text-[#555555] mt-1">{video.date}</p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </>
-            ) : (
-              // ✅ No thumbnail - Show video directly with play button overlay
-              <>
-                <video
-                  src={video.videoUrl}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                  loop
-                  autoPlay
-                  preload="metadata"
-                />
-                <div className="absolute inset-0 bg-[#0B3C5D]/30 group-hover:bg-[#0B3C5D]/40 transition-colors flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="w-6 h-6 text-[#0B3C5D] ml-1" fill="currentColor" />
-                  </div>
-                </div>
-                {/* ✅ Subtle gradient overlay for better text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </>
+              </motion.div>
             )}
-          </div>
-          <div className="p-4">
-            <h4 className="font-semibold text-[#0B3C5D] line-clamp-1">{video.title}</h4>
-            <p className="text-xs text-[#555555] mt-1">{video.date}</p>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  </motion.div>
-)}
 
-            {/* Daily Rituals - Admin rituals */}
+            {/* Daily Rituals */}
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -474,106 +499,106 @@ export default function DarshanPage() {
             </motion.div>
           </>
         )}
-      </div>
 
-      {/* Image Modal */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-[#0B3C5D]/95 backdrop-blur-lg flex items-center justify-center p-4"
-            onClick={closeImageModal}
-          >
+        {/* Image Modal */}
+        <AnimatePresence>
+          {selectedImage && (
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="relative max-w-5xl w-full"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] bg-[#0B3C5D]/95 backdrop-blur-lg flex items-center justify-center p-4"
+              onClick={closeImageModal}
             >
-              <button
-                onClick={closeImageModal}
-                className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative max-w-5xl w-full"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="h-8 w-8" />
-              </button>
+                <button
+                  onClick={closeImageModal}
+                  className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
+                >
+                  <X className="h-8 w-8" />
+                </button>
 
-              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#0B3C5D]">
-                <Image
-                  src={selectedImage.src}
-                  alt={selectedImage.alt}
-                  fill
-                  className="object-contain"
-                />
-              </div>
-
-              <div className="mt-4 text-center">
-                <h3 className="text-xl font-semibold text-white">{selectedImage.title}</h3>
-                <p className="text-sm text-white/60">{selectedImage.date}</p>
-                {selectedImage.isSpecial && (
-                  <span className="inline-block mt-2 text-xs bg-[#D4AF37]/20 text-[#D4AF37] px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                    Special Moment
-                  </span>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Video Modal */}
-      <AnimatePresence>
-        {selectedVideo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-[#0B3C5D]/95 backdrop-blur-lg flex items-center justify-center p-4"
-            onClick={closeVideoModal}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="relative max-w-4xl w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={closeVideoModal}
-                className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
-              >
-                <X className="h-8 w-8" />
-              </button>
-
-              <div className="rounded-2xl overflow-hidden bg-black aspect-video">
-                {selectedVideo.videoUrl ? (
-                  <video
-                    ref={videoRef}
-                    src={selectedVideo.videoUrl}
-                    controls
-                    autoPlay
-                    className="w-full h-full"
-                    poster={selectedVideo.thumbnailUrl || undefined}
+                <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#0B3C5D]">
+                  <Image
+                    src={selectedImage.src}
+                    alt={selectedImage.alt}
+                    fill
+                    className="object-contain"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/60">
-                    Video not available
-                  </div>
-                )}
-              </div>
+                </div>
 
-              <div className="mt-4 text-center">
-                <h3 className="text-xl font-semibold text-white">{selectedVideo.title}</h3>
-                <p className="text-sm text-white/60">{selectedVideo.date}</p>
-              </div>
+                <div className="mt-4 text-center">
+                  <h3 className="text-xl font-semibold text-white">{selectedImage.title}</h3>
+                  <p className="text-sm text-white/60">{selectedImage.date}</p>
+                  {selectedImage.isSpecial && (
+                    <span className="inline-block mt-2 text-xs bg-[#D4AF37]/20 text-[#D4AF37] px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                      Special Moment
+                    </span>
+                  )}
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+
+        {/* Video Modal */}
+        <AnimatePresence>
+          {selectedVideo && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] bg-[#0B3C5D]/95 backdrop-blur-lg flex items-center justify-center p-4"
+              onClick={closeVideoModal}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative max-w-4xl w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={closeVideoModal}
+                  className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
+                >
+                  <X className="h-8 w-8" />
+                </button>
+
+                <div className="rounded-2xl overflow-hidden bg-black aspect-video">
+                  {selectedVideo.videoUrl ? (
+                    <video
+                      ref={videoRef}
+                      src={selectedVideo.videoUrl}
+                      controls
+                      autoPlay
+                      className="w-full h-full"
+                      poster={selectedVideo.thumbnailUrl || undefined}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white/60">
+                      Video not available
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 text-center">
+                  <h3 className="text-xl font-semibold text-white">{selectedVideo.title}</h3>
+                  <p className="text-sm text-white/60">{selectedVideo.date}</p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,10 @@
+// components/admin/gallery/GalleryVideoTable.tsx
 'use client';
 
 import { Play, Trash2, Video } from 'lucide-react';
 import Image from 'next/image';
 import { GalleryVideo } from '@/lib/services/adminGalleryService';
+import { getMediaTypeLabel } from '@/lib/constants/media';
 
 interface GalleryVideoTableProps {
   videos: GalleryVideo[];
@@ -54,74 +56,86 @@ export default function GalleryVideoTable({
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">#</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Thumbnail</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Title</th>
+              {/* ✅ NEW: Media Type Header */}
+              <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Type</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Duration</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Uploaded</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#555555] uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E5E3DD]/30">
-            {videos.map((video, index) => (
-              <tr
-                key={video.id}
-                className={`transition-colors ${index % 2 === 0 ? 'bg-white/50' : 'bg-[#F9F8F4]/50'} hover:bg-[#D4AF37]/5`}
-              >
-                <td className="px-4 py-3">
-                  <span className="text-sm text-[#555555]">{index + 1}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="w-20 h-14 rounded-lg overflow-hidden bg-[#0B3C5D]/10 border border-[#E5E3DD]/50 relative">
-                    {video.thumbnailUrl ? (
-                      <Image
-                        src={video.thumbnailUrl}
-                        alt={video.title}
-                        width={80}
-                        height={56}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Play className="w-5 h-5 text-[#555555]/40" />
+            {videos.map((video, index) => {
+              const mediaTypeLabel = getMediaTypeLabel(video.mediaType || 'normal');
+              return (
+                <tr
+                  key={video.id}
+                  className={`transition-colors ${index % 2 === 0 ? 'bg-white/50' : 'bg-[#F9F8F4]/50'} hover:bg-[#D4AF37]/5`}
+                >
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-[#555555]">{index + 1}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-[#0B3C5D]/10 border border-[#E5E3DD]/50 relative">
+                      {video.thumbnailUrl ? (
+                        <Image
+                          src={video.thumbnailUrl}
+                          alt={video.title}
+                          width={80}
+                          height={56}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Play className="w-5 h-5 text-[#555555]/40" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <Play className="w-4 h-4 text-white fill-white" />
                       </div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Play className="w-4 h-4 text-white fill-white" />
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="text-sm font-medium text-[#0B3C5D] truncate max-w-xs">
-                    {video.title || 'Untitled'}
-                  </p>
-                  {video.description && (
-                    <p className="text-xs text-[#555555] truncate max-w-xs">{video.description}</p>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-sm text-[#555555]">{video.duration || '—'}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-sm text-[#555555]">{formatDate(video.createdAt)}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => window.open(video.videoUrl, '_blank')}
-                      className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer"
-                      title="Watch video"
-                    >
-                      <Play className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(video)}
-                      className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"
-                      title="Delete video"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="text-sm font-medium text-[#0B3C5D] truncate max-w-xs">
+                      {video.title || 'Untitled'}
+                    </p>
+                  </td>
+                  {/* ✅ NEW: Media Type Column */}
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      video.mediaType === 'media-coverage'
+                        ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                        : 'bg-[#0B3C5D]/10 text-[#0B3C5D]'
+                    }`}>
+                      {mediaTypeLabel}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-[#555555]">{video.duration || '—'}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-[#555555]">{formatDate(video.createdAt)}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => window.open(video.videoUrl, '_blank')}
+                        className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer"
+                        title="Watch video"
+                      >
+                        <Play className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(video)}
+                        className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"
+                        title="Delete video"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

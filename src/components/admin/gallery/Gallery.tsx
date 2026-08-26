@@ -15,6 +15,7 @@ import {
   GalleryVideo,
 } from '@/lib/services/adminGalleryService';
 import { ActivityActions, ActivityEntityTypes } from '@/lib/services/activityLogService';
+import { MediaType, MEDIA_TYPES } from '@/lib/constants/media';
 import GalleryStats from '@/components/admin/gallery/GalleryStats';
 import GalleryTable from '@/components/admin/gallery/GalleryTable';
 import GalleryVideoTable from '@/components/admin/gallery/GalleryVideoTable';
@@ -35,6 +36,7 @@ export default function GalleryPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false);
   const [isBulkUpload, setIsBulkUpload] = useState(false);
+  const [isBulkVideoUpload, setIsBulkVideoUpload] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -82,8 +84,6 @@ export default function GalleryPage() {
   };
 
   const fetchImages = useCallback(async (isLoadMore = false) => {
-    // `loading` starts as true, so using it here prevents the first request
-    // from ever running and leaves this page on its loading spinner forever.
     if (isFetchingRef.current) return;
     
     isFetchingRef.current = true;
@@ -138,24 +138,27 @@ export default function GalleryPage() {
     }
   };
 
-  const handleUpload = async (files: File[]) => {
+  // ✅ Updated: Handle image upload with mediaType
+  const handleUpload = async (files: File[], mediaType: MediaType) => {
     setIsUploading(true);
     try {
       const user = auth.currentUser;
       const result = await adminGalleryService.uploadMultipleImages(
         files,
         user?.uid || '',
-        user?.displayName || 'Admin'
+        user?.displayName || 'Admin',
+        mediaType
       );
 
       if (result.success) {
-        toast.success(`${files.length} image${files.length > 1 ? 's' : ''} uploaded successfully!`);
+        const mediaLabel = MEDIA_TYPES.find(t => t.value === mediaType)?.label || 'Normal';
+        toast.success(`${files.length} image${files.length > 1 ? 's' : ''} uploaded as ${mediaLabel}!`);
         await log({
           action: ActivityActions.CREATE,
           entityType: ActivityEntityTypes.GALLERY,
           entityId: result.ids?.[0] || '',
           entityTitle: `${files.length} images uploaded`,
-          details: `Uploaded ${files.length} image${files.length > 1 ? 's' : ''} to gallery`,
+          details: `Uploaded ${files.length} image${files.length > 1 ? 's' : ''} as ${mediaLabel}`,
         });
         setIsUploadModalOpen(false);
         lastDocRef.current = null;
@@ -172,30 +175,34 @@ export default function GalleryPage() {
     }
   };
 
+  // ✅ Updated: Handle video upload with mediaType (no title/description)
   const handleVideoUpload = async (data: {
-    title: string;
-    description: string;
     videoFile: File;
     thumbnailFile: Blob | null;
     duration: string;
+    mediaType: MediaType;
   }) => {
     setIsUploading(true);
     try {
       const user = auth.currentUser;
       const result = await adminGalleryService.createGalleryVideo({
-        ...data,
+        videoFile: data.videoFile,
+        thumbnailFile: data.thumbnailFile,
+        duration: data.duration,
+        mediaType: data.mediaType,
         uploadedBy: user?.uid || '',
         uploadedByName: user?.displayName || 'Admin',
       });
 
       if (result.success) {
-        toast.success('Video uploaded successfully!');
+        const mediaLabel = MEDIA_TYPES.find(t => t.value === data.mediaType)?.label || 'Normal';
+        toast.success(`Video uploaded as ${mediaLabel}!`);
         await log({
           action: ActivityActions.CREATE,
           entityType: ActivityEntityTypes.VIDEO,
           entityId: result.id || '',
-          entityTitle: data.title,
-          details: `Uploaded gallery video: ${data.title}`,
+          entityTitle: data.videoFile.name,
+          details: `Uploaded gallery video as ${mediaLabel}`,
         });
         setIsVideoUploadOpen(false);
         await fetchVideos();
@@ -439,37 +446,34 @@ export default function GalleryPage() {
 
       {activeTab === 'photos' && (
         <>
-          {/* Stats */}
           <GalleryStats
-        stats={stats}
-        onUpload={() => {
-          setIsBulkUpload(false);
-          setIsUploadModalOpen(true);
-        }}
-        onBulkUpload={() => {
-          setIsBulkUpload(true);
-          setIsUploadModalOpen(true);
-        }}
-      />
+            stats={stats}
+            onUpload={() => {
+              setIsBulkUpload(false);
+              setIsUploadModalOpen(true);
+            }}
+            onBulkUpload={() => {
+              setIsBulkUpload(true);
+              setIsUploadModalOpen(true);
+            }}
+          />
 
-      {/* Table */}
-      <GalleryTable
-        images={images}
-        loading={loading}
-        onEdit={(image) => {
-          setEditingImage(image);
-          setIsEditModalOpen(true);
-        }}
-        onDelete={handleDelete}
-        onToggleShowcase={handleToggleShowcase}
-      />
+          <GalleryTable
+            images={images}
+            loading={loading}
+            onEdit={(image) => {
+              setEditingImage(image);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={handleDelete}
+            onToggleShowcase={handleToggleShowcase}
+          />
 
-      {/* Load More Indicator */}
-      {loading && images.length > 0 && (
-        <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D4AF37] border-t-transparent" />
-        </div>
-      )}
+          {loading && images.length > 0 && (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#D4AF37] border-t-transparent" />
+            </div>
+          )}
         </>
       )}
 
@@ -487,13 +491,28 @@ export default function GalleryPage() {
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => setIsVideoUploadOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-[#0B3C5D] font-semibold hover:bg-[#E8C84A] transition-all duration-200 shadow-lg shadow-[#D4AF37]/25 cursor-pointer text-sm"
-            >
-              <Video className="w-4 h-4" />
-              Upload Video
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setIsBulkVideoUpload(false);
+                  setIsVideoUploadOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-[#0B3C5D] font-semibold hover:bg-[#E8C84A] transition-all duration-200 shadow-lg shadow-[#D4AF37]/25 cursor-pointer text-sm"
+              >
+                <Video className="w-4 h-4" />
+                Upload Single
+              </button>
+              <button
+                onClick={() => {
+                  setIsBulkVideoUpload(true);
+                  setIsVideoUploadOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3C5D] text-white font-semibold hover:bg-[#062A42] transition-all duration-200 shadow-lg shadow-[#0B3C5D]/25 cursor-pointer text-sm"
+              >
+                <Video className="w-4 h-4" />
+                Bulk Upload
+              </button>
+            </div>
           </div>
 
           <GalleryVideoTable
@@ -504,7 +523,7 @@ export default function GalleryPage() {
         </>
       )}
 
-      {/* Upload Modal */}
+      {/* Upload Image Modal */}
       <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => {
@@ -516,11 +535,16 @@ export default function GalleryPage() {
         isUploading={isUploading}
       />
 
+      {/* Upload Video Modal */}
       <UploadVideoModal
         isOpen={isVideoUploadOpen}
-        onClose={() => setIsVideoUploadOpen(false)}
+        onClose={() => {
+          setIsVideoUploadOpen(false);
+          setIsBulkVideoUpload(false);
+        }}
         onUpload={handleVideoUpload}
         isUploading={isUploading}
+        isBulk={isBulkVideoUpload}
       />
 
       {/* Edit Modal */}

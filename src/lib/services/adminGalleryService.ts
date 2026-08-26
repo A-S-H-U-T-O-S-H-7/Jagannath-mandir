@@ -16,6 +16,7 @@ import {
   getCountFromServer,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { MediaType } from '@/lib/constants/media';
 
 const COLLECTION = 'gallery';
 const VIDEO_COLLECTION = 'galleryVideos';
@@ -27,6 +28,7 @@ export interface GalleryImage {
   url: string;
   thumbnailUrl: string;
   showcase: boolean;
+  mediaType: MediaType; // ✅ NEW
   order: number;
   uploadedBy: string;
   uploadedByName: string;
@@ -43,6 +45,7 @@ export interface GalleryVideo {
   fileName: string;
   fileSize: number;
   duration: string;
+  mediaType: MediaType; // ✅ NEW
   uploadedBy: string;
   uploadedByName: string;
   createdAt: string;
@@ -59,8 +62,13 @@ export const adminGalleryService = {
     return { url: downloadURL, thumbnailUrl: downloadURL };
   },
 
-  // Upload multiple images
-  async uploadMultipleImages(files: File[], uploadedBy: string, uploadedByName: string): Promise<{ success: boolean; error?: string; ids?: string[] }> {
+  // ✅ Updated: Upload multiple images with mediaType
+  async uploadMultipleImages(
+    files: File[], 
+    uploadedBy: string, 
+    uploadedByName: string,
+    mediaType: MediaType = 'normal' // ✅ NEW
+  ): Promise<{ success: boolean; error?: string; ids?: string[] }> {
     try {
       const now = new Date().toISOString();
       const ids: string[] = [];
@@ -77,6 +85,7 @@ export const adminGalleryService = {
           url,
           thumbnailUrl,
           showcase: false,
+          mediaType, // ✅ NEW
           order: 0,
           uploadedBy,
           uploadedByName,
@@ -91,6 +100,21 @@ export const adminGalleryService = {
     } catch (error: any) {
       console.error('Error uploading multiple images:', error);
       return { success: false, error: error.message };
+    }
+  },
+
+  // Get images by media type
+  async getImagesByType(mediaType: MediaType) {
+    try {
+      const result = await this.getAllImages();
+      if (!result.success) {
+        return { success: false, error: result.error, images: [] };
+      }
+      const images = result.images.filter((img) => img.mediaType === mediaType);
+      return { success: true, images };
+    } catch (error: any) {
+      console.error('Error getting images by type:', error);
+      return { success: false, error: error.message, images: [] };
     }
   },
 
@@ -109,6 +133,7 @@ export const adminGalleryService = {
           url: data.url || '',
           thumbnailUrl: data.thumbnailUrl || data.url || '',
           showcase: data.showcase || false,
+          mediaType: data.mediaType || 'normal', // ✅ NEW
           order: data.order || 0,
           uploadedBy: data.uploadedBy || '',
           uploadedByName: data.uploadedByName || '',
@@ -256,12 +281,12 @@ export const adminGalleryService = {
     return await getDownloadURL(storageRef);
   },
 
+  // ✅ Updated: Create gallery video with mediaType (no title/description required)
   async createGalleryVideo(data: {
-    title: string;
-    description?: string;
     videoFile: File;
     thumbnailFile?: File | Blob | null;
     duration?: string;
+    mediaType?: MediaType; // ✅ NEW
     uploadedBy: string;
     uploadedByName: string;
   }) {
@@ -276,13 +301,14 @@ export const adminGalleryService = {
       }
 
       await setDoc(docRef, {
-        title: data.title.trim() || data.videoFile.name.replace(/\.[^/.]+$/, ''),
-        description: data.description || '',
+        title: data.videoFile.name.replace(/\.[^/.]+$/, ''),
+        description: '',
         videoUrl,
         thumbnailUrl,
         fileName: data.videoFile.name,
         fileSize: data.videoFile.size,
         duration: data.duration || '',
+        mediaType: data.mediaType || 'normal', // ✅ NEW
         uploadedBy: data.uploadedBy,
         uploadedByName: data.uploadedByName,
         createdAt: now,
@@ -294,6 +320,105 @@ export const adminGalleryService = {
       console.error('Error creating gallery video:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // ✅ NEW: Bulk upload videos
+  async uploadMultipleVideos(
+    files: File[],
+    uploadedBy: string,
+    uploadedByName: string,
+    mediaType: MediaType = 'normal'
+  ): Promise<{ success: boolean; error?: string; ids?: string[] }> {
+    try {
+      const now = new Date().toISOString();
+      const ids: string[] = [];
+
+      for (const file of files) {
+        const docRef = doc(collection(db, VIDEO_COLLECTION));
+        const videoId = docRef.id;
+        
+        const videoUrl = await this.uploadGalleryVideoFile(file, videoId);
+        
+        // Auto-generate thumbnail from video
+        let thumbnailUrl = '';
+        try {
+          const { blob } = await this.captureVideoThumbnail(file);
+          if (blob) {
+            thumbnailUrl = await this.uploadGalleryVideoThumbnail(blob, videoId);
+          }
+        } catch (e) {
+          console.log('Could not generate thumbnail for:', file.name);
+        }
+
+        await setDoc(docRef, {
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          description: '',
+          videoUrl,
+          thumbnailUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          duration: '',
+          mediaType, // ✅ NEW
+          uploadedBy,
+          uploadedByName,
+          createdAt: now,
+          updatedAt: now,
+        });
+        
+        ids.push(videoId);
+      }
+
+      return { success: true, ids };
+    } catch (error: any) {
+      console.error('Error uploading multiple videos:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Helper: Capture video thumbnail
+  async captureVideoThumbnail(file: File): Promise<{ blob: Blob | null; duration: string }> {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      const objectUrl = URL.createObjectURL(file);
+      video.src = objectUrl;
+
+      const cleanup = () => URL.revokeObjectURL(objectUrl);
+
+      video.onloadedmetadata = () => {
+        video.currentTime = Math.min(1, video.duration / 2 || 0);
+      };
+
+      video.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 360;
+          canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              cleanup();
+              const total = Math.floor(video.duration || 0);
+              const minutes = Math.floor(total / 60);
+              const secs = total % 60;
+              resolve({ blob, duration: `${minutes}:${secs.toString().padStart(2, '0')}` });
+            },
+            'image/jpeg',
+            0.8
+          );
+        } catch {
+          cleanup();
+          resolve({ blob: null, duration: '' });
+        }
+      };
+
+      video.onerror = () => {
+        cleanup();
+        resolve({ blob: null, duration: '' });
+      };
+    });
   },
 
   async getAllGalleryVideos() {
@@ -312,6 +437,7 @@ export const adminGalleryService = {
           fileName: data.fileName || '',
           fileSize: data.fileSize || 0,
           duration: data.duration || '',
+          mediaType: data.mediaType || 'normal', // ✅ NEW
           uploadedBy: data.uploadedBy || '',
           uploadedByName: data.uploadedByName || '',
           createdAt: data.createdAt || new Date().toISOString(),
@@ -323,6 +449,21 @@ export const adminGalleryService = {
       return { success: true, videos };
     } catch (error: any) {
       console.error('Error getting gallery videos:', error);
+      return { success: false, error: error.message, videos: [] };
+    }
+  },
+
+  // Get videos by media type
+  async getVideosByType(mediaType: MediaType) {
+    try {
+      const result = await this.getAllGalleryVideos();
+      if (!result.success) {
+        return { success: false, error: result.error, videos: [] };
+      }
+      const videos = result.videos.filter((v) => v.mediaType === mediaType);
+      return { success: true, videos };
+    } catch (error: any) {
+      console.error('Error getting videos by type:', error);
       return { success: false, error: error.message, videos: [] };
     }
   },

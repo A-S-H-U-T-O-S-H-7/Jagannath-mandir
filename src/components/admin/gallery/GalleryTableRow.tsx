@@ -4,6 +4,7 @@
 import { Edit, Trash2, Star, StarOff, Image as ImageIcon, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { GalleryImage } from '@/lib/services/adminGalleryService';
+import { getMediaTypeLabel } from '@/lib/constants/media';
 
 interface GalleryTableRowProps {
   image: GalleryImage;
@@ -28,6 +29,8 @@ export default function GalleryTableRow({
       day: '2-digit',
     });
   };
+
+  const mediaTypeLabel = getMediaTypeLabel(image.mediaType || 'normal');
 
   return (
     <tr className={`transition-colors ${index % 2 === 0 ? 'bg-white/50' : 'bg-[#F9F8F4]/50'} hover:bg-[#D4AF37]/5`}>
@@ -57,6 +60,17 @@ export default function GalleryTableRow({
         <p className="text-sm font-medium text-[#0B3C5D] truncate max-w-xs">
           {image.title || 'Untitled'}
         </p>
+      </td>
+
+      {/* ✅ NEW: Media Type Column */}
+      <td className="px-4 py-3">
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+          image.mediaType === 'media-coverage'
+            ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+            : 'bg-[#0B3C5D]/10 text-[#0B3C5D]'
+        }`}>
+          {mediaTypeLabel}
+        </span>
       </td>
 
       <td className="px-4 py-3">
