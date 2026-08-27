@@ -182,7 +182,17 @@ export default function DonationForm({ donorType }: DonationFormProps) {
         }),
       });
 
-      const created = await createRes.json();
+      const createResponseText = await createRes.text();
+      let created: { success?: boolean; error?: string };
+      try {
+        created = JSON.parse(createResponseText);
+      } catch {
+        throw new Error(
+          createRes.status >= 500
+            ? 'Our donation service is temporarily unavailable. Please try again shortly.'
+            : 'Unable to create donation'
+        );
+      }
       if (!createRes.ok || !created.success) {
         throw new Error(created.error || 'Unable to create donation');
       }
@@ -203,8 +213,14 @@ export default function DonationForm({ donorType }: DonationFormProps) {
         }),
       });
 
-      const paymentJson = await paymentRes.json();
-      if (!paymentRes.ok || !paymentJson.status || !paymentJson.encRequest || !paymentJson.access_code) {
+      const paymentResponseText = await paymentRes.text();
+      let paymentJson: { status?: boolean; encRequest?: string; access_code?: string; paymentUrl?: string; errors?: string[] };
+      try {
+        paymentJson = JSON.parse(paymentResponseText);
+      } catch {
+        throw new Error('Unable to start payment. Please try again.');
+      }
+      if (!paymentRes.ok || !paymentJson.status || !paymentJson.encRequest || !paymentJson.access_code || !paymentJson.paymentUrl) {
         const message = paymentJson.errors?.[0] || 'Unable to start payment';
         throw new Error(message);
       }

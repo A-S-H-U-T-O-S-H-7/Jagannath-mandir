@@ -1,4 +1,4 @@
-import { adminDb } from '@/lib/firebase/admin';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { DonationData, DonationResponse } from '@/lib/services/donationService';
 
@@ -9,7 +9,7 @@ export const donationServer = {
     data: Omit<DonationData, 'createdAt' | 'updatedAt'>
   ): Promise<{ success: boolean; donationId?: string; error?: string }> {
     try {
-      await adminDb.collection(COLLECTION).doc(data.id).set({
+      await getAdminDb().collection(COLLECTION).doc(data.id).set({
         ...data,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -22,7 +22,7 @@ export const donationServer = {
   },
   async getDonation(donationId: string): Promise<DonationResponse> {
     try {
-      const snap = await adminDb.collection(COLLECTION).doc(donationId).get();
+      const snap = await getAdminDb().collection(COLLECTION).doc(donationId).get();
       if (!snap.exists) {
         return { success: false, error: 'Donation not found' };
       }
@@ -67,7 +67,7 @@ export const donationServer = {
         updates.completedAt = FieldValue.serverTimestamp();
       }
 
-      await adminDb.collection(COLLECTION).doc(donationId).update(updates);
+      await getAdminDb().collection(COLLECTION).doc(donationId).update(updates);
       return { success: true };
     } catch (error: any) {
       console.error('donationServer.updateDonationStatus error:', error);
