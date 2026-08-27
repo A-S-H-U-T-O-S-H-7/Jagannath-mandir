@@ -17,7 +17,12 @@ import {
   Flower2,
   Lamp,
   HandHeart,
-  UserPlus
+  UserPlus,
+  Landmark,
+  Sparkles,
+  Music,
+  BookOpen,
+  Sun
 } from 'lucide-react';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { formatTimeRange, normalizeRituals, RitualEntry } from '@/lib/utils/timingHelpers';
@@ -54,49 +59,6 @@ export default function AboutPage() {
     { label: 'Seva Options', value: '8+', icon: HandHeart },
   ];
 
-  const features = [
-    {
-      icon: Building2,
-      title: 'Kalinga Architecture',
-      description: 'Traditional Odia temple design with intricate carvings and modern amenities',
-    },
-    {
-      icon: Flower2,
-      title: 'Daily Rituals',
-      description: rituals.length
-        ? rituals.map((ritual) => ritual.name).join(', ')
-        : 'Mangala Aarti, Abhishekam, Bhoga, Evening Aarti, and Shayan Aarti',
-    },
-    {
-      icon: Users,
-      title: 'Devotee Community',
-      description: 'A vibrant community of devotees connecting through faith and service',
-    },
-    {
-      icon: Heart,
-      title: 'Spiritual Guidance',
-      description: 'Experienced priests offering spiritual guidance and conducting ceremonies',
-    },
-  ];
-
-  const milestones = [
-    {
-      year: '2024',
-      title: 'Temple Inauguration',
-      description: 'Jagnanth Mandir Noida was established to serve the spiritual needs of the community.',
-    },
-    {
-      year: '2025',
-      title: 'First Rath Yatra',
-      description: 'Celebrated the first grand Rath Yatra with thousands of devotees.',
-    },
-    {
-      year: '2026',
-      title: 'Community Outreach',
-      description: 'Expanded seva activities including Annadan and educational programs.',
-    },
-  ];
-
   return (
     <div>
       {/* Hero Section */}
@@ -129,26 +91,22 @@ export default function AboutPage() {
                 variants={fadeInUp}
                 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#0B3C5D]"
               >
-                A Divine Abode of{' '}
-                <span className="text-[#D4AF37]">Lord Jagannath</span>
+                Sri Swarna Kshetra{' '}
+                <span className="text-[#D4AF37]">Jagannath Mandir</span>
               </motion.h1>
 
-              <motion.p
+              <motion.div
                 variants={fadeInUp}
-                className="text-base sm:text-lg text-[#555555] leading-relaxed"
+                className="space-y-4"
               >
-                Jagnanth Mandir Noida is a sacred sanctuary dedicated to Lord Jagannath, 
-                serving as a spiritual home for devotees in the National Capital Region.
-              </motion.p>
+                <p className="text-base sm:text-lg text-[#555555] leading-relaxed">
+                  Sri Swarna Kshetra is a divine abode of Lord Jagannath located in the heart of Noida. Our temple is a spiritual sanctuary for devotees, offering daily rituals, cultural programs, and a warm, vibrant community dedicated to preserving Jagannath Sanskriti and heritage and spreading the message of devotion.
+                </p>
 
-              <motion.p
-                variants={fadeInUp}
-                className="text-sm sm:text-base text-[#555555] leading-relaxed"
-              >
-                Established with the vision of preserving Odia culture and spreading the 
-                message of devotion, our temple offers a serene environment for prayer, 
-                meditation, and spiritual growth.
-              </motion.p>
+                <p className="text-sm sm:text-base text-[#555555] leading-relaxed">
+                  Built in a style that blends traditional architecture with modern amenities, the temple provides a peaceful environment for prayer, meditation, and spiritual growth. Besides the main deities, the Royale Garden Estate Mandir complex also houses shrines for many other beloved forms of the Divine, making it a comprehensive centre for devotional life in the neighbourhood.
+                </p>
+              </motion.div>
 
               <motion.div
                 variants={fadeInUp}
@@ -178,12 +136,12 @@ export default function AboutPage() {
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <Image
                   src="/aboutmain.png"
-                  alt="Jagnanth Mandir Noida"
+                  alt="Sri Swarna Kshetra Jagannath Mandir"
                   width={600}
                   height={500}
                   className="w-full h-[350px] sm:h-[400px] lg:h-[450px] object-cover"
                 />
-                {/* <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/40 to-transparent" /> */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/20 to-transparent" />
               </div>
               <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#D4AF37]/20 rounded-full blur-2xl -z-10" />
               <div className="absolute -top-4 -left-4 w-32 h-32 bg-[#0B3C5D]/10 rounded-full blur-2xl -z-10" />
@@ -218,7 +176,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Deities and Shrines Section */}
       <section className="relative py-16 sm:py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8]" />
         
@@ -236,9 +194,9 @@ export default function AboutPage() {
               variants={fadeInUp}
               className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-white/80 backdrop-blur-sm px-4 py-1.5 shadow-sm mb-4"
             >
-              <CheckCircle className="h-4 w-4 text-[#D4AF37]" />
+              <Flower2 className="h-4 w-4 text-[#D4AF37]" />
               <span className="text-xs font-semibold tracking-wide text-[#0B3C5D] uppercase">
-                Why Visit Us
+                Deities and Shrines
               </span>
             </motion.div>
 
@@ -246,19 +204,187 @@ export default function AboutPage() {
               variants={fadeInUp}
               className="font-serif text-3xl sm:text-4xl font-bold text-[#0B3C5D]"
             >
-              What Makes Our <span className="text-[#D4AF37]">Temple</span> Special
+              Sacred <span className="text-[#D4AF37]">Deities</span> We Worship
             </motion.h2>
-
-            <motion.p
-              variants={fadeInUp}
-              className="mt-3 text-sm sm:text-base text-[#555555] leading-relaxed"
-            >
-              Experience the divine presence of Lord Jagannath in a serene and spiritual environment
-            </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 transition-all duration-300 shadow-sm hover:shadow-xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-[#D4AF37]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0B3C5D]">Chaturdha Murti</h3>
+              </div>
+              <p className="text-sm text-[#555555] leading-relaxed mb-4">
+                Lord Jagannath, Prabhu Balbhadra, Devi Subhadra and Sudarshan
+              </p>
+              <div className="inline-flex items-center gap-2 bg-[#D4AF37]/10 rounded-full px-3 py-1.5">
+                <Calendar className="h-4 w-4 text-[#D4AF37]" />
+                <span className="text-xs font-semibold text-[#0B3C5D]">
+                  Sthapana: 8 July 2025 at Sri Swarna Kshetra
+                </span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 transition-all duration-300 shadow-sm hover:shadow-xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
+                  <Landmark className="h-6 w-6 text-[#D4AF37]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0B3C5D]">Additional Shrines</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Shiva Parivar',
+                  'Sri Ram Parivar',
+                  'Laxmi Narayan',
+                  'Radha–Krishna',
+                  'Bajrang Bali',
+                  'Mata Durga',
+                  'Shanidev',
+                  'Sai Baba'
+                ].map((shrine, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#0B3C5D]/5 text-xs font-medium text-[#0B3C5D] border border-[#0B3C5D]/10"
+                  >
+                    {shrine}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* A Brief History Section */}
+      <section className="relative py-16 sm:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]" />
+        
+        <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.div
+                variants={fadeInUp}
+                className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-white/80 backdrop-blur-sm px-4 py-1.5 shadow-sm mb-4"
+              >
+                <Clock className="h-4 w-4 text-[#D4AF37]" />
+                <span className="text-xs font-semibold tracking-wide text-[#0B3C5D] uppercase">
+                  A Brief History
+                </span>
+              </motion.div>
+
+              <motion.h2
+                variants={fadeInUp}
+                className="font-serif text-3xl sm:text-4xl font-bold text-[#0B3C5D] mb-6"
+              >
+                Our Spiritual <span className="text-[#D4AF37]">Journey</span>
+              </motion.h2>
+
+              <motion.p
+                variants={fadeInUp}
+                className="text-base text-[#555555] leading-relaxed"
+              >
+                These deities have been lovingly worshipped by the community since 2009, initially at the Sector 121 Jagannath Mandir. On 8 July 2025 the Chaturdha Murti were formally installed at Sri Swarna Kshetra. Residents of Royale Garden Estate and adjoining sectors consider it a powerful source of blessings and spiritual energy.
+              </motion.p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative rounded-2xl overflow-hidden shadow-xl">
+                <Image
+                  src="/templehistory2.jpeg"
+                  alt="Temple History"
+                  width={500}
+                  height={400}
+                  className="w-full h-[300px] sm:h-[350px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/40 to-transparent" />
+              </div>
+              <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-[#D4AF37]/20 rounded-full blur-2xl -z-10" />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* What We Offer Section */}
+      <section className="relative py-16 sm:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8]" />
+        
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#D4AF37]/15 rounded-full blur-[120px] -z-10" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#0B3C5D]/15 rounded-full blur-[120px] -z-10" />
+
+        <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-12 sm:mb-16"
+          >
+            <motion.div
+              variants={fadeInUp}
+              className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-white/80 backdrop-blur-sm px-4 py-1.5 shadow-sm mb-4"
+            >
+              <CheckCircle className="h-4 w-4 text-[#D4AF37]" />
+              <span className="text-xs font-semibold tracking-wide text-[#0B3C5D] uppercase">
+                What We Offer
+              </span>
+            </motion.div>
+
+            <motion.h2
+              variants={fadeInUp}
+              className="font-serif text-3xl sm:text-4xl font-bold text-[#0B3C5D]"
+            >
+              Our <span className="text-[#D4AF37]">Services</span> & Offerings
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                icon: Sun,
+                title: 'Daily Puja & Aarti',
+                description: 'Daily puja and aarti',
+              },
+              {
+                icon: Music,
+                title: 'Cultural Events',
+                description: 'Devotional music and cultural events',
+              },
+              {
+                icon: Users,
+                title: 'Community & Seva',
+                description: 'A welcoming community for seva, study, and spiritual fellowship',
+              },
+              {
+                icon: BookOpen,
+                title: 'Meditation Space',
+                description: 'A serene space for personal prayer and meditation',
+              },
+            ].map((offer, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
@@ -268,13 +394,13 @@ export default function AboutPage() {
                 className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 text-center border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl"
               >
                 <div className="w-14 h-14 rounded-full bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-4">
-                  <feature.icon className="h-7 w-7 text-[#D4AF37]" />
+                  <offer.icon className="h-7 w-7 text-[#D4AF37]" />
                 </div>
                 <h3 className="text-base font-bold text-[#0B3C5D] mb-2">
-                  {feature.title}
+                  {offer.title}
                 </h3>
                 <p className="text-sm text-[#555555] leading-relaxed">
-                  {feature.description}
+                  {offer.description}
                 </p>
               </motion.div>
             ))}
@@ -282,8 +408,33 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Invitation Section */}
       <section className="relative py-16 sm:py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]" />
+        
+        <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-4xl mx-auto text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 sm:p-12 border border-[#D4AF37]/20 shadow-xl"
+          >
+            <Heart className="h-12 w-12 text-[#D4AF37] mx-auto mb-6" />
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B3C5D] mb-4">
+              We Welcome You
+            </h2>
+            <p className="text-base sm:text-lg text-[#555555] leading-relaxed italic">
+              We warmly invite devotees and visitors to join us for darshan, participate in our programmes, and share in the spiritual life of the temple.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Darshan Timings Section */}
+      <section className="relative py-16 sm:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#D4E8F0] via-[#E8E4D8] to-[#D4C8B8]" />
+        
         <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
           <motion.div
             initial="hidden"
@@ -337,63 +488,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Milestones Section */}
-      <section className="relative py-16 sm:py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]" />
-
-        <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-10">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-12 sm:mb-16"
-          >
-            <motion.div
-              variants={fadeInUp}
-              className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-white/80 backdrop-blur-sm px-4 py-1.5 shadow-sm mb-4"
-            >
-              <Calendar className="h-4 w-4 text-[#D4AF37]" />
-              <span className="text-xs font-semibold tracking-wide text-[#0B3C5D] uppercase">
-                Our Journey
-              </span>
-            </motion.div>
-
-            <motion.h2
-              variants={fadeInUp}
-              className="font-serif text-3xl sm:text-4xl font-bold text-[#0B3C5D]"
-            >
-              Temple <span className="text-[#D4AF37]">Milestones</span>
-            </motion.h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {milestones.map((milestone, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-[#E5E3DD]/50 hover:border-[#D4AF37]/30 transition-all duration-300 shadow-sm hover:shadow-xl"
-              >
-                <div className="absolute -top-3 left-8 bg-[#D4AF37] text-[#0B3C5D] text-xs font-bold px-3 py-1 rounded-full">
-                  {milestone.year}
-                </div>
-                <div className="mt-4">
-                  <h3 className="text-lg font-bold text-[#0B3C5D] mb-2">
-                    {milestone.title}
-                  </h3>
-                  <p className="text-sm text-[#555555] leading-relaxed">
-                    {milestone.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - NEW COLOR */}
+      {/* CTA Section */}
       <section className="relative py-12 sm:py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37] via-[#E8C84A] to-[#B8962E]" />
         
@@ -413,7 +508,7 @@ export default function AboutPage() {
               Become Part of Our <span className="text-white">Spiritual Family</span>
             </h2>
             <p className="text-[#0B3C5D]/80 text-sm sm:text-base max-w-2xl mx-auto mb-6">
-              Join Jagnanth Mandir as a member and be part of our growing community. 
+              Join Sri Swarna Kshetra as a member and be part of our growing community. 
               Experience the divine presence of Lord Jagannath through exclusive services and events.
             </p>
             <div className="flex flex-wrap justify-center gap-3">

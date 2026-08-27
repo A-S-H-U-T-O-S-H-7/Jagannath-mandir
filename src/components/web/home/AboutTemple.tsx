@@ -138,43 +138,29 @@ export default function AboutTemple() {
               </span>
             </motion.h2>
 
-            {/* Description */}
-            <motion.p
-              variants={fadeInUp}
-              className="text-base sm:text-lg text-[#555555] leading-relaxed"
-            >
-              A divine abode of Lord Jagannath in the heart of Noida. 
-              Our temple serves as a spiritual sanctuary for devotees, 
-              offering daily rituals, cultural events, and a vibrant 
-              community dedicated to preserving Odia heritage and 
-              spreading the message of devotion.
-            </motion.p>
-
-            <motion.p
-              variants={fadeInUp}
-              className="text-sm sm:text-base text-[#555555] leading-relaxed"
-            >
-              Built with traditional Kalinga architecture and modern 
-              amenities, the temple provides a serene environment for 
-              prayer, meditation, and spiritual growth.
-            </motion.p>
-
-            {/* Temple Timings */}
+            {/* ✅ Exact content - Description */}
             <motion.div
               variants={fadeInUp}
-              className="flex flex-wrap gap-3 text-sm text-[#555555]"
+              className="space-y-4"
             >
-              <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E3DD]/50 px-3 py-1.5">
-                <Clock className="h-4 w-4 text-[#D4AF37]" />
-                Morning: <strong className="text-[#0B3C5D]">{morningTiming}</strong>
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E3DD]/50 px-3 py-1.5">
-                <Clock className="h-4 w-4 text-[#D4AF37]" />
-                Evening: <strong className="text-[#0B3C5D]">{eveningTiming}</strong>
-              </span>
+              <p className="text-base sm:text-lg text-[#555555] leading-relaxed">
+                Sri Swarna Kshetra is a divine abode of Lord Jagannath located in the heart of Noida. Our temple is a spiritual sanctuary for devotees, offering daily rituals, cultural programs, and a warm, vibrant community dedicated to preserving Jagannath Sanskriti and heritage and spreading the message of devotion.
+              </p>
+
+              <p className="text-sm sm:text-base text-[#555555] leading-relaxed">
+                Built in a style that blends traditional architecture with modern amenities, the temple provides a peaceful environment for prayer, meditation, and spiritual growth. Besides the main deities, the Royale Garden Estate Mandir complex also houses shrines for many other beloved forms of the Divine, making it a comprehensive centre for devotional life in the neighbourhood.
+              </p>
             </motion.div>
 
-            {/* Features Grid */}
+            {/* ✅ Closing invitation */}
+            <motion.p
+              variants={fadeInUp}
+              className="text-sm sm:text-base text-[#555555] leading-relaxed italic"
+            >
+              We warmly invite devotees and visitors to join us for darshan, participate in our programmes, and share in the spiritual life of the temple.
+            </motion.p>
+
+            {/* ✅ Features Grid */}
             <motion.div
               variants={fadeInUp}
               className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2"
@@ -199,7 +185,22 @@ export default function AboutTemple() {
               ))}
             </motion.div>
 
-            {/* CTA Button */}
+            {/* ✅ Temple Timings */}
+            <motion.div
+              variants={fadeInUp}
+              className="flex flex-wrap gap-3 text-sm text-[#555555]"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E3DD]/50 px-3 py-1.5">
+                <Clock className="h-4 w-4 text-[#D4AF37]" />
+                Morning: <strong className="text-[#0B3C5D]">{morningTiming}</strong>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E3DD]/50 px-3 py-1.5">
+                <Clock className="h-4 w-4 text-[#D4AF37]" />
+                Evening: <strong className="text-[#0B3C5D]">{eveningTiming}</strong>
+              </span>
+            </motion.div>
+
+            {/* ✅ CTA Button */}
             <motion.div
               variants={fadeInUp}
               className="pt-2"
