@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { donationService } from '@/lib/services/donationService';
+import { donationServer } from '@/lib/services/donationServer';
 import {
   buildFailedRedirect,
   decryptCCAvenueResponse,
@@ -23,9 +23,9 @@ async function handleCancel(request: Request) {
     }
 
     if (orderId) {
-      const donation = await donationService.getDonation(orderId);
+      const donation = await donationServer.getDonation(orderId);
       if (donation.success && donation.data?.status !== 'completed') {
-        await donationService.updateDonationStatus(orderId, 'cancelled', {
+        await donationServer.updateDonationStatus(orderId, 'cancelled', {
           failure_message: 'Payment cancelled by user',
           order_status: 'Aborted',
           cancelledAt: new Date().toISOString(),

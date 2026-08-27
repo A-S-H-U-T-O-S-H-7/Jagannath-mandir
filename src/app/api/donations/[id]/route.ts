@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { donationService } from '@/lib/services/donationService';
+import { donationServer } from '@/lib/services/donationServer';
 
 export async function GET(
   _request: Request,
@@ -16,7 +16,7 @@ export async function GET(
       );
     }
 
-    const result = await donationService.getDonation(donationId);
+    const result = await donationServer.getDonation(donationId);
 
     if (!result.success || !result.data) {
       return NextResponse.json(

@@ -8,7 +8,7 @@ import {
   getRequestBaseUrl,
   amountsMatch,
 } from '@/lib/payment/ccavenue';
-import { donationService } from '@/lib/services/donationService';
+import { donationServer } from '@/lib/services/donationServer';
 
 async function handleResponse(request: NextRequest) {
   const baseUrl = getRequestBaseUrl(request);
@@ -40,7 +40,7 @@ async function handleResponse(request: NextRequest) {
     const orderId = paymentData.order_id;
     let orderStatus = mapOrderStatus(paymentData.order_status);
 
-    const donationResult = await donationService.getDonation(orderId || '');
+    const donationResult = await donationServer.getDonation(orderId || '');
     if (!donationResult.success || !donationResult.data) {
       return NextResponse.redirect(
         buildFailedRedirect(baseUrl, {
@@ -62,7 +62,7 @@ async function handleResponse(request: NextRequest) {
       paymentData.failure_message = 'Paid amount did not match donation amount';
     }
 
-    const updateResult = await donationService.updateDonationStatus(
+    const updateResult = await donationServer.updateDonationStatus(
       orderId!,
       orderStatus,
       paymentData

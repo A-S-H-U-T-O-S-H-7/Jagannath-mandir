@@ -16,8 +16,14 @@ export type DonationPaymentStatus = 'completed' | 'failed' | 'cancelled';
 const CCAVENUE_RESPONSE_HANDLER = 'https://svsamiti.com/temple/ccavResponseHandler.php';
 
 export function getRequestBaseUrl(request: Request): string {
-  const envBase = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '');
-  return envBase || new URL(request.url).origin;
+  // Payment callbacks arrive at the public domain configured with CCAvenue.
+  // Prefer that actual request origin so a stale local environment value cannot
+  // redirect a donor to localhost after payment.
+  try {
+    return new URL(request.url).origin;
+  } catch {
+    return (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  }
 }
 
 export async function extractEncResp(request: Request): Promise<string | null> {

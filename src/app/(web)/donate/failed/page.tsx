@@ -9,6 +9,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+type FailureInfo = {
+  order_id: string;
+  message: string;
+  failure_message: string;
+  amount: number;
+  status_message: string;
+};
+
 function LoadingDonationFailed() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-[#F9F8F4] to-red-100 flex items-center justify-center px-4">
@@ -23,7 +31,7 @@ function LoadingDonationFailed() {
 function DonationFailedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [errorInfo, setErrorInfo] = useState<any>(null);
+  const [errorInfo, setErrorInfo] = useState<FailureInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
