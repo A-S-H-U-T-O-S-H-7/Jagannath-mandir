@@ -1,120 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { donationServer } from '@/lib/services/donationServer';
-import {
-  encryptCCAvenue,
-  getCCAvenueConfig,
-  getRequestBaseUrl,
-  toMerchantQuery,
-} from '@/lib/payment/ccavenue';
+import { NextResponse } from 'next/server';
 
-export const runtime = 'nodejs';
+const REQUEST_HANDLER = 'https://svsamiti.com/temple/ccavenueRequest.php';
+const PAYMENT_URL = 'https://secure.ccavenue.com/transaction/transaction.do?command=initiateTransaction';
+const REDIRECT_URL = 'https://jagannathmandirnoida.svsamiti.com/api/payment/ccavenue-response';
+const CANCEL_URL = 'https://jagannathmandirnoida.svsamiti.com/api/payment/ccavenue-cancel';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { workingKey, accessCode, merchantId, paymentUrl, mode } = getCCAvenueConfig();
-
-    if (!workingKey || !accessCode || !merchantId) {
-      return NextResponse.json(
-        {
-          status: false,
-          errors: ['CCAvenue is not configured. Set CCAVENUE_WORKING_KEY, CCAVENUE_ACCESS_CODE, and CCAVENUE_MERCHANT_ID.'],
-        },
-        { status: 500 }
-      );
-    }
-
     const body = await request.json();
-    const {
-      order_id,
-      purpose,
-      amount,
-      name,
-      email,
-      phone,
-      address,
-      donor_type,
-      country,
-    } = body;
+    const required = ['order_id', 'amount', 'name', 'email', 'phone'];
+    const missing = required.filter((key) => !String(body[key] || '').trim());
+    if (missing.length) return NextResponse.json({ status: false, errors: [`Missing fields: ${missing.join(', ')}`] }, { status: 400 });
 
-    if (!order_id || !amount || !name || !email || !phone) {
-      return NextResponse.json(
-        { status: false, errors: ['Missing required fields'] },
-        { status: 400 }
-      );
-    }
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ status: false, errors: ['Invalid donation amount'] }, { status: 400 });
 
-    const donationResult = await donationServer.getDonation(order_id);
-    if (!donationResult.success || !donationResult.data) {
-      return NextResponse.json(
-        { status: false, errors: ['Donation not found'] },
-        { status: 404 }
-      );
-    }
-
-    const donation = donationResult.data;
-    const parsedAmount = Number(amount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      return NextResponse.json(
-        { status: false, errors: ['Invalid donation amount'] },
-        { status: 400 }
-      );
-    }
-
-    if (Math.abs(parsedAmount - Number(donation.amount)) > 0.01) {
-      return NextResponse.json(
-        { status: false, errors: ['Amount does not match donation record'] },
-        { status: 400 }
-      );
-    }
-
-    const baseUrl = getRequestBaseUrl(request);
-    const formattedAmount = parsedAmount.toFixed(2);
-
-    const paymentData = {
-      merchant_id: merchantId,
-      order_id,
-      currency: 'INR',
-      amount: formattedAmount,
-      redirect_url: `${baseUrl}/api/payment/ccavenue-response`,
-      cancel_url: `${baseUrl}/api/payment/ccavenue-cancel`,
-      language: 'EN',
-      billing_name: name,
-      billing_email: email,
-      billing_tel: phone,
-      billing_address: address || donation.donorDetails.address || 'NA',
-      billing_city: donation.donorDetails.city || 'Delhi',
-      billing_state: donation.donorDetails.state || 'Delhi',
-      billing_zip: donation.donorDetails.pincode || '110001',
-      billing_country: country || donation.donorDetails.country || 'India',
-      delivery_name: name,
-      delivery_email: email,
-      delivery_tel: phone,
-      delivery_address: address || donation.donorDetails.address || 'NA',
-      delivery_city: donation.donorDetails.city || 'Delhi',
-      delivery_state: donation.donorDetails.state || 'Delhi',
-      delivery_zip: donation.donorDetails.pincode || '110001',
-      delivery_country: country || donation.donorDetails.country || 'India',
-      merchant_param1: donor_type || donation.donorType || 'indian',
-      merchant_param2: purpose || donation.purpose || 'donation',
-      merchant_param3: (donation.donorDetails.name || name).slice(0, 100),
-      merchant_param4: (donation.donorDetails.email || email).slice(0, 100),
-      merchant_param5: (donation.donorDetails.mobile || phone).slice(0, 100),
+    const payload = {
+      order_id: String(body.order_id).trim(), amount: amount.toFixed(2), name: String(body.name).trim(),
+      email: String(body.email).trim().toLowerCase(), phone: String(body.phone).replace(/\D/g, ''),
+      address: String(body.address || 'India').trim(), purpose: String(body.purpose || 'General Donation').trim(),
+      donor_type: String(body.donor_type || 'indian').trim(), country: String(body.country || 'India').trim(),
+      redirect_url: REDIRECT_URL, cancel_url: CANCEL_URL,
     };
-
-    const encRequest = encryptCCAvenue(toMerchantQuery(paymentData), workingKey);
-
+    const formData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => formData.append(key, value));
+    const upstream = await fetch(REQUEST_HANDLER, { method: 'POST', body: formData });
+    if (!upstream.ok) throw new Error(`CCAvenue request handler returned ${upstream.status}`);
+    const result = await upstream.json();
     return NextResponse.json({
-      status: true,
-      encRequest,
-      access_code: accessCode,
-      paymentUrl,
-      mode,
-    });
+      status: Boolean(result.status), encRequest: result.encRequest, access_code: result.access_code,
+      order_id: result.order_id || payload.order_id, paymentUrl: PAYMENT_URL, errors: result.errors,
+    }, { status: result.status ? 200 : 400 });
   } catch (error: any) {
-    console.error('CCAvenue request error:', error);
-    return NextResponse.json(
-      { status: false, errors: [error.message || 'Payment request failed'] },
-      { status: 500 }
-    );
+    console.error('ccavenue-request error:', error);
+    return NextResponse.json({ status: false, errors: [error.message || 'Unable to start payment'] }, { status: 500 });
   }
 }

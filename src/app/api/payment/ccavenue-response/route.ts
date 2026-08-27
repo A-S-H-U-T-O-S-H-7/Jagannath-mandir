@@ -7,11 +7,8 @@ import {
   buildFailedRedirect,
   getRequestBaseUrl,
   amountsMatch,
-  isExpectedCCAvenueResponse,
 } from '@/lib/payment/ccavenue';
-import { donationServer } from '@/lib/services/donationServer';
-
-export const runtime = 'nodejs';
+import { donationService } from '@/lib/services/donationService';
 
 async function handleResponse(request: NextRequest) {
   const baseUrl = getRequestBaseUrl(request);
@@ -28,7 +25,7 @@ async function handleResponse(request: NextRequest) {
       );
     }
 
-    const decrypted = decryptCCAvenueResponse(encResp);
+    const decrypted = await decryptCCAvenueResponse(encResp);
     if (!decrypted.ok || !decrypted.data) {
       return NextResponse.redirect(
         buildFailedRedirect(baseUrl, {
@@ -43,19 +40,7 @@ async function handleResponse(request: NextRequest) {
     const orderId = paymentData.order_id;
     let orderStatus = mapOrderStatus(paymentData.order_status);
 
-    if (!isExpectedCCAvenueResponse(paymentData)) {
-      console.warn('Rejected CCAvenue response with an unexpected merchant or currency');
-      return NextResponse.redirect(
-        buildFailedRedirect(baseUrl, {
-          order_id: orderId,
-          message: 'Invalid payment response',
-          status_message: 'Merchant validation failed',
-        }),
-        303
-      );
-    }
-
-    const donationResult = await donationServer.getDonation(orderId || '');
+    const donationResult = await donationService.getDonation(orderId || '');
     if (!donationResult.success || !donationResult.data) {
       return NextResponse.redirect(
         buildFailedRedirect(baseUrl, {
@@ -70,9 +55,6 @@ async function handleResponse(request: NextRequest) {
     const donation = donationResult.data;
     // Do not let a repeated, delayed, or conflicting callback downgrade a
     // donation that has already been confirmed as paid.
-    if (donation.status === 'completed' && orderStatus !== 'completed') {
-      return NextResponse.redirect(buildSuccessRedirect(baseUrl, orderId!), 303);
-    }
     const expectedAmount = donation.amount || 0;
     if (orderStatus === 'completed' && !amountsMatch(expectedAmount, paymentData.amount)) {
       console.warn(`Amount mismatch: Expected ${expectedAmount}, Received ${paymentData.amount}`);
@@ -80,7 +62,7 @@ async function handleResponse(request: NextRequest) {
       paymentData.failure_message = 'Paid amount did not match donation amount';
     }
 
-    const updateResult = await donationServer.updateDonationStatus(
+    const updateResult = await donationService.updateDonationStatus(
       orderId!,
       orderStatus,
       paymentData

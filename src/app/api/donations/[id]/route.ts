@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import { donationServer } from '@/lib/services/donationServer';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { donationService } from '@/lib/services/donationService';
 
 export async function GET(
   _request: Request,
@@ -19,7 +16,7 @@ export async function GET(
       );
     }
 
-    const result = await donationServer.getDonation(donationId);
+    const result = await donationService.getDonation(donationId);
 
     if (!result.success || !result.data) {
       return NextResponse.json(

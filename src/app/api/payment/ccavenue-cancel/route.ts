@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import { donationServer } from '@/lib/services/donationServer';
+import { donationService } from '@/lib/services/donationService';
 import {
   buildFailedRedirect,
   decryptCCAvenueResponse,
   extractEncResp,
   getRequestBaseUrl,
-  isExpectedCCAvenueResponse,
 } from '@/lib/payment/ccavenue';
-
-export const runtime = 'nodejs';
 
 async function handleCancel(request: Request) {
   const baseUrl = getRequestBaseUrl(request);
@@ -17,8 +14,8 @@ async function handleCancel(request: Request) {
   try {
     const encResp = await extractEncResp(request);
     if (encResp) {
-      const decrypted = decryptCCAvenueResponse(encResp);
-      if (decrypted.ok && decrypted.data?.order_id && isExpectedCCAvenueResponse(decrypted.data)) {
+      const decrypted = await decryptCCAvenueResponse(encResp);
+      if (decrypted.ok && decrypted.data?.order_id) {
         orderId = String(decrypted.data.order_id);
       } else {
         console.warn('Rejected unverified CCAvenue cancellation response');
@@ -26,9 +23,9 @@ async function handleCancel(request: Request) {
     }
 
     if (orderId) {
-      const donation = await donationServer.getDonation(orderId);
+      const donation = await donationService.getDonation(orderId);
       if (donation.success && donation.data?.status !== 'completed') {
-        await donationServer.updateDonationStatus(orderId, 'cancelled', {
+        await donationService.updateDonationStatus(orderId, 'cancelled', {
           failure_message: 'Payment cancelled by user',
           order_status: 'Aborted',
           cancelledAt: new Date().toISOString(),

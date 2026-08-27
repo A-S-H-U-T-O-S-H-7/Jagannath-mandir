@@ -6,6 +6,7 @@ import { IndianRupee, User, Mail, Phone, MapPin, Heart, ArrowRight, Loader2 } fr
 import toast from 'react-hot-toast';
 import { useLocationData } from '@/hooks/useLocationData';
 import useAuthStore from '@/lib/store/authStore';
+import { donationService } from '@/lib/services/donationService';
 
 interface DonationFormProps {
   donorType: string;
@@ -153,47 +154,14 @@ export default function DonationForm({ donorType }: DonationFormProps) {
       const amount = parseFloat(formData.amount);
       const storedDonorType = isIndianDonor ? 'indian' : 'foreign';
 
-      const createRes = await fetch('/api/donations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: donationId,
-          userId: user?.uid || null,
-          donorDetails: {
-            name: formData.fullName.trim(),
-            email: formData.email.trim(),
-            mobile: formData.mobile.replace(/\D/g, ''),
-            address: formData.address.trim(),
-            city: formData.city,
-            state: formData.state,
-            country: formData.country,
-            pincode: formData.pincode.trim(),
-            donorType: storedDonorType,
-          },
-          amount,
-          currency: 'INR',
-          purpose: 'General Donation',
-          donorType: storedDonorType,
-          taxExemption: {
-            eligible: true,
-            section: '80G',
-            certificateRequired: true,
-          },
-        }),
+      const created = await donationService.createDonation({
+        id: donationId, donationId, userId: user?.uid || null,
+        donorDetails: { name: formData.fullName.trim(), email: formData.email.trim(), mobile: formData.mobile.replace(/\D/g, ''), address: formData.address.trim(), city: formData.city, state: formData.state, country: formData.country, pincode: formData.pincode.trim(), donorType: storedDonorType },
+        amount, currency: 'INR', purpose: 'General Donation', donorType: storedDonorType,
+        status: 'pending_payment', paymentGateway: 'ccavenue',
+        taxExemption: { eligible: true, section: '80G', certificateRequired: true },
       });
-
-      const createResponseText = await createRes.text();
-      let created: { success?: boolean; error?: string };
-      try {
-        created = JSON.parse(createResponseText);
-      } catch {
-        throw new Error(
-          createRes.status >= 500
-            ? 'Our donation service is temporarily unavailable. Please try again shortly.'
-            : 'Unable to create donation'
-        );
-      }
-      if (!createRes.ok || !created.success) {
+      if (!created.success) {
         throw new Error(created.error || 'Unable to create donation');
       }
 
