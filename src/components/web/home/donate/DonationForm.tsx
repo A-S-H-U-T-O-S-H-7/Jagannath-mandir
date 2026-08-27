@@ -3,7 +3,9 @@
 
 import { useState } from 'react';
 import { IndianRupee, User, Mail, Phone, MapPin, Heart, ArrowRight, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useLocationData } from '@/hooks/useLocationData';
+import useAuthStore from '@/lib/store/authStore';
 
 interface DonationFormProps {
   donorType: string;
@@ -33,8 +35,37 @@ interface FormErrors {
   pincode?: string;
 }
 
+function createDonationId() {
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `DON${Date.now()}${rand}`.slice(0, 30);
+}
+
+function redirectToCCAvenue(paymentUrl: string, encRequest: string, accessCode: string) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = paymentUrl;
+  form.style.display = 'none';
+
+  const encInput = document.createElement('input');
+  encInput.type = 'hidden';
+  encInput.name = 'encRequest';
+  encInput.value = encRequest;
+  form.appendChild(encInput);
+
+  const accessInput = document.createElement('input');
+  accessInput.type = 'hidden';
+  accessInput.name = 'access_code';
+  accessInput.value = accessCode;
+  form.appendChild(accessInput);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
 export default function DonationForm({ donorType }: DonationFormProps) {
   const [processing, setProcessing] = useState(false);
+  const { user } = useAuthStore();
+  const isIndianDonor = donorType !== 'international';
   const [formData, setFormData] = useState<FormData>({
     amount: '',
     fullName: '',
@@ -75,8 +106,11 @@ export default function DonationForm({ donorType }: DonationFormProps) {
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    if (!formData.mobile || !/^[0-9]{10}$/.test(formData.mobile.replace(/\D/g, ''))) {
-      newErrors.mobile = 'Please enter a valid 10-digit mobile number';
+    const digits = formData.mobile.replace(/\D/g, '');
+    if (!formData.mobile || (isIndianDonor ? !/^[0-9]{10}$/.test(digits) : digits.length < 8 || digits.length > 15)) {
+      newErrors.mobile = isIndianDonor
+        ? 'Please enter a valid 10-digit mobile number'
+        : 'Please enter a valid phone number';
     }
     if (!formData.address || formData.address.trim().length < 10) {
       newErrors.address = 'Please enter a complete address';
@@ -90,24 +124,97 @@ export default function DonationForm({ donorType }: DonationFormProps) {
     if (!formData.city) {
       newErrors.city = 'Please select your city';
     }
-    if (!formData.pincode || !/^[0-9]{6}$/.test(formData.pincode)) {
-      newErrors.pincode = 'Please enter a valid 6-digit pincode';
+    if (
+      !formData.pincode ||
+      (isIndianDonor
+        ? !/^[0-9]{6}$/.test(formData.pincode)
+        : formData.pincode.trim().length < 3)
+    ) {
+      newErrors.pincode = isIndianDonor
+        ? 'Please enter a valid 6-digit pincode'
+        : 'Please enter a valid postal code';
     }
     
     return newErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     setErrors({});
     setProcessing(true);
-    // Handle donation logic here
-    setTimeout(() => setProcessing(false), 2000);
+
+    try {
+      const donationId = createDonationId();
+      const amount = parseFloat(formData.amount);
+      const storedDonorType = isIndianDonor ? 'indian' : 'foreign';
+
+      const createRes = await fetch('/api/donations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: donationId,
+          userId: user?.uid || null,
+          donorDetails: {
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
+            mobile: formData.mobile.replace(/\D/g, ''),
+            address: formData.address.trim(),
+            city: formData.city,
+            state: formData.state,
+            country: formData.country,
+            pincode: formData.pincode.trim(),
+            donorType: storedDonorType,
+          },
+          amount,
+          currency: 'INR',
+          purpose: 'General Donation',
+          donorType: storedDonorType,
+          taxExemption: {
+            eligible: true,
+            section: '80G',
+            certificateRequired: true,
+          },
+        }),
+      });
+
+      const created = await createRes.json();
+      if (!createRes.ok || !created.success) {
+        throw new Error(created.error || 'Unable to create donation');
+      }
+
+      const paymentRes = await fetch('/api/payment/ccavenue-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: donationId,
+          purpose: 'General Donation',
+          amount,
+          name: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phone: formData.mobile.replace(/\D/g, ''),
+          address: formData.address.trim(),
+          donor_type: storedDonorType,
+          country: formData.country,
+        }),
+      });
+
+      const paymentJson = await paymentRes.json();
+      if (!paymentRes.ok || !paymentJson.status || !paymentJson.encRequest || !paymentJson.access_code) {
+        const message = paymentJson.errors?.[0] || 'Unable to start payment';
+        throw new Error(message);
+      }
+
+      redirectToCCAvenue(paymentJson.paymentUrl, paymentJson.encRequest, paymentJson.access_code);
+    } catch (error: any) {
+      console.error('Donation submit error:', error);
+      toast.error(error.message || 'Payment could not be started. Please try again.');
+      setProcessing(false);
+    }
   };
 
   return (

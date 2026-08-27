@@ -12,7 +12,7 @@ export default function CookiesPage() {
 
   const contactInfo = {
     contact: {
-      contactEmail: "info@jagnanthmandir.com",
+      contactEmail: "info@jagannathmandir.com",
       phone1: "+91 98765 43210",
     }
   };
@@ -155,7 +155,7 @@ export default function CookiesPage() {
             </section>
 
             <div className="pt-4 border-t border-[#E5E3DD]/50 text-xs text-[#555555]/60">
-              <p>&copy; {currentYear} Jagnanth Mandir Noida. All rights reserved.</p>
+              <p>&copy; {currentYear} Jagannath Mandir Noida. All rights reserved.</p>
             </div>
           </div>
         </motion.div>

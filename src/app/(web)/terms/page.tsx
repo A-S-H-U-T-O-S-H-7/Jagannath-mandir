@@ -12,7 +12,7 @@ export default function TermsPage() {
 
   const contactInfo = {
     contact: {
-      contactEmail: "info@jagnanthmandir.com",
+      contactEmail: "info@jagannathmandir.com",
       phone1: "+91 98765 43210",
       address: "Sector 93A, Noida, Uttar Pradesh - 201301",
     }
@@ -55,7 +55,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-xl font-bold text-[#0B3C5D] mb-3">1. Acceptance of Terms</h2>
               <p className="text-[#555555] leading-relaxed">
-                By using Jagnanth Mandir Noida's website and services ("we," "us," or "our"), you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
+                By using Jagannath Mandir Noida's website and services ("we," "us," or "our"), you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
               </p>
             </section>
 
@@ -82,7 +82,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-xl font-bold text-[#0B3C5D] mb-3">4. Donations and Payments</h2>
               <p className="text-[#555555] leading-relaxed mb-3">
-                When you make a donation to Jagnanth Mandir Noida:
+                When you make a donation to Jagannath Mandir Noida:
               </p>
               <ul className="list-disc list-inside text-[#555555] leading-relaxed space-y-2 ml-4">
                 <li>All donations are voluntary and non-refundable</li>
@@ -133,7 +133,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-xl font-bold text-[#0B3C5D] mb-3">8. Content and Intellectual Property</h2>
               <p className="text-[#555555] leading-relaxed">
-                All content on this platform, including text, graphics, logos, and images, is the property of Jagnanth Mandir Noida and is protected by copyright laws. You may not reproduce, distribute, or create derivative works without our explicit permission.
+                All content on this platform, including text, graphics, logos, and images, is the property of Jagannath Mandir Noida and is protected by copyright laws. You may not reproduce, distribute, or create derivative works without our explicit permission.
               </p>
             </section>
 
@@ -147,7 +147,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-xl font-bold text-[#0B3C5D] mb-3">10. Limitation of Liability</h2>
               <p className="text-[#555555] leading-relaxed">
-                Jagnanth Mandir Noida is provided "as is" without warranties of any kind. We are not liable for any damages arising from your use of the platform, including but not limited to direct, indirect, incidental, or consequential damages.
+                Jagannath Mandir Noida is provided "as is" without warranties of any kind. We are not liable for any damages arising from your use of the platform, including but not limited to direct, indirect, incidental, or consequential damages.
               </p>
             </section>
 
@@ -177,7 +177,7 @@ export default function TermsPage() {
             </section>
 
             <div className="pt-4 border-t border-[#E5E3DD]/50 text-xs text-[#555555]/60">
-              <p>&copy; {currentYear} Jagnanth Mandir Noida. All rights reserved.</p>
+              <p>&copy; {currentYear} Jagannath Mandir Noida. All rights reserved.</p>
             </div>
           </div>
         </motion.div>

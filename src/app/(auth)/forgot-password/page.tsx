@@ -143,7 +143,7 @@ export default function ForgotPasswordPage() {
                   {/* Logo */}
                   <div className="flex justify-center mb-6">
                     <div className="h-16 w-16 rounded-full bg-white shadow-md flex items-center justify-center overflow-hidden ring-1 ring-[#D4AF37]/20">
-                      <Image src="/mandir-logo.png" alt="Jagnanth Mandir Noida" width={40} height={40} className="h-10 w-10 object-contain" />
+                      <Image src="/mandir-logo.png" alt="Jagannath Mandir Noida" width={40} height={40} className="h-10 w-10 object-contain" />
                     </div>
                   </div>
 

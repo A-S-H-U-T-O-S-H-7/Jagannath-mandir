@@ -54,8 +54,8 @@ export default function ContactPage() {
     {
       icon: <Mail className="w-5 h-5" />,
       label: "Email",
-      value: "info@jagnanthmandir.com",
-      href: "mailto:info@jagnanthmandir.com" as string | null,
+      value: "info@Jagannathmandir.com",
+      href: "mailto:info@Jagannathmandir.com" as string | null,
     },
     {
       icon: <MapPin className="w-5 h-5" />,

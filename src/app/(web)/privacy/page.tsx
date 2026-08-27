@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
 
   const contactInfo = {
     contact: {
-      contactEmail: "info@jagnanthmandir.com",
+      contactEmail: "info@jagannathmandir.com",
       phone1: "+91 98765 43210",
       address: "Sector 93A, Noida, Uttar Pradesh - 201301",
     }
@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-xl font-bold text-[#0B3C5D] mb-3">1. Introduction</h2>
               <p className="text-[#555555] leading-relaxed">
-                At Jagnanth Mandir Noida, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our platform. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the platform.
+                At Jagannath Mandir Noida, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our platform. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the platform.
               </p>
             </section>
 
@@ -156,7 +156,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <div className="pt-4 border-t border-[#E5E3DD]/50 text-xs text-[#555555]/60">
-              <p>&copy; {currentYear} Jagnanth Mandir Noida. All rights reserved.</p>
+              <p>&copy; {currentYear} Jagannath Mandir Noida. All rights reserved.</p>
             </div>
           </div>
         </motion.div>

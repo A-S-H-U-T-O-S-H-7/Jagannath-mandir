@@ -115,14 +115,14 @@ export default function LoginPage() {
         >
           <Image
             src="/mandir-logo.png"
-            alt="Jagnanth Mandir Noida"
+            alt="Jagannath Mandir Noida"
             width={80}
             height={80}
             className="h-20 w-20 object-contain"
           />
 
           <h2 className="mt-4 text-4xl font-serif font-bold text-[#0B3C5D]">
-            Jagnanth <span className="text-[#D4AF37]">Mandir</span>
+            Jagannath <span className="text-[#D4AF37]">Mandir</span>
           </h2>
           <p className="mt-1 text-xs font-semibold tracking-[0.2em] text-[#0B3C5D]/70">
             DIVINE · PEACE · DEVOTION
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
           <p className="mt-4 text-base leading-7 text-gray-600 max-w-md">
             Sign in to manage your donations, seva bookings, and stay connected 
-            with the <span className="font-semibold text-[#D4AF37]">Jagnanth Mandir</span> community.
+            with the <span className="font-semibold text-[#D4AF37]">Jagannath Mandir</span> community.
           </p>
 
           <div className="mt-6 flex items-center gap-4 text-sm text-gray-500">
@@ -162,13 +162,13 @@ export default function LoginPage() {
         >
           <Image
             src="/mandir-logo.png"
-            alt="Jagnanth Mandir Noida"
+            alt="Jagannath Mandir Noida"
             width={56}
             height={56}
             className="mx-auto mb-2 h-14 w-14 object-contain"
           />
           <h2 className="text-2xl font-serif font-bold text-[#0B3C5D]">
-            Jagnanth <span className="text-[#D4AF37]">Mandir</span>
+            Jagannath <span className="text-[#D4AF37]">Mandir</span>
           </h2>
           <h1 className="mt-4 text-3xl font-serif font-bold text-[#0B3C5D]">Welcome Back!</h1>
         </motion.div>

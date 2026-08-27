@@ -56,7 +56,7 @@ export default function SignupPage() {
     try {
       const result = await signUp(data.name, data.email, data.password);
       if (result.success) {
-        toast.success("Account created successfully! Welcome to Jagnanth Mandir 🙏");
+        toast.success("Account created successfully! Welcome to Jagannath Mandir 🙏");
         router.push("/");
       } else {
         if (result.error?.includes("email")) {
@@ -143,7 +143,7 @@ export default function SignupPage() {
         >
           <Image
             src="/mandir-logo.png"
-            alt="Jagnanth Mandir Noida"
+            alt="Jagannath Mandir Noida"
             width={80}
             height={80}
             className="h-20 w-20 object-contain"
@@ -154,7 +154,7 @@ export default function SignupPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]" />
             </span>
-            Welcome to Jagnanth Mandir
+            Welcome to Jagannath Mandir
           </span>
 
           <h1 className="mt-8 text-6xl font-serif font-bold leading-tight text-[#0B3C5D]">
@@ -164,7 +164,7 @@ export default function SignupPage() {
           </h1>
 
           <p className="mt-6 text-lg leading-9 text-gray-600 max-w-lg">
-            Join the Jagnanth Mandir community. Experience divine blessings, 
+            Join the Jagannath Mandir community. Experience divine blessings, 
             participate in seva, and connect with fellow devotees.
           </p>
 
@@ -197,7 +197,7 @@ export default function SignupPage() {
         >
           <Image
             src="/mandir-logo.png"
-            alt="Jagnanth Mandir Noida"
+            alt="Jagannath Mandir Noida"
             width={56}
             height={56}
             className="mx-auto mb-3 h-14 w-14 object-contain"
@@ -208,7 +208,7 @@ export default function SignupPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]" />
             </span>
-            Welcome to Jagnanth Mandir
+            Welcome to Jagannath Mandir
           </span>
 
           <h1 className="mt-4 text-3xl font-serif font-bold leading-tight text-[#0B3C5D] sm:text-4xl">

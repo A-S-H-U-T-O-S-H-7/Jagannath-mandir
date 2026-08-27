@@ -165,7 +165,7 @@ export default function EventsPage() {
               <span className="text-[#D4AF37]">Events</span> & Festivals
             </h1>
             <p className="text-sm md:text-lg text-white/80 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
-              Discover upcoming festivals, rituals, and community gatherings at Jagnanth Mandir
+              Discover upcoming festivals, rituals, and community gatherings at Jagannath Mandir
             </p>
             
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 mt-6 md:mt-8">
