@@ -6,6 +6,7 @@ import { X, Upload, Loader2, Calendar, Image as ImageIcon, Star } from 'lucide-r
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { DarshanImage } from '@/lib/services/adminDarshanService';
+import { compressImageUnderLimit } from '@/lib/utils/imageCompression';
 
 interface CreateDarshanImageModalProps {
   isOpen: boolean;
@@ -61,8 +62,8 @@ export default function CreateDarshanImageModal({
     }
   }, [editingImage, isOpen]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
     if (!file) return;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -71,13 +72,13 @@ export default function CreateDarshanImageModal({
       return;
     }
 
-    if (file.size > MAX_IMAGE_SIZE) {
-      setErrors({ ...errors, imageFile: `Image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB` });
-      toast.error(`Image size exceeds ${MAX_IMAGE_SIZE / (1024 * 1024)}MB limit.`);
-      return;
-    }
-
     setIsUploading(true);
+    try {
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.loading('Compressing image...', { id: 'darshan-compress' });
+        file = await compressImageUnderLimit(file, MAX_IMAGE_SIZE);
+        toast.success('Image compressed below 5MB', { id: 'darshan-compress' });
+      }
     const reader = new FileReader();
     reader.onloadend = () => {
       setFormData({
@@ -95,6 +96,11 @@ export default function CreateDarshanImageModal({
       toast.error('Failed to read image file. Please try again.');
     };
     reader.readAsDataURL(file);
+    } catch (error: any) {
+      setIsUploading(false);
+      setErrors({ ...errors, imageFile: error.message || 'Failed to compress image' });
+      toast.error(error.message || 'Failed to compress image');
+    }
   };
 
   const removeImage = () => {
@@ -257,7 +263,7 @@ export default function CreateDarshanImageModal({
                     <>
                       <Upload className="w-8 h-8 text-[#555555]/40" />
                       <p className="text-sm text-[#555555]/60 mt-2">Click to upload image</p>
-                      <p className="text-xs text-[#555555]/40">PNG, JPG, WEBP (Max 5MB)</p>
+                      <p className="text-xs text-[#555555]/40">PNG, JPG, WEBP · large images compress automatically</p>
                     </>
                   )}
                 </div>

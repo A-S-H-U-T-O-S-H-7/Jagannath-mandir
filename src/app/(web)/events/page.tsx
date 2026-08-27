@@ -276,12 +276,13 @@ export default function EventsPage() {
               >
                 <Link href={`/events/${event.slug}`} className="block">
                 {/* Image */}
-                <div className="relative h-56 sm:h-60 overflow-hidden">
+                <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#F5F0EA] to-[#E5E3DD] sm:h-60">
                   <Image
                     src={event.image}
                     alt={event.title}
                     fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                    className="object-contain p-2 transition-opacity duration-300 group-hover:opacity-95"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B3C5D]/40 via-transparent to-transparent" />
                   

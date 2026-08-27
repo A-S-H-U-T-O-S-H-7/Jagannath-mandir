@@ -18,6 +18,19 @@ import {
 
 const COLLECTION = 'donations';
 
+function normalizeFirestoreDate(value: unknown): string {
+  if (!value) return new Date().toISOString();
+  if (value instanceof Date) return value.toISOString();
+  if (typeof (value as { toDate?: unknown }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate().toISOString();
+  }
+  if (typeof (value as { seconds?: unknown }).seconds === 'number') {
+    return new Date((value as { seconds: number }).seconds * 1000).toISOString();
+  }
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+}
+
 export interface Donation {
   id: string;
   donationId: string;
@@ -86,8 +99,8 @@ export const adminDonationService = {
           purpose: data.purpose || 'donation',
           donorType: data.donorType || 'indian',
           taxExemption: data.taxExemption || { eligible: true, section: '80G', certificateRequired: true },
-          createdAt: data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt || new Date().toISOString(),
+          createdAt: normalizeFirestoreDate(data.createdAt),
+          updatedAt: normalizeFirestoreDate(data.updatedAt),
           expiryTime: data.expiryTime || '',
           transactionId: data.transactionId || '',
           paymentDetails: data.paymentDetails || null,
@@ -126,8 +139,8 @@ export const adminDonationService = {
           purpose: data.purpose || 'donation',
           donorType: data.donorType || 'indian',
           taxExemption: data.taxExemption || { eligible: true, section: '80G', certificateRequired: true },
-          createdAt: data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt || new Date().toISOString(),
+          createdAt: normalizeFirestoreDate(data.createdAt),
+          updatedAt: normalizeFirestoreDate(data.updatedAt),
           expiryTime: data.expiryTime || '',
           transactionId: data.transactionId || '',
           paymentDetails: data.paymentDetails || null,
@@ -242,8 +255,8 @@ export const adminDonationService = {
             purpose: data.purpose || 'donation',
             donorType: data.donorType || 'indian',
             taxExemption: data.taxExemption || { eligible: true, section: '80G', certificateRequired: true },
-            createdAt: data.createdAt || new Date().toISOString(),
-            updatedAt: data.updatedAt || new Date().toISOString(),
+            createdAt: normalizeFirestoreDate(data.createdAt),
+            updatedAt: normalizeFirestoreDate(data.updatedAt),
             expiryTime: data.expiryTime || '',
             transactionId: data.transactionId || '',
             paymentDetails: data.paymentDetails || null,

@@ -16,6 +16,7 @@ import {
   getMembershipByUser,
   type MembershipApplication,
 } from '@/lib/services/membershipService';
+import ProfileDonations from '@/components/web/profile/ProfileDonations';
 
 function Field({ label, value }: { label: string; value?: string | number | null }) {
   if (!value && value !== 0) return null;
@@ -32,6 +33,7 @@ export default function ProfilePage() {
   const { user, isAuthenticated, loading, initialize } = useAuthStore();
   const [membership, setMembership] = useState<MembershipApplication | null>(null);
   const [loadingMembership, setLoadingMembership] = useState(true);
+  const [activeTab, setActiveTab] = useState<'account' | 'donations'>('account');
 
   useEffect(() => {
     const unsubscribe = initialize();
@@ -95,6 +97,11 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-6 p-6">
+            <div className="flex gap-2 border-b border-[#E5E3DD]/60 pb-3">
+              <button onClick={() => setActiveTab('account')} className={`rounded-lg px-3 py-2 text-sm font-semibold ${activeTab === 'account' ? 'bg-[#0B3C5D] text-white' : 'text-[#555555]'}`}>Profile</button>
+              <button onClick={() => setActiveTab('donations')} className={`rounded-lg px-3 py-2 text-sm font-semibold ${activeTab === 'donations' ? 'bg-[#0B3C5D] text-white' : 'text-[#555555]'}`}>Donations</button>
+            </div>
+            {activeTab === 'account' ? <>
             <section>
               <h2 className="mb-3 font-serif text-lg font-bold text-[#0B3C5D]">Account</h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -190,6 +197,10 @@ export default function ProfilePage() {
                 </Link>
               </section>
             )}
+            </> : <section>
+              <h2 className="mb-3 font-serif text-lg font-bold text-[#0B3C5D]">Your Donations</h2>
+              <ProfileDonations userId={user.uid} email={user.email} />
+            </section>}
           </div>
         </div>
       </div>

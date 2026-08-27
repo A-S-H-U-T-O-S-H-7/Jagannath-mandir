@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { Event } from '@/lib/services/adminEventService';
 import { slugify } from '@/lib/utils/displayHelpers';
 import TimeAmPmInput from '@/components/ui/TimeAmPmInput';
+import { compressImageUnderLimit } from '@/lib/utils/imageCompression';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -84,8 +85,8 @@ export default function CreateEventModal({
     }
   }, [editingEvent, isOpen]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
     if (!file) return;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -94,13 +95,13 @@ export default function CreateEventModal({
       return;
     }
 
-    if (file.size > MAX_IMAGE_SIZE) {
-      setErrors({ ...errors, coverImage: `Image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB` });
-      toast.error(`Image size exceeds ${MAX_IMAGE_SIZE / (1024 * 1024)}MB limit.`);
-      return;
-    }
-
     setIsUploading(true);
+    try {
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.loading('Compressing cover image...', { id: 'cover-compress' });
+        file = await compressImageUnderLimit(file, MAX_IMAGE_SIZE);
+        toast.success('Cover image compressed below 5MB', { id: 'cover-compress' });
+      }
     const reader = new FileReader();
     reader.onloadend = () => {
       setFormData({
@@ -118,6 +119,11 @@ export default function CreateEventModal({
       toast.error('Failed to read image file. Please try again.');
     };
     reader.readAsDataURL(file);
+    } catch (error: any) {
+      setIsUploading(false);
+      setErrors({ ...errors, coverImage: error.message || 'Failed to compress image' });
+      toast.error(error.message || 'Failed to compress image');
+    }
   };
 
   const removeImage = () => {

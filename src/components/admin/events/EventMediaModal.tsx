@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { adminEventService, Event, EventMedia } from '@/lib/services/adminEventService';
+import { compressImageUnderLimit } from '@/lib/utils/imageCompression';
 
 interface EventMediaModalProps {
   isOpen: boolean;
@@ -51,10 +52,6 @@ export default function EventMediaModal({ isOpen, event, onClose }: EventMediaMo
           toast.error(`${file.name} is not an image`);
           return false;
         }
-        if (file.size > MAX_IMAGE_SIZE) {
-          toast.error(`${file.name} exceeds 5MB`);
-          return false;
-        }
       } else {
         if (!file.type.startsWith('video/')) {
           toast.error(`${file.name} is not a video`);
@@ -70,7 +67,20 @@ export default function EventMediaModal({ isOpen, event, onClose }: EventMediaMo
 
     if (!valid.length) return;
     setUploading(true);
-    const result = await adminEventService.uploadEventMedia(event.id, valid, type);
+    let uploadFiles = valid;
+    try {
+      if (type === 'image') {
+        const oversized = valid.filter((file) => file.size > MAX_IMAGE_SIZE);
+        if (oversized.length) toast.loading(`Compressing ${oversized.length} image(s)...`, { id: 'gallery-compress' });
+        uploadFiles = await Promise.all(valid.map((file) => compressImageUnderLimit(file, MAX_IMAGE_SIZE)));
+        if (oversized.length) toast.success('Images compressed below 5MB', { id: 'gallery-compress' });
+      }
+    } catch (error: any) {
+      setUploading(false);
+      toast.error(error.message || 'Failed to compress image');
+      return;
+    }
+    const result = await adminEventService.uploadEventMedia(event.id, uploadFiles, type);
     setUploading(false);
     if (result.success) {
       toast.success(`${result.items.length} ${type}${result.items.length > 1 ? 's' : ''} uploaded`);

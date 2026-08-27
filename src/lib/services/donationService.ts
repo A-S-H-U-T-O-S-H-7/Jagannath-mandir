@@ -126,7 +126,7 @@ export const donationService = {
     }
   },
 
-  async getUserDonations(userId: string): Promise<{ success: boolean; donations?: DonationData[]; error?: string }> {
+  async getUserDonations(userId: string, email?: string | null): Promise<{ success: boolean; donations?: DonationData[]; error?: string }> {
     try {
       const donationsRef = collection(db, 'donations');
       let snapshot;
@@ -148,6 +148,21 @@ export const donationService = {
       snapshot.forEach((docSnap) => {
         donations.push({ id: docSnap.id, ...docSnap.data() } as DonationData);
       });
+
+      // Older/guest donations may not have had userId captured at checkout.
+      // Include records for the authenticated account email and de-duplicate.
+      if (email) {
+        try {
+          const emailSnapshot = await getDocs(query(donationsRef, where('donorDetails.email', '==', email.trim().toLowerCase())));
+          emailSnapshot.forEach((docSnap) => {
+            if (!donations.some((donation) => donation.id === docSnap.id)) {
+              donations.push({ id: docSnap.id, ...docSnap.data() } as DonationData);
+            }
+          });
+        } catch (error) {
+          console.warn('Unable to load email-matched donations:', error);
+        }
+      }
 
       // Sort manually if fallback was used
       donations.sort((a, b) => {

@@ -10,7 +10,6 @@ interface DonationTableProps {
   loading?: boolean;
   onView: (donation: Donation) => void;
   onDelete: (donation: Donation) => void;
-  onUpdateStatus: (donation: Donation, status: string) => void;
 }
 
 export default function DonationTable({
@@ -18,7 +17,6 @@ export default function DonationTable({
   loading = false,
   onView,
   onDelete,
-  onUpdateStatus,
 }: DonationTableProps) {
   if (loading) {
     return (
@@ -65,7 +63,6 @@ export default function DonationTable({
                 index={index}
                 onView={onView}
                 onDelete={onDelete}
-                onUpdateStatus={onUpdateStatus}
               />
             ))}
           </tbody>

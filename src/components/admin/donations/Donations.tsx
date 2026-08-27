@@ -256,7 +256,6 @@ export default function DonationsPage() {
         loading={loading}
         onView={handleView}
         onDelete={handleDelete}
-        onUpdateStatus={handleUpdateStatus}
       />
 
       {/* Detail Modal */}

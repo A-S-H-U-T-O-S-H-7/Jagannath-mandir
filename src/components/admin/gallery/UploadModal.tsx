@@ -5,6 +5,9 @@ import { useState, useRef } from 'react';
 import { X, Upload, Image as ImageIcon, Loader2, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { MEDIA_TYPES, MediaType } from '@/lib/constants/media';
+import { compressImageUnderLimit } from '@/lib/utils/imageCompression';
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -27,7 +30,7 @@ export default function UploadModal({
   const [mediaType, setMediaType] = useState<MediaType>('normal');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (selectedFiles: FileList | null) => {
+  const handleFileChange = async (selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
     
     const fileArray = Array.from(selectedFiles);
@@ -36,19 +39,26 @@ export default function UploadModal({
         toast.error(`${file.name} is not a valid image`);
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds 5MB limit`);
-        return false;
-      }
       return true;
     });
 
     if (validFiles.length === 0) return;
 
-    const newFiles = [...files, ...validFiles];
+    let preparedFiles = validFiles;
+    try {
+      const oversized = validFiles.filter((file) => file.size > MAX_IMAGE_SIZE);
+      if (oversized.length) toast.loading(`Compressing ${oversized.length} image(s)...`, { id: 'gallery-compress' });
+      preparedFiles = await Promise.all(validFiles.map((file) => compressImageUnderLimit(file, MAX_IMAGE_SIZE)));
+      if (oversized.length) toast.success('Images compressed below 5MB', { id: 'gallery-compress' });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to compress image');
+      return;
+    }
+
+    const newFiles = [...files, ...preparedFiles];
     setFiles(newFiles);
 
-    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+    const newPreviews = preparedFiles.map(file => URL.createObjectURL(file));
     setPreviews([...previews, ...newPreviews]);
   };
 
@@ -136,7 +146,7 @@ export default function UploadModal({
                 {isBulk ? 'Drag & drop images here' : 'Click to select an image'}
               </p>
               <p className="text-xs text-[#555555]/40 mt-1">
-                {isBulk ? 'PNG, JPG, WEBP (Max 5MB each)' : 'PNG, JPG, WEBP (Max 5MB)'}
+                {isBulk ? 'PNG, JPG, WEBP · large images compress automatically' : 'PNG, JPG, WEBP · large images compress automatically'}
               </p>
             </div>
           ) : (

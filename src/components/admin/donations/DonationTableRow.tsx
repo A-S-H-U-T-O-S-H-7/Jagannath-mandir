@@ -9,7 +9,6 @@ interface DonationTableRowProps {
   index: number;
   onView: (donation: Donation) => void;
   onDelete: (donation: Donation) => void;
-  onUpdateStatus: (donation: Donation, status: string) => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -33,7 +32,6 @@ export default function DonationTableRow({
   index,
   onView,
   onDelete,
-  onUpdateStatus,
 }: DonationTableRowProps) {
   const formatDate = (date: string) => {
     if (!date) return '—';
@@ -105,18 +103,6 @@ export default function DonationTableRow({
             <Eye className="w-4 h-4" />
           </button>
           
-          <select
-            onChange={(e) => onUpdateStatus(donation, e.target.value)}
-            value={donation.status}
-            className="p-1.5 text-xs rounded-lg border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 outline-none cursor-pointer"
-          >
-            <option value="pending_payment">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-            <option value="refunded">Refunded</option>
-          </select>
-
           <button
             onClick={() => onDelete(donation)}
             className="p-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer bg-red-100 text-red-600 hover:bg-red-200"

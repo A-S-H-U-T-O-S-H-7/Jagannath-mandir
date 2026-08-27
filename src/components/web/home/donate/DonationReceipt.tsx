@@ -1,177 +1,25 @@
 'use client';
 
-import React from 'react';
 import { format } from 'date-fns';
 
-interface DonationReceiptProps {
-  donation: any;
-}
+export default function DonationReceipt({ donation }: { donation: any }) {
+  const orderId = donation?.id || donation?.donationId || 'N/A';
+  const details = donation?.donorDetails || {};
+  const name = details.name || donation?.name || 'N/A';
+  const email = details.email || donation?.email || 'N/A';
+  const mobile = details.mobile || donation?.mobile || 'N/A';
+  const address = [details.address, details.city, details.state, details.country, details.pincode].filter(Boolean).join(', ') || 'N/A';
+  const amount = donation?.amount || donation?.donationAmount || '0';
+  const dateValue = donation?.createdAt?.toDate?.() || (donation?.createdAt?.seconds ? new Date(donation.createdAt.seconds * 1000) : new Date(donation?.createdAt));
+  const date = Number.isNaN(dateValue.getTime()) ? 'Unknown' : format(dateValue, 'MMM dd, yyyy');
 
-const DonationReceipt = ({ donation }: DonationReceiptProps) => {
-  const orderId = donation?.id || "N/A";
-  
-  const name = donation?.donorDetails?.name ||
-               donation?.donorName ||
-               "N/A";
-  
-  const mobile = donation?.donorDetails?.mobile ||
-                 donation?.mobile ||
-                 "N/A";
-  
-  const amount = donation?.amount || donation?.donationAmount || "0";
-  
-  const pan = donation?.pan || "N/A";
-  
-  const address = donation?.donorDetails?.address ||
-                  donation?.address ||
-                  "N/A";
-
-  let date = 'Unknown';
-  try {
-    if (donation.createdAt) {
-      let dateObj = donation.createdAt;
-      if (donation.createdAt.toDate && typeof donation.createdAt.toDate === 'function') {
-        dateObj = donation.createdAt.toDate();
-      } else if (donation.createdAt.seconds) {
-        dateObj = new Date(donation.createdAt.seconds * 1000);
-      }
-      if (dateObj instanceof Date && !isNaN(dateObj.getTime())) {
-        date = format(dateObj, 'MMM dd, yyyy \'at\' hh:mm a');
-      }
-    }
-  } catch (error) {
-    console.warn('Error formatting date:', error);
-    date = 'Unknown';
-  }
-
-  const receiptNumber = orderId;
-  const receiptDate = date;
-  const donorName = name;
-  const donorPhone = mobile;
-  const donorPan = pan;
-  const donorAddress = address;
-  const donationAmount = amount;
-  const paymentMode = donation?.paymentMode || "Online";
-
-  return (
-    <div className="max-w-4xl mx-auto p-4 bg-white" id="donation-receipt">
-      <div className="border-2 border-[#D4AF37] rounded-lg p-6 bg-white shadow-lg">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span className="text-green-600 font-bold text-xs sm:text-sm bg-green-50 px-3 py-1 rounded">
-              Reg. No.: 345529
-            </span>
-            <h1 className="text-[#0B3C5D] font-bold text-xl sm:text-2xl tracking-wider">RECEIPT</h1>
-            <span className="text-green-600 font-bold text-xs sm:text-sm bg-green-50 px-3 py-1 rounded">
-              PAN No.: AAJTS7550E
-            </span>
-          </div>
-        </div>
-
-        {/* Organization Info */}
-        <div className="mb-4">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-[#0B3C5D] flex items-center justify-center text-white text-3xl">
-                🏛️
-              </div>
-            </div>
-            
-            <div className="flex-grow text-center sm:text-left">
-              <h2 className="text-[#0B3C5D] font-bold text-lg sm:text-xl mb-2">Jagannath Mandir</h2>
-              <div className="text-[#555555] text-xs sm:text-sm leading-relaxed">
-                <p className="mb-1 font-semibold">
-                  Donations are Income Tax exempted under section 80G of IT Act.
-                </p>
-                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 text-xs">
-                  <span>331, Vardhman Tower, Preet Vihar, New Delhi-110092</span>
-                  <span className="hidden sm:inline">|</span>
-                  <span>info@jagannathmandir.org | www.jagannathmandir.org</span>
-                </div>
-                <div className="mt-1 text-xs">
-                  <span className="font-medium">Bank:</span> Jagannath Mandir Trust | 
-                  <span className="font-medium"> A/c:</span> 083101002804 | 
-                  <span className="font-medium"> IFSC:</span> ICIC0000831
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-shrink-0">
-              <div className="w-20 h-20 rounded-lg border border-[#D4AF37]/30 flex items-center justify-center bg-[#F5F0EA]">
-                <span className="text-4xl">🙏</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Receipt Details */}
-        <div className="space-y-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2">
-            <div className="text-gray-800 p-3 border border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">Receipt No:</span> 
-              <span className="text-sm ml-2">{receiptNumber}</span>
-            </div>
-            <div className="text-gray-800 p-3 border border-gray-300 bg-gray-50 sm:text-right">
-              <span className="font-bold text-sm">Date:</span> 
-              <span className="text-sm ml-2">{receiptDate}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2">
-            <div className="p-3 text-gray-800 border border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">Donor Name:</span> 
-              <span className="text-sm ml-2">{donorName}</span>
-            </div>
-            <div className="p-3 text-gray-800 border border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">Phone:</span> 
-              <span className="text-sm ml-2">{donorPhone}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2">
-            <div className="p-3 border text-gray-800 border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">PAN:</span> 
-              <span className="text-sm ml-2">{donorPan}</span>
-            </div>
-            <div className="p-3 text-gray-800 border border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">Address:</span> 
-              <span className="text-sm ml-2">{donorAddress}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2">
-            <div className="text-gray-800 p-3 border border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">Amount:</span> 
-              <span className="font-semibold text-sm ml-2 text-[#D4AF37]">₹{donationAmount}/-</span>
-            </div>
-            <div className="text-gray-800 p-3 border border-gray-300 bg-gray-50">
-              <span className="font-bold text-sm">Payment Mode:</span> 
-              <span className="text-emerald-500 font-semibold text-sm ml-2">{paymentMode}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 flex flex-col sm:flex-row justify-between items-end gap-2">
-          <p className="text-xs text-gray-600 order-2 sm:order-1">
-            * Receipt is valid subject to realization of payment
-          </p>
-          
-          <div className="text-center sm:text-right order-1 sm:order-2">
-            <p className="font-bold text-gray-800 text-sm mb-2">For Jagannath Mandir Trust</p>
-            <div className="border-t border-gray-400 pt-1 min-w-32">
-              <p className="font-bold text-xs text-gray-700">Authorised Signatory</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 text-center">
-          <p className="text-xs text-[#0B3C5D] font-semibold">🙏 May Lord Jagannath bless you!</p>
-        </div>
-      </div>
+  return <div id="donation-receipt" className="w-full bg-white p-2 md:p-4">
+    <div className="w-full rounded-2xl border-2 border-[#D4AF37] bg-white p-4 shadow-lg md:p-6">
+      <div className="mb-3 flex items-center justify-between text-xs md:text-sm"><span className="rounded-md bg-green-50 px-2.5 py-1 font-semibold text-green-700">Reg: 345529</span><h1 className="text-base font-bold tracking-wide text-[#0B3C5D] md:text-2xl">RECEIPT</h1><span className="rounded-md bg-green-50 px-2.5 py-1 font-semibold text-green-700">PAN: AAJTS7550E</span></div>
+      <div className="mb-3 flex items-start gap-3"><img src="/svslogo.png" alt="SVS Logo" className="h-12 w-12 rounded border border-[#D4AF37]/40 object-contain md:h-16 md:w-16" /><div className="flex-1 text-xs md:text-sm"><h2 className="text-sm font-bold text-[#0B3C5D] md:text-lg">Samudayik Vikas Samiti</h2><p className="font-medium text-green-600">80G Certified</p><p className="text-gray-700">A 86/B, 2nd Floor, School Block,</p><p className="text-gray-700">Chander Vihar, Delhi-110092</p></div><img src="/donationqr.jpg" alt="Donation QR" className="h-12 w-12 rounded border border-[#D4AF37]/40 object-contain md:h-16 md:w-16" /></div>
+      <div className="mb-3 rounded-lg bg-[#F5F0EA] px-3 py-1.5 text-xs text-gray-700 md:text-sm"><span className="font-semibold">ICICI Bank</span> | A/c: 083101002804 | IFSC: ICIC0000831</div>
+      <div className="overflow-hidden rounded-lg border border-gray-300 text-sm md:text-base"><div className="grid grid-cols-2"><div className="border-b border-r border-gray-300 bg-gray-50 px-3 py-2"><b>Receipt No:</b> {String(orderId).slice(-8)}</div><div className="border-b border-gray-300 bg-gray-50 px-3 py-2"><b>Date:</b> {date}</div></div><div className="grid grid-cols-2"><div className="border-b border-r border-gray-300 px-3 py-2"><b>Name:</b> {name}</div><div className="border-b border-gray-300 px-3 py-2"><b>On Account Of:</b> Donation</div></div><div className="border-b border-gray-300 px-3 py-2"><b>Email:</b> {email}</div><div className="border-b border-gray-300 px-3 py-2"><b>Address:</b> {address}</div><div className="grid grid-cols-2"><div className="border-r border-gray-300 px-3 py-2"><b>Phone:</b> {mobile}</div><div className="px-3 py-2"><b>Payment:</b> Online</div></div><div className="border-t border-gray-300 bg-gray-50 px-3 py-2.5"><b>Amount:</b> <span className="text-xl font-bold text-[#D4AF37] md:text-2xl">₹ {Number(amount).toLocaleString('en-IN')}</span></div></div>
+      <div className="mt-3 flex items-end justify-between text-[10px] md:text-xs"><p className="text-gray-500">* Subject to realization</p><div className="text-right"><p className="font-bold text-gray-700 md:text-sm">For Samudayik Vikas Samiti</p><div className="ml-auto mt-1 w-28 border-t border-gray-400 pt-1"><p className="font-bold text-gray-600">Authorised Signatory</p></div></div></div>
     </div>
-  );
-};
-
-export default DonationReceipt;
+  </div>;
+}
