@@ -11,6 +11,8 @@ import {
 } from '@/lib/payment/ccavenue';
 import { donationServer } from '@/lib/services/donationServer';
 
+export const runtime = 'nodejs';
+
 async function handleResponse(request: NextRequest) {
   const baseUrl = getRequestBaseUrl(request);
 

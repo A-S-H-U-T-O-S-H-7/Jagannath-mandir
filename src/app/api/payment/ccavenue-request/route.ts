@@ -7,6 +7,8 @@ import {
   toMerchantQuery,
 } from '@/lib/payment/ccavenue';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const { workingKey, accessCode, merchantId, paymentUrl, mode } = getCCAvenueConfig();

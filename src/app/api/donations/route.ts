@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { donationServer } from '@/lib/services/donationServer';
 
+// Firebase Admin requires the Node.js runtime. Explicitly declaring it avoids
+// Vercel evaluating this route as an Edge function.
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

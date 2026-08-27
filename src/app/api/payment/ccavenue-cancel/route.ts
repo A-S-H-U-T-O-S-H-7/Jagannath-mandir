@@ -8,6 +8,8 @@ import {
   isExpectedCCAvenueResponse,
 } from '@/lib/payment/ccavenue';
 
+export const runtime = 'nodejs';
+
 async function handleCancel(request: Request) {
   const baseUrl = getRequestBaseUrl(request);
   let orderId: string | undefined;
