@@ -5,30 +5,35 @@ import {
   decryptCCAvenueResponse,
   extractEncResp,
   getRequestBaseUrl,
+  isExpectedCCAvenueResponse,
 } from '@/lib/payment/ccavenue';
 
 async function handleCancel(request: Request) {
   const baseUrl = getRequestBaseUrl(request);
-  const url = new URL(request.url);
-  let orderId = url.searchParams.get('order_id') || undefined;
+  let orderId: string | undefined;
 
   try {
     const encResp = await extractEncResp(request);
     if (encResp) {
       const decrypted = decryptCCAvenueResponse(encResp);
-      if (decrypted.ok && decrypted.data?.order_id) {
+      if (decrypted.ok && decrypted.data?.order_id && isExpectedCCAvenueResponse(decrypted.data)) {
         orderId = String(decrypted.data.order_id);
+      } else {
+        console.warn('Rejected unverified CCAvenue cancellation response');
       }
     }
 
     if (orderId) {
-      await donationServer.updateDonationStatus(orderId, 'cancelled', {
-        failure_message: 'Payment cancelled by user',
-        order_status: 'Aborted',
-        cancelledAt: new Date().toISOString(),
-      });
+      const donation = await donationServer.getDonation(orderId);
+      if (donation.success && donation.data?.status !== 'completed') {
+        await donationServer.updateDonationStatus(orderId, 'cancelled', {
+          failure_message: 'Payment cancelled by user',
+          order_status: 'Aborted',
+          cancelledAt: new Date().toISOString(),
+        });
+      }
     } else {
-      console.warn('No order_id found in CCAvenue cancel request');
+      console.warn('No verified order_id found in CCAvenue cancel request');
     }
   } catch (error) {
     console.error('ccavenue-cancel error:', error);

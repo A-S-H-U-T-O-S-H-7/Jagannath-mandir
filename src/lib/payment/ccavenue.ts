@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 export type CCAvenuePaymentData = {
+  merchant_id?: string;
   order_id?: string;
   order_status?: string;
   tracking_id?: string;
@@ -74,7 +75,10 @@ export function decryptCCAvenue(encText: string, workingKey: string): string {
 export function toMerchantQuery(data: Record<string, string | number | undefined | null>): string {
   return Object.entries(data)
     .filter(([, value]) => value !== undefined && value !== null && String(value).length > 0)
-    .map(([key, value]) => `${key}=${String(value)}`)
+    // CCAvenue expects an encrypted query string. Values must be encoded first so
+    // donor names, addresses, and purposes containing `&`, `=`, or `+` do not
+    // corrupt the request payload.
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
     .join('&');
 }
 
@@ -146,6 +150,15 @@ export function mapOrderStatus(orderStatus?: string): DonationPaymentStatus {
   if (normalized === 'success') return 'completed';
   if (normalized === 'aborted') return 'cancelled';
   return 'failed';
+}
+
+export function isExpectedCCAvenueResponse(data: CCAvenuePaymentData): boolean {
+  const { merchantId } = getCCAvenueConfig();
+  return Boolean(
+    merchantId &&
+      data.merchant_id === merchantId &&
+      String(data.currency || '').toUpperCase() === 'INR'
+  );
 }
 
 export function buildSuccessRedirect(baseUrl: string, orderId: string): string {
