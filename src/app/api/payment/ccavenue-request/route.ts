@@ -20,6 +20,10 @@ export async function POST(request: Request) {
       email: String(body.email).trim().toLowerCase(), phone: String(body.phone).replace(/\D/g, ''),
       address: String(body.address || 'India').trim(), purpose: String(body.purpose || 'General Donation').trim(),
       donor_type: String(body.donor_type || 'indian').trim(), country: String(body.country || 'India').trim(),
+      city: String(body.city || '').trim(), state: String(body.state || '').trim(),
+      pincode: String(body.pincode || '').trim(),
+      billing_city: String(body.city || '').trim(), billing_state: String(body.state || '').trim(),
+      billing_zip: String(body.pincode || '').trim(), billing_country: String(body.country || 'India').trim(),
       redirect_url: REDIRECT_URL, cancel_url: CANCEL_URL,
     };
     const formData = new FormData();
