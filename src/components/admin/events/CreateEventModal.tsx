@@ -86,8 +86,9 @@ export default function CreateEventModal({
   }, [editingEvent, isOpen]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    let file: File = selectedFile;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setErrors({ ...errors, coverImage: 'Please upload a valid image (JPEG, PNG, WEBP)' });
@@ -102,23 +103,24 @@ export default function CreateEventModal({
         file = await compressImageUnderLimit(file, MAX_IMAGE_SIZE);
         toast.success('Cover image compressed below 5MB', { id: 'cover-compress' });
       }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({
-        ...formData,
-        coverImageFile: file,
-        coverImagePreview: reader.result as string,
-      });
-      setErrors({ ...errors, coverImage: '' });
-      setIsUploading(false);
-      toast.success('Image uploaded successfully!');
-    };
-    reader.onerror = () => {
-      setIsUploading(false);
-      setErrors({ ...errors, coverImage: 'Failed to read image file' });
-      toast.error('Failed to read image file. Please try again.');
-    };
-    reader.readAsDataURL(file);
+      const processedFile: File = file;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({
+          ...formData,
+          coverImageFile: processedFile,
+          coverImagePreview: reader.result as string,
+        });
+        setErrors({ ...errors, coverImage: '' });
+        setIsUploading(false);
+        toast.success('Image uploaded successfully!');
+      };
+      reader.onerror = () => {
+        setIsUploading(false);
+        setErrors({ ...errors, coverImage: 'Failed to read image file' });
+        toast.error('Failed to read image file. Please try again.');
+      };
+      reader.readAsDataURL(processedFile);
     } catch (error: any) {
       setIsUploading(false);
       setErrors({ ...errors, coverImage: error.message || 'Failed to compress image' });
