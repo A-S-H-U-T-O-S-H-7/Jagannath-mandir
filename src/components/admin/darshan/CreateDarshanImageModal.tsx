@@ -63,8 +63,9 @@ export default function CreateDarshanImageModal({
   }, [editingImage, isOpen]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    let file: File = selectedFile;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setErrors({ ...errors, imageFile: 'Please upload a valid image (JPEG, PNG, WEBP)' });
@@ -79,23 +80,24 @@ export default function CreateDarshanImageModal({
         file = await compressImageUnderLimit(file, MAX_IMAGE_SIZE);
         toast.success('Image compressed below 5MB', { id: 'darshan-compress' });
       }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({
-        ...formData,
-        imageFile: file,
-        imagePreview: reader.result as string,
-      });
-      setErrors({ ...errors, imageFile: '' });
-      setIsUploading(false);
-      toast.success('Image uploaded successfully!');
-    };
-    reader.onerror = () => {
-      setIsUploading(false);
-      setErrors({ ...errors, imageFile: 'Failed to read image file' });
-      toast.error('Failed to read image file. Please try again.');
-    };
-    reader.readAsDataURL(file);
+      const processedFile: File = file;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({
+          ...formData,
+          imageFile: processedFile,
+          imagePreview: reader.result as string,
+        });
+        setErrors({ ...errors, imageFile: '' });
+        setIsUploading(false);
+        toast.success('Image uploaded successfully!');
+      };
+      reader.onerror = () => {
+        setIsUploading(false);
+        setErrors({ ...errors, imageFile: 'Failed to read image file' });
+        toast.error('Failed to read image file. Please try again.');
+      };
+      reader.readAsDataURL(processedFile);
     } catch (error: any) {
       setIsUploading(false);
       setErrors({ ...errors, imageFile: error.message || 'Failed to compress image' });
