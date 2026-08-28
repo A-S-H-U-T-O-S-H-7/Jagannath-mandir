@@ -18,7 +18,7 @@ export const MEMBERSHIP_GRADES = [
   { 
     sl: '2', 
     grade: 'Life Time Member', 
-    amountLabel: '1,01,000/- (One Time) + 11,000/- p.a', 
+    amountLabel: '1,01,000/-',
     amount: 101000,
     details: [
       'Priority in Puja booking',
@@ -42,7 +42,7 @@ export const MEMBERSHIP_GRADES = [
   { 
     sl: '4', 
     grade: 'Annual Associate', 
-    amountLabel: '2,100/- p.a', 
+    amountLabel: '2,100/-',
     amount: 2100,
     details: [
       'Information on all programmes',
@@ -52,7 +52,7 @@ export const MEMBERSHIP_GRADES = [
   { 
     sl: '5', 
     grade: 'Annual Member', 
-    amountLabel: '1,100/- p.a', 
+    amountLabel: '1,100/-',
     amount: 1100,
     details: [
       'Information on all major programmes'
@@ -69,7 +69,7 @@ export const MEMBERSHIP_INFO_POINTS = [
 ] as const;
 
 export type MembershipGrade = (typeof MEMBERSHIP_GRADES)[number]['grade'];
-export type PaymentMethod = 'Cash' | 'Cheque' | 'DD';
+export type PaymentMethod = 'Cash' | 'Cheque' | 'DD' | 'Online Payment';
 export type TitleOption = 'Mr' | 'Ms' | 'Mrs' | 'Dr' | 'Prof';
 export type GenderOption = 'Male' | 'Female' | 'Others';
 

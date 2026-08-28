@@ -170,7 +170,7 @@ export default function MembershipFormStep({
                 <option value="">Select membership grade</option>
                 {MEMBERSHIP_GRADES.map((grade) => (
                   <option key={grade.sl} value={grade.grade}>
-                    {grade.grade} — Rs. {grade.amountLabel}
+                    {grade.grade} — Rs. {grade.amount.toLocaleString('en-IN')}/-
                   </option>
                 ))}
               </select>
@@ -182,7 +182,7 @@ export default function MembershipFormStep({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Amount (Rs.)">
                 <input
-                  value={selected?.amountLabel || ''}
+                  value={selected ? `${selected.amount.toLocaleString('en-IN')}/-` : ''}
                   readOnly
                   placeholder="Select grade first"
                   className={`${inputClass} bg-[#F9F8F4] cursor-not-allowed`}
@@ -198,11 +198,12 @@ export default function MembershipFormStep({
                   <option value="Cash">Cash</option>
                   <option value="Cheque">Cheque</option>
                   <option value="DD">Demand Draft (DD)</option>
+                  <option value="Online Payment">Online Payment</option>
                 </select>
               </Field>
             </div>
 
-            {data.paymentMethod && data.paymentMethod !== 'Cash' ? (
+            {(data.paymentMethod === 'Cheque' || data.paymentMethod === 'DD') ? (
               <div className="grid grid-cols-1 gap-4 rounded-xl bg-[#F9F8F4] p-4 sm:grid-cols-3">
                 <Field label={`${data.paymentMethod} No.`} required error={errors.chequeOrDdNo}>
                   <input

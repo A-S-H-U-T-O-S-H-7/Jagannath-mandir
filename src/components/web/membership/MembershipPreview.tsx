@@ -160,17 +160,19 @@ function SheetFrame({
 export default function MembershipPreview({
   data,
   onSubmit,
+  onOnlinePayment,
   submitting = false,
 }: {
   data: MembershipFormData;
   onSubmit?: () => void | Promise<void>;
+  onOnlinePayment?: () => void;
   submitting?: boolean;
 }) {
   const grade = getSelectedGrade(data.membershipType);
   const dob = formatDateParts(data.dateOfBirth);
   const declared = formatDateParts(data.declarationDate);
   const payDate = formatDateParts(data.paymentDate);
-  const amountLabel = grade?.amountLabel || '';
+  const amountLabel = grade ? `${grade.amount.toLocaleString('en-IN')}/-` : '';
 
   const handlePrint = () => {
     window.print();
@@ -222,9 +224,9 @@ export default function MembershipPreview({
               <div className="mt-4 flex items-start justify-between gap-6">
                 <div className="text-[13px] leading-5 text-[#0B3C5D]">
                   <p>To</p>
-                  <p>The President</p>
-                  <p className="font-bold">SRI JAGANNATH SAMITI,</p>
-                  <p>Sector-121, Noida, G B Nagar, Uttar Pradesh.</p>
+                  <p className="font-bold">President,</p>
+                  <p className="font-bold">Samudayik Vikas Samiti,</p>
+                  <p>C-316 B&amp;C, Sector-10, Noida, G B Nagar, UP.</p>
                 </div>
               </div>
 
@@ -246,6 +248,10 @@ export default function MembershipPreview({
                 /{' '}
                 <span className="inline-flex items-center gap-1">
                   <Tick checked={data.paymentMethod === 'DD'} /> DD No.
+                </span>{' '}
+                /{' '}
+                <span className="inline-flex items-center gap-1">
+                  <Tick checked={data.paymentMethod === 'Online Payment'} /> Online Payment
                 </span>{' '}
                 <DottedValue value={data.chequeOrDdNo} minWidth="90px" /> of{' '}
                 <DottedValue value={data.bankName} minWidth="130px" /> bank, dated{' '}
@@ -431,7 +437,9 @@ export default function MembershipPreview({
                             {row.grade}
                             {selected ? '  ✓' : ''}
                           </td>
-                          <td className="border border-[#0B3C5D] px-3 py-2 text-right text-[#0B3C5D]">{row.amountLabel}</td>
+                          <td className="border border-[#0B3C5D] px-3 py-2 text-right text-[#0B3C5D]">
+                            {row.amount.toLocaleString('en-IN')}/-
+                          </td>
                         </tr>
                       );
                     })}
@@ -497,6 +505,16 @@ export default function MembershipPreview({
           <Printer className="h-4 w-4" />
           Print
         </button>
+        {data.paymentMethod === 'Online Payment' ? (
+          <button
+            type="button"
+            onClick={onOnlinePayment}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37] bg-[#FFF8DE] px-5 py-2.5 text-sm font-semibold text-[#0B3C5D] transition hover:bg-[#FBEFC1] sm:w-auto"
+          >
+            <Send className="h-4 w-4" />
+            Pay Online (Coming Soon)
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={onSubmit}

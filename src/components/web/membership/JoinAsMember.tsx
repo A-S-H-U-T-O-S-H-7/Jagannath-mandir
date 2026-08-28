@@ -26,7 +26,7 @@ function validateForm(data: MembershipFormData) {
   if (!data.photoFile) errors.photoFile = 'Please upload your passport photo';
   if (!data.membershipType) errors.membershipType = 'Please select a membership grade';
   if (!data.paymentMethod) errors.paymentMethod = 'Please select a payment method';
-  if (data.paymentMethod && data.paymentMethod !== 'Cash') {
+  if (data.paymentMethod === 'Cheque' || data.paymentMethod === 'DD') {
     if (!data.chequeOrDdNo) errors.chequeOrDdNo = 'Required';
     if (!data.bankName) errors.bankName = 'Required';
     if (!data.paymentDate) errors.paymentDate = 'Required';
@@ -35,9 +35,11 @@ function validateForm(data: MembershipFormData) {
   if (!data.gender) errors.gender = 'Required';
   if (!data.fullName.trim()) errors.fullName = 'Required';
   if (!data.dateOfBirth) errors.dateOfBirth = 'Required';
+  else if (new Date(data.dateOfBirth) >= new Date()) errors.dateOfBirth = 'Date of birth must be in the past';
   if (!data.fatherName.trim()) errors.fatherName = 'Required';
   if (!data.motherName.trim()) errors.motherName = 'Required';
   if (!data.address.trim()) errors.address = 'Required';
+  else if (data.address.trim().length < 10) errors.address = 'Enter a complete address';
   if (!data.country) errors.country = 'Required';
   if (!data.state) errors.state = 'Required';
   if (!data.city) errors.city = 'Required';
@@ -51,6 +53,7 @@ function validateForm(data: MembershipFormData) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = 'Enter a valid email';
   if (!data.place.trim()) errors.place = 'Required';
   if (!data.declarationDate) errors.declarationDate = 'Required';
+  else if (new Date(data.declarationDate) > new Date()) errors.declarationDate = 'Declaration date cannot be in the future';
   return errors;
 }
 
@@ -106,13 +109,21 @@ export default function JoinAsMember() {
         throw new Error(result.error || 'Unable to submit application');
       }
       setSubmittedId(result.id);
-      toast.success('Application submitted successfully');
+      toast.success(
+        form.paymentMethod === 'Online Payment'
+          ? 'Application submitted. Online payment will be available soon.'
+          : 'Application submitted successfully',
+      );
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unable to submit application';
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleOnlinePayment = () => {
+    toast('Online payment integration will be available soon.');
   };
 
   return (
@@ -139,6 +150,9 @@ export default function JoinAsMember() {
           <h1 className="mb-3 font-serif text-3xl font-bold leading-tight text-[#0B3C5D] md:text-5xl">
             Join as <span className="text-[#D4AF37]">Member</span>
           </h1>
+          <p className="mb-3 font-serif text-xl font-semibold tracking-wide text-[#D4AF37] md:text-2xl">
+            Shree Swarna Khetra
+          </p>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-[#555555]">
             Fill your details in step 1. On Next, your photo and information will appear on the
             official membership application form.
@@ -236,6 +250,7 @@ export default function JoinAsMember() {
               <MembershipPreview
                 data={form}
                 onSubmit={handleSubmit}
+                onOnlinePayment={handleOnlinePayment}
                 submitting={submitting}
               />
             )}

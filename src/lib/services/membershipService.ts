@@ -9,6 +9,8 @@ import {
   getDoc,
   query,
   orderBy,
+  where,
+  limit,
   updateDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -68,6 +70,21 @@ export interface MembershipApplication {
 
 export const submitMembershipApplication = async (data: MembershipFormData) => {
   try {
+    const matchingApplications = await getDocs(
+      query(collection(db, COLLECTION), where('aadhaar', '==', data.aadhaar.trim()), limit(1)),
+    );
+    const previousApplication = matchingApplications.docs[0];
+    const previousCreatedAt = previousApplication?.data().createdAt as string | undefined;
+    const renewalAvailableAt = previousCreatedAt
+      ? new Date(new Date(previousCreatedAt).getTime() + 365 * 24 * 60 * 60 * 1000)
+      : null;
+
+    if (renewalAvailableAt && renewalAvailableAt > new Date()) {
+      throw new Error(
+        `A membership application already exists for this Aadhaar number. Renewal is available after ${renewalAvailableAt.toLocaleDateString('en-IN')}.`,
+      );
+    }
+
     const docRef = doc(collection(db, COLLECTION));
     const grade = getSelectedGrade(data.membershipType);
     const currentUser = auth.currentUser;
@@ -131,6 +148,8 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
       aadhaarUrl,
       panUrl, // ✅ NEW
       userId: currentUser?.uid || '',
+      isRenewal: Boolean(previousApplication),
+      renewalOf: previousApplication?.id || '',
       status: 'pending' as MembershipStatus,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
