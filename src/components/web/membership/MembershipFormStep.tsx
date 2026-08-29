@@ -113,6 +113,38 @@ export default function MembershipFormStep({
     onChange({ [key]: value });
   };
 
+  const setFromInput = (
+    key: keyof MembershipFormData,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    transform: (value: string) => string = (value) => value,
+  ) => {
+    const input = event.currentTarget;
+    const selectionStart = input.selectionStart;
+    const selectionEnd = input.selectionEnd;
+    const value = transform(input.value);
+    const nextSelectionStart = selectionStart === null
+      ? null
+      : transform(input.value.slice(0, selectionStart)).length;
+    const nextSelectionEnd = selectionEnd === null
+      ? null
+      : transform(input.value.slice(0, selectionEnd)).length;
+
+    set(key, value);
+
+    // React may replace a transformed controlled value and move the caret to
+    // the end. Restore it after the updated value has been committed.
+    if (nextSelectionStart !== null && nextSelectionEnd !== null) {
+      window.requestAnimationFrame(() => {
+        if (document.activeElement === input) {
+          input.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+        }
+      });
+    }
+  };
+
+  const uppercase = (value: string) => value.toUpperCase();
+  const digitsOnly = (value: string) => value.replace(/\D/g, '');
+
   const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     const updates: Partial<MembershipFormData> = { [name]: value };
@@ -208,14 +240,14 @@ export default function MembershipFormStep({
                 <Field label={`${data.paymentMethod} No.`} required error={errors.chequeOrDdNo}>
                   <input
                     value={data.chequeOrDdNo}
-                    onChange={(e) => set('chequeOrDdNo', e.target.value.toUpperCase())}
+                    onChange={(e) => setFromInput('chequeOrDdNo', e, uppercase)}
                     className={inputClass}
                   />
                 </Field>
                 <Field label="Bank Name" required error={errors.bankName}>
                   <input
                     value={data.bankName}
-                    onChange={(e) => set('bankName', e.target.value.toUpperCase())}
+                    onChange={(e) => setFromInput('bankName', e, uppercase)}
                     className={inputClass}
                   />
                 </Field>
@@ -257,7 +289,7 @@ export default function MembershipFormStep({
               <Field label="Full Name (as per Aadhaar)" required error={errors.fullName}>
                 <input
                   value={data.fullName}
-                  onChange={(e) => set('fullName', e.target.value.toUpperCase())}
+                  onChange={(e) => setFromInput('fullName', e, uppercase)}
                   className={inputClass}
                   placeholder="Enter your full name as per Aadhaar"
                 />
@@ -294,7 +326,7 @@ export default function MembershipFormStep({
             <Field label="Father's Name" required error={errors.fatherName}>
               <input
                 value={data.fatherName}
-                onChange={(e) => set('fatherName', e.target.value.toUpperCase())}
+                onChange={(e) => setFromInput('fatherName', e, uppercase)}
                 className={inputClass}
                 placeholder="Enter father's full name"
               />
@@ -302,7 +334,7 @@ export default function MembershipFormStep({
             <Field label="Mother's Name" required error={errors.motherName}>
               <input
                 value={data.motherName}
-                onChange={(e) => set('motherName', e.target.value.toUpperCase())}
+                onChange={(e) => setFromInput('motherName', e, uppercase)}
                 className={inputClass}
                 placeholder="Enter mother's full name"
               />
@@ -319,7 +351,7 @@ export default function MembershipFormStep({
             <textarea
               rows={3}
               value={data.address}
-              onChange={(e) => set('address', e.target.value.toUpperCase())}
+              onChange={(e) => setFromInput('address', e, uppercase)}
               className={`${inputClass} resize-none`}
               placeholder="Enter your complete address with House No., Street, Area, Landmark"
             />
@@ -378,7 +410,7 @@ export default function MembershipFormStep({
               <input
                 value={data.pinCode}
                 maxLength={6}
-                onChange={(e) => set('pinCode', e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setFromInput('pinCode', e, digitsOnly)}
                 className={inputClass}
                 placeholder="6-digit"
               />
@@ -395,7 +427,7 @@ export default function MembershipFormStep({
             <input
               value={data.aadhaar}
               maxLength={12}
-              onChange={(e) => set('aadhaar', e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => setFromInput('aadhaar', e, digitsOnly)}
               className={inputClass}
               placeholder="12-digit Aadhaar"
             />
@@ -403,7 +435,7 @@ export default function MembershipFormStep({
           <Field label="PAN No." required error={errors.panNumber}>
             <input
               value={data.panNumber}
-              onChange={(e) => set('panNumber', e.target.value.toUpperCase())}
+              onChange={(e) => setFromInput('panNumber', e, uppercase)}
               className={inputClass}
               placeholder="ABCDE1234F"
             />
@@ -426,7 +458,7 @@ export default function MembershipFormStep({
             <input
               value={data.contactNo}
               maxLength={10}
-              onChange={(e) => set('contactNo', e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => setFromInput('contactNo', e, digitsOnly)}
               className={inputClass}
               placeholder="10-digit"
             />
@@ -451,7 +483,7 @@ export default function MembershipFormStep({
             <Field label="Qualification">
               <input
                 value={data.qualification}
-                onChange={(e) => set('qualification', e.target.value.toUpperCase())}
+                onChange={(e) => setFromInput('qualification', e, uppercase)}
                 className={inputClass}
                 placeholder="e.g., B.Tech, M.A."
               />
@@ -459,7 +491,7 @@ export default function MembershipFormStep({
             <Field label="Occupation">
               <input
                 value={data.occupation}
-                onChange={(e) => set('occupation', e.target.value.toUpperCase())}
+                onChange={(e) => setFromInput('occupation', e, uppercase)}
                 className={inputClass}
                 placeholder="e.g., Engineer, Teacher"
               />
@@ -469,7 +501,7 @@ export default function MembershipFormStep({
           <Field label="Introducer Name & Details">
             <input
               value={data.introducer}
-              onChange={(e) => set('introducer', e.target.value.toUpperCase())}
+              onChange={(e) => setFromInput('introducer', e, uppercase)}
               className={inputClass}
               placeholder="Name and membership details of introducer"
             />
@@ -514,7 +546,7 @@ export default function MembershipFormStep({
           <Field label="Place" required error={errors.place}>
             <input
               value={data.place}
-              onChange={(e) => set('place', e.target.value.toUpperCase())}
+              onChange={(e) => setFromInput('place', e, uppercase)}
               className={inputClass}
               placeholder="City/Town"
             />
