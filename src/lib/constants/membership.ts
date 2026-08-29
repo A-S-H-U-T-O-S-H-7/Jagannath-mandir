@@ -58,6 +58,15 @@ export const MEMBERSHIP_GRADES = [
       'Information on all major programmes'
     ]
   },
+  {
+    sl: 'T',
+    grade: 'Payment Gateway Test',
+    amountLabel: '1/-',
+    amount: 1,
+    details: [
+      'For CCAvenue payment-flow testing only'
+    ]
+  },
 ] as const;
 
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as const;
