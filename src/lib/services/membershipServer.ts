@@ -41,6 +41,12 @@ export const membershipServer = {
         paymentDetails,
         updatedAt: FieldValue.serverTimestamp(),
       };
+      const application = await getAdminDb().collection(COLLECTION).doc(applicationId).get();
+      if (!application.exists) return { success: false as const, error: 'Membership application not found' };
+      if (paymentStatus === 'paid' && application.data()?.isRenewal === true) {
+        updates.status = 'approved';
+        updates.reviewedAt = new Date().toISOString();
+      }
       const transactionId = paymentDetails.transaction_id || paymentDetails.tracking_id;
       if (transactionId) updates.transactionId = String(transactionId);
       if (paymentStatus === 'paid') updates.paidAt = FieldValue.serverTimestamp();

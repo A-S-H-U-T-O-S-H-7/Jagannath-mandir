@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { MembershipFormData } from '@/lib/constants/membership';
-import { getSelectedGrade } from '@/lib/constants/membership';
+import { getMembershipRenewalDetails, getSelectedGrade } from '@/lib/constants/membership';
 
 const COLLECTION = 'membershipApplications';
 
@@ -289,5 +289,57 @@ export const getMembershipByUser = async (email?: string | null, userId?: string
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unable to load membership.';
     return { success: false, error: message, application: null };
+  }
+};
+
+export const getLatestMembershipByUser = async (email?: string | null, userId?: string | null) => {
+  const result = await getAllMembershipApplications();
+  if (!result.success) return { success: false, error: result.error, application: null };
+  const normalizedEmail = email?.trim().toLowerCase() || '';
+  const applications = result.applications
+    .filter((item) =>
+      Boolean((normalizedEmail && item.email?.trim().toLowerCase() === normalizedEmail) || (userId && item.userId === userId)),
+    )
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return { success: true, application: applications[0] || null };
+};
+
+export const getMembershipApplicationById = async (applicationId: string) => {
+  try {
+    const snapshot = await getDoc(doc(db, COLLECTION, applicationId));
+    if (!snapshot.exists()) return { success: false, application: null };
+    return { success: true, application: mapApplication(snapshot.id, snapshot.data() as Record<string, unknown>) };
+  } catch {
+    return { success: false, application: null };
+  }
+};
+
+export const createMembershipRenewal = async (application: MembershipApplication) => {
+  const renewal = getMembershipRenewalDetails(application.membershipType);
+  if (!renewal) return { success: false, error: 'This membership grade does not require renewal.' };
+
+  try {
+    const orderId = createMembershipOrderId();
+    const now = new Date().toISOString();
+    await setDoc(doc(db, COLLECTION, orderId), {
+      ...application,
+      id: orderId,
+      memberId: application.memberId || '',
+      membershipAmount: renewal.amount,
+      paymentMethod: 'Online Payment',
+      paymentStatus: 'pending',
+      status: 'pending',
+      isRenewal: true,
+      renewalOf: application.id,
+      createdAt: now,
+      updatedAt: now,
+      reviewedAt: '',
+      reviewedBy: '',
+      transactionId: '',
+      paymentDetails: {},
+    });
+    return { success: true, id: orderId, amount: renewal.amount };
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unable to create renewal payment.' };
   }
 };

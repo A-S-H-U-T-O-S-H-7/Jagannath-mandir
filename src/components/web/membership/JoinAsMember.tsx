@@ -9,16 +9,23 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
-  Printer,
   Users,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   emptyMembershipForm,
+  getMembershipRenewalDetails,
   getSelectedGrade,
   type MembershipFormData,
 } from '@/lib/constants/membership';
-import { submitMembershipApplication } from '@/lib/services/membershipService';
+import {
+  createMembershipRenewal,
+  getMembershipApplicationById,
+  getLatestMembershipByUser,
+  submitMembershipApplication,
+  type MembershipApplication,
+} from '@/lib/services/membershipService';
+import useAuthStore from '@/lib/store/authStore';
 import MembershipFormStep from './MembershipFormStep';
 import MembershipPreview from './MembershipPreview';
 
@@ -78,12 +85,46 @@ function validateForm(data: MembershipFormData) {
 
 export default function JoinAsMember() {
   const router = useRouter();
+  const { user, initialize } = useAuthStore();
   const [step, setStep] = useState<1 | 2>(1);
   const [form, setForm] = useState<MembershipFormData>(emptyMembershipForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [submittedId, setSubmittedId] = useState('');
   const [pendingPaymentId, setPendingPaymentId] = useState('');
+  const [existingMembership, setExistingMembership] = useState<MembershipApplication | null>(null);
+  const [loadingExistingMembership, setLoadingExistingMembership] = useState(true);
+  const [renewing, setRenewing] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const unsubscribe = initialize();
+    return () => unsubscribe();
+  }, [initialize]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const loadMembership = async () => {
+      const storedApplicationId = window.localStorage.getItem('membershipApplicationId');
+      if (storedApplicationId) {
+        const stored = await getMembershipApplicationById(storedApplicationId);
+        if (stored.success && stored.application) {
+          setExistingMembership(stored.application);
+          setLoadingExistingMembership(false);
+          return;
+        }
+      }
+      if (!user) { setExistingMembership(null); setLoadingExistingMembership(false); return; }
+      setLoadingExistingMembership(true);
+      const result = await getLatestMembershipByUser(user.email, user.uid);
+      setExistingMembership(result.application);
+      setLoadingExistingMembership(false);
+    };
+    loadMembership();
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -121,6 +162,67 @@ export default function JoinAsMember() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const startOnlinePayment = async (application: {
+    id: string; amount: number; membershipType: string; fullName: string; email: string; contactNo: string;
+    address: string; city: string; state: string; pinCode: string; country: string;
+  }) => {
+    const paymentResponse = await fetch('/api/payment/ccavenue-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order_id: application.id,
+        purpose: `Membership: ${application.membershipType}`,
+        amount: application.amount,
+        name: application.fullName.trim(),
+        email: application.email.trim(),
+        phone: application.contactNo.replace(/\D/g, ''),
+        address: application.address.trim(),
+        city: application.city,
+        state: application.state,
+        pincode: application.pinCode.trim(),
+        country: application.country,
+        donor_type: 'indian',
+      }),
+    });
+    const paymentResponseText = await paymentResponse.text();
+    let payment: { status?: boolean; encRequest?: string; access_code?: string; paymentUrl?: string; errors?: string[] };
+    try {
+      payment = JSON.parse(paymentResponseText);
+    } catch {
+      throw new Error('Unable to start payment. Please try again.');
+    }
+    if (!paymentResponse.ok || !payment.status || !payment.encRequest || !payment.access_code || !payment.paymentUrl) {
+      throw new Error(payment.errors?.[0] || 'Unable to start payment');
+    }
+    redirectToCCAvenue(payment.paymentUrl, payment.encRequest, payment.access_code);
+  };
+
+  const handleRenewal = async () => {
+    if (!existingMembership) return;
+    setRenewing(true);
+    try {
+      const renewal = await createMembershipRenewal(existingMembership);
+      if (!renewal.success || !renewal.id || !renewal.amount) throw new Error(renewal.error || 'Unable to start renewal');
+      window.localStorage.setItem('membershipApplicationId', renewal.id);
+      await startOnlinePayment({
+        id: renewal.id,
+        amount: renewal.amount,
+        membershipType: existingMembership.membershipType,
+        fullName: existingMembership.fullName,
+        email: existingMembership.email,
+        contactNo: existingMembership.contactNo,
+        address: existingMembership.address || '',
+        city: existingMembership.city || '',
+        state: existingMembership.state || '',
+        pinCode: existingMembership.pinCode || '',
+        country: existingMembership.country || 'India',
+      });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Unable to start renewal');
+      setRenewing(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -132,47 +234,41 @@ export default function JoinAsMember() {
           throw new Error(result.error || 'Unable to submit application');
         }
         applicationId = result.id;
+        window.localStorage.setItem('membershipApplicationId', applicationId);
         if (form.paymentMethod === 'Online Payment') {
           setPendingPaymentId(applicationId);
         }
       }
 
       if (form.paymentMethod === 'Online Payment') {
-        const paymentResponse = await fetch('/api/payment/ccavenue-request', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            order_id: applicationId,
-            purpose: `Membership: ${form.membershipType}`,
-            amount: getSelectedGrade(form.membershipType)?.amount,
-            name: form.fullName.trim(),
-            email: form.email.trim(),
-            phone: form.contactNo.replace(/\D/g, ''),
-            address: form.address.trim(),
-            city: form.city,
-            state: form.state,
-            pincode: form.pinCode.trim(),
-            country: form.country,
-            donor_type: 'indian',
-          }),
+        await startOnlinePayment({
+          id: applicationId,
+          amount: getSelectedGrade(form.membershipType)?.amount || 0,
+          membershipType: form.membershipType,
+          fullName: form.fullName,
+          email: form.email,
+          contactNo: form.contactNo,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pinCode: form.pinCode,
+          country: form.country,
         });
-        const paymentResponseText = await paymentResponse.text();
-        let payment: {
-          status?: boolean; encRequest?: string; access_code?: string; paymentUrl?: string; errors?: string[];
-        };
-        try {
-          payment = JSON.parse(paymentResponseText);
-        } catch {
-          throw new Error('Unable to start payment. Please try again.');
-        }
-        if (!paymentResponse.ok || !payment.status || !payment.encRequest || !payment.access_code || !payment.paymentUrl) {
-          throw new Error(payment.errors?.[0] || 'Unable to start payment');
-        }
-        redirectToCCAvenue(payment.paymentUrl, payment.encRequest, payment.access_code);
         return;
       }
 
-      setSubmittedId(applicationId);
+      setExistingMembership({
+        ...form,
+        id: applicationId,
+        fullName: form.fullName,
+        email: form.email,
+        contactNo: form.contactNo,
+        membershipType: form.membershipType,
+        membershipAmount: getSelectedGrade(form.membershipType)?.amount || 0,
+        status: 'pending',
+        paymentStatus: 'not_applicable',
+        createdAt: new Date().toISOString(),
+      });
       toast.success('Application submitted successfully');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unable to submit application';
@@ -182,6 +278,15 @@ export default function JoinAsMember() {
     }
   };
 
+  const renewalDetails = existingMembership ? getMembershipRenewalDetails(existingMembership.membershipType) : null;
+  const renewalAvailableAt = renewalDetails && existingMembership
+    ? new Date(new Date(existingMembership.createdAt).getTime() + renewalDetails.intervalMs)
+    : null;
+  const renewalAvailable = Boolean(
+    existingMembership?.status === 'approved' && renewalDetails && renewalAvailableAt && now >= renewalAvailableAt.getTime(),
+  );
+  const membershipPlan = existingMembership ? getSelectedGrade(existingMembership.membershipType) : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]">
       <div className="fixed top-0 right-0 h-96 w-96 pointer-events-none rounded-full bg-[#D4AF37]/5 blur-3xl" />
@@ -190,11 +295,11 @@ export default function JoinAsMember() {
       <div className="relative mx-auto max-w-8xl px-4 py-4 sm:px-6 md:py-8 lg:px-10">
         <div className="no-print mb-6">
           <button
-            onClick={() => (step === 2 && !submittedId ? setStep(1) : router.back())}
+            onClick={() => (step === 2 && !existingMembership ? setStep(1) : router.back())}
             className="group flex items-center gap-2 rounded-xl border border-[#E5E3DD]/50 bg-white/80 px-4 py-2 text-[#555555] shadow-sm backdrop-blur-sm transition hover:border-[#D4AF37]/30 hover:text-[#0B3C5D]"
           >
             <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-0.5" />
-            <span className="text-sm font-medium">{step === 2 && !submittedId ? 'Back to form' : 'Back'}</span>
+            <span className="text-sm font-medium">{step === 2 && !existingMembership ? 'Back to form' : 'Back'}</span>
           </button>
         </div>
 
@@ -216,7 +321,7 @@ export default function JoinAsMember() {
           <div className="mx-auto mt-5 h-1 w-12 rounded-full bg-[#D4AF37]" />
         </div>
 
-        {!submittedId ? (
+        {!existingMembership && !loadingExistingMembership ? (
           <div className="no-print mx-auto mb-8 flex max-w-md items-center gap-3">
             {[
               { id: 1, label: 'Fill Details' },
@@ -245,43 +350,27 @@ export default function JoinAsMember() {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={submittedId ? 'done' : step}
+            key={existingMembership ? 'membership' : step}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
           >
-            {submittedId ? (
-              <div className="no-print mx-auto mb-8 max-w-xl rounded-2xl border border-[#E5E3DD]/50 bg-white/80 p-8 text-center shadow-xl backdrop-blur-xl">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#0B3C5D]/20">
-                  <CheckCircle className="h-10 w-10 text-[#D4AF37]" />
+            {loadingExistingMembership ? (
+              <div className="mx-auto flex max-w-xl justify-center rounded-2xl border border-[#E5E3DD] bg-white/80 p-8"><span className="text-sm text-[#555555]">Loading membership details…</span></div>
+            ) : existingMembership ? (
+              <div className="mx-auto max-w-3xl rounded-2xl border border-[#D4AF37]/30 bg-white/90 p-6 shadow-xl backdrop-blur-xl md:p-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div><p className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Your membership</p><h2 className="mt-1 font-serif text-2xl font-bold text-[#0B3C5D]">{existingMembership.membershipType}</h2><p className="mt-1 text-sm text-[#555555]">Application reference: {existingMembership.id}</p></div>
+                  <span className="rounded-full bg-[#0B3C5D]/10 px-3 py-1 text-xs font-semibold uppercase text-[#0B3C5D]">{existingMembership.status}</span>
                 </div>
-                <h3 className="mb-2 font-serif text-2xl font-bold text-[#0B3C5D]">
-                  Application Submitted
-                </h3>
-                <p className="mb-2 text-sm leading-relaxed text-[#555555]">
-                  Thank you for applying to Samudayik Vikas Samiti. Our office will review your
-                  membership form and contact you.
-                </p>
-                <p className="mb-6 text-xs text-[#555555]">Reference ID: {submittedId}</p>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <button
-                    onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 rounded-xl border border-[#E5E3DD] bg-white px-5 py-2.5 text-sm font-semibold text-[#0B3C5D]"
-                  >
-                    <Printer className="h-4 w-4" />
-                    Print form
-                  </button>
-                  <button
-                    onClick={() => router.push('/')}
-                    className="rounded-xl bg-[#D4AF37] px-5 py-2.5 text-sm font-semibold text-[#0B3C5D]"
-                  >
-                    Back to home
-                  </button>
-                </div>
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"><div className="rounded-xl bg-[#F9F8F4] p-3"><p className="text-[11px] uppercase text-[#555555]">Plan amount</p><p className="mt-1 font-semibold text-[#0B3C5D]">₹{Number(existingMembership.membershipAmount).toLocaleString('en-IN')}</p></div><div className="rounded-xl bg-[#F9F8F4] p-3"><p className="text-[11px] uppercase text-[#555555]">Payment</p><p className="mt-1 font-semibold text-[#0B3C5D]">{existingMembership.paymentStatus || 'not applicable'}</p></div><div className="rounded-xl bg-[#F9F8F4] p-3"><p className="text-[11px] uppercase text-[#555555]">Member ID</p><p className="mt-1 font-semibold text-[#0B3C5D]">{existingMembership.memberId || 'Issued after approval'}</p></div></div>
+                {membershipPlan?.details?.length ? <ul className="mt-5 space-y-1 text-sm text-[#555555]">{membershipPlan.details.map((detail) => <li key={detail}>• {detail}</li>)}</ul> : null}
+                {renewalDetails ? <div className="mt-6 rounded-xl border border-[#D4AF37]/25 bg-[#FFF8DE] p-4"><p className="font-semibold text-[#0B3C5D]">Renewal</p><p className="mt-1 text-sm text-[#555555]">{renewalDetails.label}. {renewalAvailableAt ? `Available ${renewalAvailable ? 'now' : `on ${renewalAvailableAt.toLocaleString('en-IN')}`}.` : ''}</p><button type="button" onClick={handleRenewal} disabled={!renewalAvailable || renewing} className="mt-3 rounded-xl bg-[#0B3C5D] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{renewing ? 'Opening payment…' : `Renew for ₹${renewalDetails.amount.toLocaleString('en-IN')}`}</button></div> : null}
+                {existingMembership.status !== 'approved' ? <p className="mt-5 text-sm text-amber-700">Your application must be approved before renewal becomes available.</p> : null}
               </div>
             ) : null}
 
-            {step === 1 && !submittedId ? (
+            {!existingMembership && !loadingExistingMembership && step === 1 ? (
               <div className="mx-auto max-w-4xl rounded-2xl border border-[#E5E3DD]/50 bg-white/80 p-6 shadow-xl backdrop-blur-xl md:p-8">
                 <MembershipFormStep
                   data={form}
@@ -302,13 +391,13 @@ export default function JoinAsMember() {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : !existingMembership && !loadingExistingMembership ? (
                 <MembershipPreview
                   data={form}
                   onSubmit={handleSubmit}
                   submitting={submitting}
                 />
-            )}
+            ) : null}
           </motion.div>
         </AnimatePresence>
       </div>

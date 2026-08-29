@@ -151,6 +151,18 @@ export const emptyMembershipForm = (): MembershipFormData => ({
 export const getSelectedGrade = (type: string) =>
   MEMBERSHIP_GRADES.find((grade) => grade.grade === type);
 
+export function getMembershipRenewalDetails(type: string) {
+  const grade = getSelectedGrade(type);
+  if (!grade || grade.grade === 'Patron') return null;
+  if (grade.grade === 'Payment Gateway Test') {
+    return { amount: 1, intervalMs: 2 * 60 * 60 * 1000, label: '₹1 gateway test renewal' };
+  }
+  if (grade.grade === 'Life Time Member' || grade.grade === 'Life Associate') {
+    return { amount: 1001, intervalMs: 365 * 24 * 60 * 60 * 1000, label: '₹1,001 renewal fee' };
+  }
+  return { amount: grade.amount, intervalMs: 365 * 24 * 60 * 60 * 1000, label: `₹${grade.amount.toLocaleString('en-IN')} annual renewal` };
+}
+
 export const formatDateParts = (isoDate: string) => {
   if (!isoDate) return { dd: '', mm: '', yyyy: '' };
   const [yyyy, mm, dd] = isoDate.split('-');
