@@ -15,11 +15,30 @@ import {
 import { toast } from 'react-hot-toast';
 import {
   emptyMembershipForm,
+  getSelectedGrade,
   type MembershipFormData,
 } from '@/lib/constants/membership';
 import { submitMembershipApplication } from '@/lib/services/membershipService';
 import MembershipFormStep from './MembershipFormStep';
 import MembershipPreview from './MembershipPreview';
+
+function redirectToCCAvenue(paymentUrl: string, encRequest: string, accessCode: string) {
+  const paymentForm = document.createElement('form');
+  paymentForm.method = 'POST';
+  paymentForm.action = paymentUrl;
+  paymentForm.style.display = 'none';
+
+  for (const [name, value] of Object.entries({ encRequest, access_code: accessCode })) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    paymentForm.appendChild(input);
+  }
+
+  document.body.appendChild(paymentForm);
+  paymentForm.submit();
+}
 
 function validateForm(data: MembershipFormData) {
   const errors: Record<string, string> = {};
@@ -64,6 +83,7 @@ export default function JoinAsMember() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
+  const [pendingPaymentId, setPendingPaymentId] = useState('');
 
   useEffect(() => {
     return () => {
@@ -104,26 +124,62 @@ export default function JoinAsMember() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const result = await submitMembershipApplication(form);
-      if (!result.success || !result.id) {
-        throw new Error(result.error || 'Unable to submit application');
+      let applicationId = pendingPaymentId;
+
+      if (!applicationId) {
+        const result = await submitMembershipApplication(form);
+        if (!result.success || !result.id) {
+          throw new Error(result.error || 'Unable to submit application');
+        }
+        applicationId = result.id;
+        if (form.paymentMethod === 'Online Payment') {
+          setPendingPaymentId(applicationId);
+        }
       }
-      setSubmittedId(result.id);
-      toast.success(
-        form.paymentMethod === 'Online Payment'
-          ? 'Application submitted. Online payment will be available soon.'
-          : 'Application submitted successfully',
-      );
+
+      if (form.paymentMethod === 'Online Payment') {
+        const paymentResponse = await fetch('/api/payment/ccavenue-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_id: applicationId,
+            purpose: `Membership: ${form.membershipType}`,
+            amount: getSelectedGrade(form.membershipType)?.amount,
+            name: form.fullName.trim(),
+            email: form.email.trim(),
+            phone: form.contactNo.replace(/\D/g, ''),
+            address: form.address.trim(),
+            city: form.city,
+            state: form.state,
+            pincode: form.pinCode.trim(),
+            country: form.country,
+            donor_type: 'indian',
+          }),
+        });
+        const paymentResponseText = await paymentResponse.text();
+        let payment: {
+          status?: boolean; encRequest?: string; access_code?: string; paymentUrl?: string; errors?: string[];
+        };
+        try {
+          payment = JSON.parse(paymentResponseText);
+        } catch {
+          throw new Error('Unable to start payment. Please try again.');
+        }
+        if (!paymentResponse.ok || !payment.status || !payment.encRequest || !payment.access_code || !payment.paymentUrl) {
+          throw new Error(payment.errors?.[0] || 'Unable to start payment');
+        }
+        redirectToCCAvenue(payment.paymentUrl, payment.encRequest, payment.access_code);
+        return;
+      }
+
+      setSubmittedId(applicationId);
+      toast.success('Application submitted successfully');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unable to submit application';
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleOnlinePayment = () => {
-    toast('Online payment integration will be available soon.');
   };
 
   return (
@@ -247,12 +303,11 @@ export default function JoinAsMember() {
                 </div>
               </div>
             ) : (
-              <MembershipPreview
-                data={form}
-                onSubmit={handleSubmit}
-                onOnlinePayment={handleOnlinePayment}
-                submitting={submitting}
-              />
+                <MembershipPreview
+                  data={form}
+                  onSubmit={handleSubmit}
+                  submitting={submitting}
+                />
             )}
           </motion.div>
         </AnimatePresence>

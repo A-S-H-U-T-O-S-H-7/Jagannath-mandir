@@ -34,6 +34,13 @@ const statusStyles: Record<string, string> = {
   rejected: 'bg-red-100 text-red-800 border-red-200',
 };
 
+const paymentStatusStyles: Record<string, string> = {
+  paid: 'bg-green-100 text-green-800 border-green-200',
+  pending: 'bg-amber-100 text-amber-800 border-amber-200',
+  failed: 'bg-red-100 text-red-800 border-red-200',
+  cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
+};
+
 function Detail({ label, value }: { label: string; value?: string | number | null }) {
   if (!value && value !== 0) return null;
   return (
@@ -212,6 +219,11 @@ export default function MembersPage() {
                       <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase ${statusStyles[status] || statusStyles.pending}`}>
                         {status}
                       </span>
+                      {item.paymentMethod === 'Online Payment' ? (
+                        <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase ${paymentStatusStyles[item.paymentStatus || 'pending'] || paymentStatusStyles.pending}`}>
+                          Payment: {item.paymentStatus || 'pending'}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#555555]">
                       <span className="inline-flex items-center gap-1">
@@ -287,6 +299,8 @@ export default function MembersPage() {
                           .join(', ')}
                       />
                       <Detail label="Payment method" value={item.paymentMethod} />
+                      <Detail label="Payment status" value={item.paymentStatus} />
+                      <Detail label="Transaction ID" value={item.transactionId} />
                       <Detail label="Cheque / DD no." value={item.chequeOrDdNo} />
                       <Detail label="Bank name" value={item.bankName} />
                       <Detail label="Payment date" value={item.paymentDate} />

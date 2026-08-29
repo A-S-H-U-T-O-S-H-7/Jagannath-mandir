@@ -5,10 +5,58 @@ import {
   mapOrderStatus,
   buildSuccessRedirect,
   buildFailedRedirect,
+  buildMembershipSuccessRedirect,
+  buildMembershipFailedRedirect,
   getRequestBaseUrl,
   amountsMatch,
 } from '@/lib/payment/ccavenue';
 import { donationServer } from '@/lib/services/donationServer';
+import { membershipServer } from '@/lib/services/membershipServer';
+
+async function handleMembershipResponse(
+  baseUrl: string,
+  orderId: string,
+  orderStatus: 'completed' | 'failed' | 'cancelled',
+  paymentData: Record<string, unknown>,
+) {
+  const applicationResult = await membershipServer.getApplication(orderId);
+  if (!applicationResult.success) {
+    return NextResponse.redirect(
+      buildMembershipFailedRedirect(baseUrl, { order_id: orderId, message: applicationResult.error, status_message: 'Invalid order' }),
+      303,
+    );
+  }
+
+  let finalStatus = orderStatus;
+  const expectedAmount = Number(applicationResult.data.membershipAmount || 0);
+  if (finalStatus === 'completed' && !amountsMatch(expectedAmount, String(paymentData.amount || ''))) {
+    finalStatus = 'failed';
+    paymentData.failure_message = 'Paid amount did not match membership amount';
+  }
+
+  const paymentStatus = finalStatus === 'completed' ? 'paid' : finalStatus;
+  const updateResult = await membershipServer.updatePaymentStatus(orderId, paymentStatus, paymentData);
+  if (!updateResult.success) {
+    return NextResponse.redirect(
+      buildMembershipFailedRedirect(baseUrl, { order_id: orderId, message: updateResult.error, status_message: 'Database error' }),
+      303,
+    );
+  }
+
+  if (finalStatus === 'completed') {
+    return NextResponse.redirect(buildMembershipSuccessRedirect(baseUrl, orderId), 303);
+  }
+
+  return NextResponse.redirect(
+    buildMembershipFailedRedirect(baseUrl, {
+      order_id: orderId,
+      message: String(paymentData.failure_message || paymentData.status_message || 'Payment failed'),
+      status_message: String(paymentData.status_message || finalStatus),
+      amount: String(paymentData.amount || ''),
+    }),
+    303,
+  );
+}
 
 async function handleResponse(request: NextRequest) {
   const baseUrl = getRequestBaseUrl(request);
@@ -39,6 +87,10 @@ async function handleResponse(request: NextRequest) {
     const paymentData = decrypted.data;
     const orderId = paymentData.order_id;
     let orderStatus = mapOrderStatus(paymentData.order_status);
+
+    if (orderId?.startsWith('MEM')) {
+      return handleMembershipResponse(baseUrl, orderId, orderStatus, paymentData);
+    }
 
     const donationResult = await donationServer.getDonation(orderId || '');
     if (!donationResult.success || !donationResult.data) {

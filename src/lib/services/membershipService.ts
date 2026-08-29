@@ -19,6 +19,11 @@ import { getSelectedGrade } from '@/lib/constants/membership';
 
 const COLLECTION = 'membershipApplications';
 
+function createMembershipOrderId() {
+  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `MEM${Date.now()}${random}`.slice(0, 30);
+}
+
 const uploadFile = async (file: File, path: string) => {
   const storageRef = ref(storage, path);
   await uploadBytes(storageRef, file);
@@ -51,6 +56,9 @@ export interface MembershipApplication {
   membershipType: string;
   membershipAmount: number;
   paymentMethod?: string;
+  paymentStatus?: 'not_applicable' | 'pending' | 'paid' | 'failed' | 'cancelled';
+  transactionId?: string;
+  paymentDetails?: Record<string, unknown>;
   chequeOrDdNo?: string;
   bankName?: string;
   paymentDate?: string;
@@ -85,7 +93,8 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
       );
     }
 
-    const docRef = doc(collection(db, COLLECTION));
+    const membershipOrderId = createMembershipOrderId();
+    const docRef = doc(db, COLLECTION, membershipOrderId);
     const grade = getSelectedGrade(data.membershipType);
     const currentUser = auth.currentUser;
 
@@ -139,6 +148,7 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
       membershipType: data.membershipType,
       membershipAmount: grade?.amount || 0,
       paymentMethod: data.paymentMethod,
+      paymentStatus: data.paymentMethod === 'Online Payment' ? 'pending' : 'not_applicable',
       chequeOrDdNo: data.chequeOrDdNo,
       bankName: data.bankName,
       paymentDate: data.paymentDate,

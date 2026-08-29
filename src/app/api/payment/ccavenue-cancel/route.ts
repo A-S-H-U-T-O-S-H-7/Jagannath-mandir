@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { donationServer } from '@/lib/services/donationServer';
+import { membershipServer } from '@/lib/services/membershipServer';
 import {
   buildFailedRedirect,
+  buildMembershipFailedRedirect,
   decryptCCAvenueResponse,
   extractEncResp,
   getRequestBaseUrl,
@@ -20,6 +22,22 @@ async function handleCancel(request: Request) {
       } else {
         console.warn('Rejected unverified CCAvenue cancellation response');
       }
+    }
+
+    if (orderId?.startsWith('MEM')) {
+      await membershipServer.updatePaymentStatus(orderId, 'cancelled', {
+        failure_message: 'Payment cancelled by user',
+        order_status: 'Aborted',
+        cancelledAt: new Date().toISOString(),
+      });
+      return NextResponse.redirect(
+        buildMembershipFailedRedirect(baseUrl, {
+          order_id: orderId,
+          message: 'Payment cancelled',
+          status_message: 'Cancelled',
+        }),
+        303,
+      );
     }
 
     if (orderId) {

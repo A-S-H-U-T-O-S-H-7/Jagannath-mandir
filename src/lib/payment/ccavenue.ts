@@ -89,6 +89,18 @@ export function buildFailedRedirect(baseUrl: string, params: Record<string, stri
   return url.toString();
 }
 
+export function buildMembershipSuccessRedirect(baseUrl: string, orderId: string): string {
+  const url = new URL('/join-as-member/payment-success', baseUrl);
+  url.searchParams.set('order_id', orderId);
+  return url.toString();
+}
+
+export function buildMembershipFailedRedirect(baseUrl: string, params: Record<string, string | undefined>): string {
+  const url = new URL('/join-as-member/payment-failed', baseUrl);
+  Object.entries(params).forEach(([key, value]) => { if (value) url.searchParams.set(key, value); });
+  return url.toString();
+}
+
 export function amountsMatch(expected: number, received?: string): boolean {
   const actual = Number(String(received || '').replace(/,/g, ''));
   return Number.isFinite(actual) && Math.abs(expected - actual) < 0.01;
