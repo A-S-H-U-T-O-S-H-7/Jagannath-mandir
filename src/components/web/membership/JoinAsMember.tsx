@@ -85,7 +85,7 @@ function validateForm(data: MembershipFormData) {
 
 export default function JoinAsMember() {
   const router = useRouter();
-  const { user, initialize } = useAuthStore();
+  const { user, loading: authLoading, initialize } = useAuthStore();
   const [step, setStep] = useState<1 | 2>(1);
   const [form, setForm] = useState<MembershipFormData>(emptyMembershipForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -107,24 +107,52 @@ export default function JoinAsMember() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadMembership = async () => {
-      const storedApplicationId = window.localStorage.getItem('membershipApplicationId');
+      if (authLoading) return;
+
+      // This legacy key was shared by every account in the browser and could
+      // expose the previous user's membership after logout.
+      window.localStorage.removeItem('membershipApplicationId');
+
+      if (!user) {
+        setExistingMembership(null);
+        setLoadingExistingMembership(false);
+        return;
+      }
+
+      setLoadingExistingMembership(true);
+      const storageKey = `membershipApplicationId:${user.uid}`;
+      const storedApplicationId = window.localStorage.getItem(storageKey);
       if (storedApplicationId) {
         const stored = await getMembershipApplicationById(storedApplicationId);
-        if (stored.success && stored.application) {
+        const storedBelongsToUser = Boolean(
+          stored.application
+          && (
+            stored.application.userId === user.uid
+            || (user.email && stored.application.email?.trim().toLowerCase() === user.email.trim().toLowerCase())
+          ),
+        );
+        if (!cancelled && stored.success && stored.application && storedBelongsToUser) {
           setExistingMembership(stored.application);
           setLoadingExistingMembership(false);
           return;
         }
+        window.localStorage.removeItem(storageKey);
       }
-      if (!user) { setExistingMembership(null); setLoadingExistingMembership(false); return; }
-      setLoadingExistingMembership(true);
       const result = await getLatestMembershipByUser(user.email, user.uid);
-      setExistingMembership(result.application);
-      setLoadingExistingMembership(false);
+      if (!cancelled) {
+        setExistingMembership(result.application);
+        setLoadingExistingMembership(false);
+      }
     };
-    loadMembership();
-  }, [user]);
+    void loadMembership();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
 
   useEffect(() => {
     return () => {
@@ -203,7 +231,9 @@ export default function JoinAsMember() {
     try {
       const renewal = await createMembershipRenewal(existingMembership);
       if (!renewal.success || !renewal.id || !renewal.amount) throw new Error(renewal.error || 'Unable to start renewal');
-      window.localStorage.setItem('membershipApplicationId', renewal.id);
+      if (user) {
+        window.localStorage.setItem(`membershipApplicationId:${user.uid}`, renewal.id);
+      }
       await startOnlinePayment({
         id: renewal.id,
         amount: renewal.amount,
@@ -234,7 +264,9 @@ export default function JoinAsMember() {
           throw new Error(result.error || 'Unable to submit application');
         }
         applicationId = result.id;
-        window.localStorage.setItem('membershipApplicationId', applicationId);
+        if (user) {
+          window.localStorage.setItem(`membershipApplicationId:${user.uid}`, applicationId);
+        }
         if (form.paymentMethod === 'Online Payment') {
           setPendingPaymentId(applicationId);
         }
