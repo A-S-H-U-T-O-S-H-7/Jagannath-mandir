@@ -15,6 +15,7 @@ import {
   Phone,
   User,
   FileText,
+  IdCard,
   ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -127,6 +128,18 @@ export default function MembersPage() {
     }
   };
 
+  const handleAssignMemberId = async (item: MembershipApplication) => {
+    setUpdatingId(item.id);
+    const updated = await updateMembershipStatus(item.id, 'approved', auth.currentUser?.email || '');
+    setUpdatingId(null);
+    if (updated.success) {
+      toast.success('Member ID assigned');
+      fetchData();
+    } else {
+      toast.error(updated.error || 'Unable to assign Member ID');
+    }
+  };
+
   return (
     <div className="py-4">
       <button
@@ -188,6 +201,7 @@ export default function MembersPage() {
           {visible.map((item) => {
             const status = item.status || 'pending';
             const isOpen = expandedId === item.id;
+            const canApprove = item.paymentMethod !== 'Online Payment' || item.paymentStatus === 'paid';
             const amount = item.membershipAmount
               ? `₹${Number(item.membershipAmount).toLocaleString('en-IN')}`
               : '';
@@ -245,13 +259,17 @@ export default function MembersPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     {status === 'pending' && (
                       <>
-                        <button
-                          disabled={updatingId === item.id}
-                          onClick={() => handleStatus(item, 'approved')}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3C5D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#062A42] disabled:opacity-50"
-                        >
-                          <Check className="h-3.5 w-3.5" /> Approve
-                        </button>
+                        {canApprove ? (
+                          <button
+                            disabled={updatingId === item.id}
+                            onClick={() => handleStatus(item, 'approved')}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3C5D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#062A42] disabled:opacity-50"
+                          >
+                            <Check className="h-3.5 w-3.5" /> Approve
+                          </button>
+                        ) : (
+                          <span className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">Awaiting payment</span>
+                        )}
                         <button
                           disabled={updatingId === item.id}
                           onClick={() => handleStatus(item, 'rejected')}
@@ -270,6 +288,15 @@ export default function MembersPage() {
                         <Check className="h-3.5 w-3.5" /> Approve
                       </button>
                     )}
+                    {status === 'approved' && !item.memberId ? (
+                      <button
+                        disabled={updatingId === item.id}
+                        onClick={() => handleAssignMemberId(item)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#D4AF37]/50 bg-[#FFF8DE] px-3 py-2 text-xs font-semibold text-[#0B3C5D] disabled:opacity-50"
+                      >
+                        <IdCard className="h-3.5 w-3.5" /> Assign Member ID
+                      </button>
+                    ) : null}
                     <button
                       onClick={() => setExpandedId(isOpen ? null : item.id)}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] px-3 py-2 text-xs font-semibold text-[#0B3C5D] hover:bg-[#F9F8F4]"
@@ -284,11 +311,17 @@ export default function MembersPage() {
                   <div className="border-t border-[#E5E3DD] bg-[#F9F8F4] p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       <Detail label="Gender" value={item.gender} />
+                      <Detail label="Member ID" value={item.memberId} />
+                      <Detail label="Membership grade" value={item.membershipType} />
+                      <Detail label="Membership amount" value={item.membershipAmount ? `₹${Number(item.membershipAmount).toLocaleString('en-IN')}` : ''} />
+                      <Detail label="Full name" value={`${item.title || ''} ${item.fullName || ''}`.trim()} />
+                      <Detail label="Email" value={item.email} />
                       <Detail label="Date of birth" value={item.dateOfBirth} />
                       <Detail label="Blood group" value={item.bloodGroup} />
                       <Detail label="Father's name" value={item.fatherName} />
                       <Detail label="Mother's name" value={item.motherName} />
                       <Detail label="Aadhaar" value={item.aadhaar} />
+                      <Detail label="PAN" value={item.panNumber} />
                       <Detail label="Qualification" value={item.qualification} />
                       <Detail label="Occupation" value={item.occupation} />
                       <Detail label="Introducer" value={item.introducer} />
@@ -308,7 +341,7 @@ export default function MembersPage() {
                       <Detail label="Declaration date" value={item.declarationDate} />
                     </div>
 
-                    {(item.photoUrl || item.aadhaarUrl) && (
+                    {(item.photoUrl || item.aadhaarUrl || item.panUrl) && (
                       <div className="mt-5 flex flex-wrap gap-3">
                         {item.photoUrl && (
                           <a
@@ -328,6 +361,16 @@ export default function MembersPage() {
                             className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
                           >
                             <FileText className="h-3.5 w-3.5" /> Open Aadhaar
+                          </a>
+                        )}
+                        {item.panUrl && (
+                          <a
+                            href={item.panUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Open PAN
                           </a>
                         )}
                       </div>

@@ -59,6 +59,7 @@ export interface MembershipApplication {
   paymentStatus?: 'not_applicable' | 'pending' | 'paid' | 'failed' | 'cancelled';
   transactionId?: string;
   paymentDetails?: Record<string, unknown>;
+  memberId?: string;
   chequeOrDdNo?: string;
   bankName?: string;
   paymentDate?: string;
@@ -219,8 +220,22 @@ export const updateMembershipStatus = async (
   try {
     const applicationRef = doc(db, COLLECTION, applicationId);
     const now = new Date().toISOString();
+    const existingSnapshot = await getDoc(applicationRef);
+    if (!existingSnapshot.exists()) {
+      throw new Error('Membership application not found.');
+    }
+    const existingApplication = mapApplication(
+      existingSnapshot.id,
+      existingSnapshot.data() as Record<string, unknown>,
+    );
+    const memberId =
+      status === 'approved'
+        ? existingApplication.memberId || `SVS-${new Date().getFullYear()}-${applicationId.slice(-8).toUpperCase()}`
+        : existingApplication.memberId || '';
+
     await updateDoc(applicationRef, {
       status,
+      ...(memberId ? { memberId } : {}),
       reviewedAt: now,
       reviewedBy: reviewedBy || '',
       updatedAt: now,
@@ -238,6 +253,7 @@ export const updateMembershipStatus = async (
         membershipStatus: status,
         membershipType: application.membershipType || '',
         membershipApplicationId: applicationId,
+        ...(memberId ? { memberId } : {}),
         updatedAt: now,
       }).catch(() => undefined);
     }

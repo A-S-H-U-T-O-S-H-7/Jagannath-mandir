@@ -17,6 +17,7 @@ import {
   type MembershipApplication,
 } from '@/lib/services/membershipService';
 import ProfileDonations from '@/components/web/profile/ProfileDonations';
+import ProfileMemberCard from '@/components/web/profile/ProfileMemberCard';
 
 function Field({ label, value }: { label: string; value?: string | number | null }) {
   if (!value && value !== 0) return null;
@@ -129,6 +130,7 @@ export default function ProfilePage() {
             ) : isApproved && membership ? (
               <section>
                 <h2 className="mb-3 font-serif text-lg font-bold text-[#0B3C5D]">Membership details</h2>
+                <ProfileMemberCard membership={membership} />
                 <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4">
                   <BadgeCheck className="h-5 w-5 text-[#D4AF37]" />
                   <div>
@@ -140,16 +142,28 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <Field label="Member ID" value={membership.memberId} />
+                  <Field label="Membership grade" value={membership.membershipType} />
+                  <Field label="Membership amount" value={membership.membershipAmount ? `₹${Number(membership.membershipAmount).toLocaleString('en-IN')}` : ''} />
                   <Field label="Full name" value={`${membership.title || ''} ${membership.fullName || ''}`.trim()} />
                   <Field label="Gender" value={membership.gender} />
                   <Field label="Date of birth" value={membership.dateOfBirth} />
                   <Field label="Blood group" value={membership.bloodGroup} />
                   <Field label="Father's name" value={membership.fatherName} />
                   <Field label="Mother's name" value={membership.motherName} />
+                  <Field label="Aadhaar number" value={membership.aadhaar} />
+                  <Field label="PAN number" value={membership.panNumber} />
+                  <Field label="Email" value={membership.email} />
                   <Field label="Mobile" value={membership.contactNo} />
                   <Field label="Occupation" value={membership.occupation} />
                   <Field label="Qualification" value={membership.qualification} />
+                  <Field label="Introducer" value={membership.introducer} />
+                  <Field label="Payment method" value={membership.paymentMethod} />
+                  <Field label="Payment status" value={membership.paymentStatus} />
+                  <Field label="Transaction ID" value={membership.transactionId} />
+                  <Field label="Declaration place" value={membership.place} />
+                  <Field label="Declaration date" value={membership.declarationDate} />
                   <Field
                     label="Address"
                     value={[membership.address, membership.city, membership.state, membership.country, membership.pinCode]
