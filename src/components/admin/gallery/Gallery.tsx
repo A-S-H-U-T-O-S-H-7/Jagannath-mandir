@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Image as ImageIcon, Video } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import { auth, db } from '@/lib/firebase/config';
+import { adminAuth as auth, adminDb as db } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { useActivityLogger } from '@/hooks/useActivityLogger';
 import {

@@ -18,5 +18,30 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { app, auth, db, storage };
+// Keep admin authentication in a separate Firebase app. Auth persistence is
+// scoped by app name, so an admin login cannot replace the public user session
+// in this tab or any other tab.
+const adminApp = getApps().find((candidate) => candidate.name === 'admin')
+  ?? initializeApp(firebaseConfig, 'admin');
+const adminAuth = getAuth(adminApp);
+const adminDb = getFirestore(adminApp);
+const adminStorage = getStorage(adminApp);
+
+// Creating another admin signs that new account into the Auth instance used
+// for creation. Use a third isolated app so the acting admin stays signed in.
+const adminCreationApp = getApps().find((candidate) => candidate.name === 'admin-creation')
+  ?? initializeApp(firebaseConfig, 'admin-creation');
+const adminCreationAuth = getAuth(adminCreationApp);
+
+export {
+  app,
+  auth,
+  db,
+  storage,
+  adminApp,
+  adminAuth,
+  adminDb,
+  adminStorage,
+  adminCreationAuth,
+};
 

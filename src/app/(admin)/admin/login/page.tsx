@@ -7,9 +7,9 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { adminAuth as auth } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { adminDb as db } from '@/lib/firebase/config';
 import { toast } from 'react-hot-toast';
 
 export default function AdminLoginPage() {

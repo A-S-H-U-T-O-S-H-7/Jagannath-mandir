@@ -19,7 +19,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import { auth, db } from '@/lib/firebase/config';
+import {
+  adminAuth as auth,
+  adminCreationAuth,
+  adminDb as db,
+} from '@/lib/firebase/config';
 import { 
   collection, 
   query, 
@@ -30,7 +34,13 @@ import {
   deleteDoc, 
   setDoc 
 } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  inMemoryPersistence,
+  onAuthStateChanged,
+  setPersistence,
+  signOut,
+} from 'firebase/auth';
 import { useActivityLogger } from '@/hooks/useActivityLogger';
 import { ActivityActions, ActivityEntityTypes } from '@/lib/services/activityLogService';
 import PermissionModal from '@/components/admin/admins/PermissionModal';
@@ -144,8 +154,9 @@ export default function AdminsPage() {
   const handleCreateAdmin = async (data: any) => {
     try {
       // Create user in Firebase Auth
+      await setPersistence(adminCreationAuth, inMemoryPersistence);
       const userCredential = await createUserWithEmailAndPassword(
-        auth,
+        adminCreationAuth,
         data.email,
         data.password
       );
@@ -181,6 +192,10 @@ export default function AdminsPage() {
     } catch (error: any) {
       console.error('Error creating admin:', error);
       toast.error(error.message || 'Failed to create admin');
+    } finally {
+      if (adminCreationAuth.currentUser) {
+        await signOut(adminCreationAuth);
+      }
     }
   };
 

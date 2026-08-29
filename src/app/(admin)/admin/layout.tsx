@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/config';
+import { adminAuth as auth, adminDb as db } from '@/lib/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/layout/AdminSidebar';
