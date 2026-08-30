@@ -1,6 +1,6 @@
 // lib/services/settingsService.ts
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore';
 import { normalizeTimings } from '@/lib/utils/timingHelpers';
 
 const SETTINGS_COLLECTION = 'settings';
@@ -42,9 +42,9 @@ const DEFAULT_SETTINGS = {
 };
 
 // Get all settings
-export const getSettings = async () => {
+export const getSettings = async (firestore: Firestore = db) => {
   try {
-    const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+    const settingsRef = doc(firestore, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
     const settingsSnap = await getDoc(settingsRef);
 
     if (settingsSnap.exists()) {
@@ -71,9 +71,9 @@ export const getSettings = async () => {
 };
 
 // Update social links
-export const updateSocialLinks = async (socialData: any, adminData?: any) => {
+export const updateSocialLinks = async (socialData: any, adminData?: any, firestore: Firestore = db) => {
   try {
-    const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+    const settingsRef = doc(firestore, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
     await setDoc(settingsRef, {
       social: socialData,
       updatedAt: new Date().toISOString(),
@@ -87,9 +87,9 @@ export const updateSocialLinks = async (socialData: any, adminData?: any) => {
 };
 
 // Update contact settings
-export const updateContactSettings = async (contactData: any, adminData?: any) => {
+export const updateContactSettings = async (contactData: any, adminData?: any, firestore: Firestore = db) => {
   try {
-    const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+    const settingsRef = doc(firestore, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
     await setDoc(settingsRef, {
       contact: contactData,
       updatedAt: new Date().toISOString(),
@@ -103,9 +103,9 @@ export const updateContactSettings = async (contactData: any, adminData?: any) =
 };
 
 // Update timings settings
-export const updateTimingsSettings = async (timingsData: any, adminData?: any) => {
+export const updateTimingsSettings = async (timingsData: any, adminData?: any, firestore: Firestore = db) => {
   try {
-    const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+    const settingsRef = doc(firestore, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
     await setDoc(settingsRef, {
       timings: timingsData,
       updatedAt: new Date().toISOString(),
@@ -119,9 +119,9 @@ export const updateTimingsSettings = async (timingsData: any, adminData?: any) =
 };
 
 // Update song playback settings
-export const updateSongSettings = async (songData: any, adminData?: any) => {
+export const updateSongSettings = async (songData: any, adminData?: any, firestore: Firestore = db) => {
   try {
-    const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+    const settingsRef = doc(firestore, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
     await setDoc(settingsRef, {
       song: songData,
       updatedAt: new Date().toISOString(),

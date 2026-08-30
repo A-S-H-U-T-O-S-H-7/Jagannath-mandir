@@ -10,7 +10,8 @@ import {
   startAfter, 
   where,
   Timestamp,
-  getCountFromServer
+  getCountFromServer,
+  type Firestore,
 } from 'firebase/firestore';
 
 // Activity Actions
@@ -65,7 +66,10 @@ export interface ActivityLog {
   timestamp: string;
 }
 
-export const logActivity = async (data: Omit<ActivityLog, 'id' | 'timestamp'>) => {
+export const logActivity = async (
+  data: Omit<ActivityLog, 'id' | 'timestamp'>,
+  firestore: Firestore = db,
+) => {
   try {
     const logData = {
       ...data,
@@ -73,7 +77,7 @@ export const logActivity = async (data: Omit<ActivityLog, 'id' | 'timestamp'>) =
       createdAt: new Date().toISOString(),
     };
     
-    await addDoc(collection(db, 'activityLogs'), logData);
+    await addDoc(collection(firestore, 'activityLogs'), logData);
     return { success: true };
   } catch (error) {
     console.error('Error logging activity:', error);
@@ -91,10 +95,11 @@ export const getActivityLogs = async (
     startDate?: string;
     endDate?: string;
   } = {},
-  itemsPerPage: number = 20
+  itemsPerPage: number = 20,
+  firestore: Firestore = db,
 ) => {
   try {
-    const logsRef = collection(db, 'activityLogs');
+    const logsRef = collection(firestore, 'activityLogs');
     let q = query(logsRef, orderBy('timestamp', 'desc'));
 
     // Apply filters

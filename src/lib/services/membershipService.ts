@@ -1,6 +1,7 @@
 // lib/services/membershipService.ts
 
-import { auth, db, storage } from '@/lib/firebase/config';
+import { auth } from '@/lib/firebase/config';
+import { activeDb as db, activeStorage as storage } from '@/lib/firebase/operationConfig';
 import {
   collection,
   doc,

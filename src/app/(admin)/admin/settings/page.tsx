@@ -78,7 +78,7 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const result = await getSettings();
+      const result = await getSettings(db);
       if (result.success) {
         setSettings(result.settings);
       } else {
@@ -93,7 +93,7 @@ export default function SettingsPage() {
   };
 
   const handleUpdateSocial = async (data: any) => {
-    const result = await updateSocialLinks(data);
+    const result = await updateSocialLinks(data, auth.currentUser, db);
     if (result.success) {
       await log({
         action: ActivityActions.UPDATE,
@@ -110,7 +110,7 @@ export default function SettingsPage() {
   };
 
   const handleUpdateContact = async (data: any) => {
-    const result = await updateContactSettings(data);
+    const result = await updateContactSettings(data, auth.currentUser, db);
     if (result.success) {
       await log({
         action: ActivityActions.UPDATE,
@@ -127,7 +127,7 @@ export default function SettingsPage() {
   };
 
   const handleUpdateTimings = async (data: any) => {
-    const result = await updateTimingsSettings(data);
+    const result = await updateTimingsSettings(data, auth.currentUser, db);
     if (result.success) {
       await log({
         action: ActivityActions.UPDATE,
@@ -144,7 +144,7 @@ export default function SettingsPage() {
   };
 
   const handleUpdateSong = async (data: any) => {
-    const result = await updateSongSettings(data);
+    const result = await updateSongSettings(data, auth.currentUser, db);
     if (result.success) {
       await log({
         action: ActivityActions.UPDATE,

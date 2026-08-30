@@ -1,5 +1,5 @@
 // lib/services/adminDonationService.ts
-import { db} from '@/lib/firebase/config';
+import { activeDb as db } from '@/lib/firebase/operationConfig';
 import { 
   collection, 
   doc,

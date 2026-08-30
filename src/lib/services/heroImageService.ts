@@ -1,6 +1,6 @@
 // lib/services/heroImageService.ts
 
-import { db, storage } from '@/lib/firebase/config';
+import { activeDb as db, activeStorage as storage } from '@/lib/firebase/operationConfig';
 import {
   collection,
   doc,

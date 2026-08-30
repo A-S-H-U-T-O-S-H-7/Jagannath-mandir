@@ -33,6 +33,7 @@ import {
   ActivityEntityTypes,
   ActivityLog 
 } from "@/lib/services/activityLogService";
+import { adminDb } from '@/lib/firebase/adminConfig';
 
 // Action Icons Mapping
 const actionIcons: Record<string, { icon: any; color: string; bg: string }> = {
@@ -162,7 +163,7 @@ export default function ActivityLogsPage() {
     }
     
     try {
-      const result = await getActivityLogs(currentPage, filters);
+      const result = await getActivityLogs(currentPage, filters, 20, adminDb);
       if (result.success) {
         setLogs(result.logs);
         setTotalPages(result.totalPages);

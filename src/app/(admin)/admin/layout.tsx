@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { adminAuth as auth, adminDb as db } from '@/lib/firebase/adminConfig';
+import { setAdminOperationClient } from '@/lib/firebase/operationConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/layout/AdminSidebar';
@@ -23,6 +24,7 @@ export default function AdminLayout({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setAdminOperationClient(false);
         // No user, redirect to login
         router.push('/admin/login');
         setLoading(false);
@@ -35,6 +37,7 @@ export default function AdminLayout({
         
         if (!userDoc.exists()) {
           await auth.signOut();
+          setAdminOperationClient(false);
           router.push('/admin/login');
           setLoading(false);
           return;
@@ -44,12 +47,14 @@ export default function AdminLayout({
         
         if (userData.role !== 'admin' && userData.role !== 'super_admin') {
           await auth.signOut();
+          setAdminOperationClient(false);
           router.push('/admin/login');
           setLoading(false);
           return;
         }
 
         // User is admin
+        setAdminOperationClient(true);
         setIsAdmin(true);
         setLoading(false);
         
