@@ -92,7 +92,8 @@ export default function ProfileMemberCard({ membership }: { membership: Membersh
   return <section className="mb-6 rounded-2xl border border-[#E5E3DD] bg-white p-4 shadow-sm">
     <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-serif text-lg font-bold text-[#0B3C5D]">Member Card</h3><span className="inline-flex items-center gap-1 text-xs text-[#555555]"><ArrowLeftRight className="h-3.5 w-3.5" /> Tap card to flip</span></div>
     <div ref={cardViewportRef} className="mx-auto w-full max-w-3xl" style={{ perspective: '1800px', height: `${357 * cardScale}px` }}>
-      <div ref={cardFrameRef} role="button" tabIndex={0} onClick={() => setFlipped((value) => !value)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setFlipped((value) => !value); }} className="relative h-[357px] w-[768px] origin-top-left cursor-pointer transition-transform duration-700" style={{ transformStyle: 'preserve-3d', transform: `${flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'} scale(${cardScale})` }}>
+      <div className="h-[357px] w-[768px] origin-top-left" style={{ transform: `scale(${cardScale})` }}>
+        <div ref={cardFrameRef} role="button" tabIndex={0} onClick={() => setFlipped((value) => !value)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setFlipped((value) => !value); }} className="relative h-[357px] w-[768px] cursor-pointer transition-transform duration-700" style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
         <div ref={frontRef} className="absolute inset-0 overflow-hidden rounded-2xl border border-[#9A650B] bg-gradient-to-br from-[#FFF9DA] via-[#EEC550] to-[#B87910] p-5 text-[#0B3C5D] shadow-xl" style={{ backfaceVisibility: 'hidden' }}>
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#0B3C5D 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
           <div className="absolute -bottom-20 -left-12 h-48 w-48 rounded-full border-[24px] border-white/30" /><div className="absolute -right-12 -top-16 h-48 w-48 rounded-full border-[26px] border-[#0B3C5D]/15" />
@@ -105,6 +106,7 @@ export default function ProfileMemberCard({ membership }: { membership: Membersh
           <div className="flex items-center gap-3"><img src="/svslogo.png" alt="Samudayik Vikas Samiti" className="h-10 w-10 rounded-full bg-white object-contain p-1" /><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#F4D878]">Samudayik Vikas Samiti</p><h4 className="font-serif text-lg font-bold">Member Card Terms</h4></div></div>
           <ul className="mt-4 space-y-2">{TERMS.map((term) => <li key={term} className="flex gap-2 text-xs leading-relaxed text-white/90"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F4D878]" />{term}</li>)}</ul>
           <div className="absolute bottom-5 left-5 right-5 border-t border-white/15 pt-3 text-center text-[10px] text-white/65">C-316 B&amp;C, Sector-10, Noida, G B Nagar, UP</div>
+        </div>
         </div>
       </div>
     </div>
