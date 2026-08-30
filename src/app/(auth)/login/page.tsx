@@ -92,11 +92,11 @@ export default function LoginPage() {
     <main className="relative min-h-screen overflow-hidden bg-[#F9F8F4]">
       {/* Background */}
       <div className="absolute inset-0 hidden md:block">
-        <Image src="/loginbg.png" alt="Background" fill priority className="object-cover" />
+        <Image src="/hero-desktop.png" alt="Jagannath Mandir" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#F9F8F4]/80 via-[#F9F8F4]/20 to-transparent" />
       </div>
       <div className="absolute inset-0 md:hidden">
-        <Image src="/loginmob.png" alt="Background" fill priority className="object-cover" />
+        <Image src="/hero-mobile.png" alt="Jagannath Mandir" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-[#F9F8F4]/60 backdrop-blur-sm" />
       </div>
 

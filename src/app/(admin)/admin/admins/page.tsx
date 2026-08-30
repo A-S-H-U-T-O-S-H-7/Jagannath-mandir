@@ -23,7 +23,7 @@ import {
   adminAuth as auth,
   adminCreationAuth,
   adminDb as db,
-} from '@/lib/firebase/config';
+} from '@/lib/firebase/adminConfig';
 import { 
   collection, 
   query, 

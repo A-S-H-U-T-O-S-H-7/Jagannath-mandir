@@ -10,7 +10,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase/config';
+import { auth, authReady, db } from '@/lib/firebase/config';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 interface UserData {
@@ -55,11 +55,16 @@ function getAuthErrorMessage(code: string): string {
     'auth/missing-email': 'Please enter your email address.',
     'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
     'auth/popup-blocked': 'Google sign-in popup was blocked by the browser.',
+    'auth/internal-error': 'Google sign-in could not start. Please check your connection and try again.',
     'auth/account-exists-with-different-credential': 'An account already exists with this email using another sign-in method.',
     'auth/unauthorized-domain': 'This domain is not authorized for Google sign-in.',
   };
   return messages[code] || 'An error occurred. Please try again.';
 }
+
+let authListener: (() => void) | null = null;
+let authListenerStarting = false;
+let authSubscriberCount = 0;
 
 const useAuthStore = create<AuthState>()(
   (set, get) => ({
@@ -69,64 +74,67 @@ const useAuthStore = create<AuthState>()(
     isAuthenticated: false,
 
     initialize: () => {
-      set({ loading: true });
-      
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-          try {
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-            const userData = userDoc.exists() ? userDoc.data() : {};
-            
-            const user: UserData = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName || userData.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
-              photoURL: firebaseUser.photoURL || userData.photoURL || null,
-              createdAt: userData.createdAt || new Date().toISOString(),
-              updatedAt: userData.updatedAt || new Date().toISOString(),
-            };
-            
-            set({
-              user,
-              isAuthenticated: true,
-              loading: false,
-              error: null,
-            });
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-            const user: UserData = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
-              photoURL: firebaseUser.photoURL || null,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-            
-            set({
-              user,
-              isAuthenticated: true,
-              loading: false,
-              error: null,
-            });
-          }
-        } else {
-          set({
-            user: null,
-            isAuthenticated: false,
-            loading: false,
-            error: null,
-          });
-        }
-      });
+      authSubscriberCount += 1;
 
-      return unsubscribe;
+      if (!authListener && !authListenerStarting) {
+        authListenerStarting = true;
+        set({ loading: true });
+
+        void authReady.then(() => {
+          if (authSubscriberCount === 0) return;
+
+          authListener = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+              const now = new Date().toISOString();
+              const basicUser: UserData = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
+                photoURL: firebaseUser.photoURL || null,
+                createdAt: now,
+                updatedAt: now,
+              };
+
+              set({ user: basicUser, isAuthenticated: true, loading: false, error: null });
+
+              void getDoc(doc(db, 'users', firebaseUser.uid))
+                .then((userDoc) => {
+                  if (!userDoc.exists() || auth.currentUser?.uid !== firebaseUser.uid) return;
+                  const userData = userDoc.data();
+                  set({
+                    user: {
+                      ...basicUser,
+                      displayName: firebaseUser.displayName || userData.displayName || basicUser.displayName,
+                      photoURL: firebaseUser.photoURL || userData.photoURL || null,
+                      createdAt: userData.createdAt || basicUser.createdAt,
+                      updatedAt: userData.updatedAt || basicUser.updatedAt,
+                    },
+                  });
+                })
+                .catch(() => undefined);
+            } else {
+              set({ user: null, isAuthenticated: false, loading: false, error: null });
+            }
+          });
+        }).finally(() => {
+          authListenerStarting = false;
+        });
+      }
+
+      return () => {
+        authSubscriberCount = Math.max(0, authSubscriberCount - 1);
+        if (authSubscriberCount === 0 && authListener) {
+          authListener();
+          authListener = null;
+        }
+      };
     },
 
     signUp: async (name: string, email: string, password: string) => {
       set({ loading: true, error: null });
       
       try {
+        await authReady;
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
         
@@ -141,7 +149,8 @@ const useAuthStore = create<AuthState>()(
           updatedAt: new Date().toISOString(),
         };
         
-        await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+        void setDoc(doc(db, 'users', firebaseUser.uid), userData)
+          .catch(() => undefined);
         
         const user: UserData = {
           uid: firebaseUser.uid,
@@ -171,45 +180,23 @@ const useAuthStore = create<AuthState>()(
       set({ loading: true, error: null });
       
       try {
+        await authReady;
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
-        
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          const userData = userDoc.exists() ? userDoc.data() : {};
-          
-          const user: UserData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || userData.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
-            photoURL: firebaseUser.photoURL || userData.photoURL || null,
-            createdAt: userData.createdAt || new Date().toISOString(),
-            updatedAt: userData.updatedAt || new Date().toISOString(),
-          };
-          
-          set({
-            user,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
-          });
-        } catch (error) {
-          const user: UserData = {
+        const now = new Date().toISOString();
+        set({
+          user: {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
             photoURL: firebaseUser.photoURL || null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          set({
-            user,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
-          });
-        }
+            createdAt: now,
+            updatedAt: now,
+          },
+          isAuthenticated: true,
+          loading: false,
+          error: null,
+        });
         
         return { success: true };
       } catch (error: any) {
@@ -224,65 +211,33 @@ const useAuthStore = create<AuthState>()(
       set({ loading: true, error: null });
       
       try {
+        await authReady;
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         const userCredential = await signInWithPopup(auth, provider);
         const firebaseUser = userCredential.user;
-        
-        // Check if user exists in Firestore, if not create
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          
-          if (!userDoc.exists()) {
-            // Create new user document
-            const userData = {
-              uid: firebaseUser.uid,
-              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
-              email: firebaseUser.email,
-              photoURL: firebaseUser.photoURL || null,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-            
-            await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-          }
-          
-          const userDocData = (await getDoc(doc(db, 'users', firebaseUser.uid))).data() || {};
-          
-          const user: UserData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || userDocData.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
-            photoURL: firebaseUser.photoURL || userDocData.photoURL || null,
-            createdAt: userDocData.createdAt || new Date().toISOString(),
-            updatedAt: userDocData.updatedAt || new Date().toISOString(),
-          };
-          
-          set({
-            user,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
-          });
-          
-        } catch (error) {
-          // If Firestore fails, still set user with basic info
-          console.error('Error fetching/creating user data:', error);
-          const user: UserData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
-            photoURL: firebaseUser.photoURL || null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          set({
-            user,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
-          });
-        }
+        const now = new Date().toISOString();
+        const user: UserData = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Devotee',
+          photoURL: firebaseUser.photoURL || null,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        set({ user, isAuthenticated: true, loading: false, error: null });
+        void getDoc(doc(db, 'users', firebaseUser.uid))
+          .then((userDoc) => {
+            if (!userDoc.exists()) {
+              return setDoc(doc(db, 'users', firebaseUser.uid), {
+                ...user,
+                createdAt: now,
+                updatedAt: now,
+              });
+            }
+          })
+          .catch(() => undefined);
         
         return { success: true };
       } catch (error: any) {

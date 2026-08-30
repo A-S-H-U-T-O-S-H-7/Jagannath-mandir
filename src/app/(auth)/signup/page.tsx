@@ -93,13 +93,13 @@ export default function SignupPage() {
     <main className="relative min-h-screen overflow-hidden bg-[#F9F8F4]">
       {/* Background - Desktop */}
       <div className="absolute inset-0 hidden md:block">
-        <Image src="/signupbg.png" alt="Background" fill priority className="object-cover" />
+        <Image src="/hero-desktop.png" alt="Jagannath Mandir" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#F9F8F4]/60 via-[#F9F8F4]/50 to-transparent" />
       </div>
 
       {/* Background - Mobile */}
       <div className="absolute inset-0 md:hidden">
-        <Image src="/signupmob.png" alt="Background" fill priority className="object-cover" />
+        <Image src="/hero-mobile.png" alt="Jagannath Mandir" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-[#F9F8F4]/60 backdrop-blur-sm" />
       </div>
 

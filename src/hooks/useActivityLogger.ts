@@ -1,6 +1,6 @@
 // lib/hooks/useActivityLogger.ts
 import { useCallback } from 'react';
-import { adminAuth as auth } from '@/lib/firebase/config';
+import { adminAuth as auth } from '@/lib/firebase/adminConfig';
 import { logActivity, ActivityAction, ActivityEntityType } from '@/lib/services/activityLogService';
 
 interface LogActivityParams {
@@ -23,7 +23,7 @@ export const useActivityLogger = () => {
     
     try {
       const { doc, getDoc } = await import('firebase/firestore');
-      const { adminDb: db } = await import('@/lib/firebase/config');
+      const { adminDb: db } = await import('@/lib/firebase/adminConfig');
       
       if (user) {
         const userDoc = await getDoc(doc(db, 'users', user.uid));

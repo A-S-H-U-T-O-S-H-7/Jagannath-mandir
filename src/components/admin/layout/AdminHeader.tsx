@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ChevronDown, LogOut, Shield, User } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { adminAuth as auth, adminDb as db } from '@/lib/firebase/config';
+import { adminAuth as auth, adminDb as db } from '@/lib/firebase/adminConfig';
 import { toast } from 'react-hot-toast';
 
 export default function AdminHeader() {

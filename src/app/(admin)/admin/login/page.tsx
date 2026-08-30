@@ -7,9 +7,9 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { adminAuth as auth } from '@/lib/firebase/config';
+import { adminAuth as auth, adminAuthReady } from '@/lib/firebase/adminConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { adminDb as db } from '@/lib/firebase/config';
+import { adminDb as db } from '@/lib/firebase/adminConfig';
 import { toast } from 'react-hot-toast';
 
 export default function AdminLoginPage() {
@@ -31,6 +31,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   try {
     console.log('🔐 Step 1: Attempting to sign in...');
     
+    await adminAuthReady;
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
     console.log('✅ Step 1: User signed in successfully!');

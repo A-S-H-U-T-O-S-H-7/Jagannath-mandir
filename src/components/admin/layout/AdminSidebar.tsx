@@ -24,7 +24,7 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
-import { adminAuth as auth } from '@/lib/firebase/config';
+import { adminAuth as auth } from '@/lib/firebase/adminConfig';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -60,7 +60,7 @@ export default function AdminSidebar() {
       
       try {
         const { doc, getDoc } = await import('firebase/firestore');
-        const { adminDb: db } = await import('@/lib/firebase/config');
+        const { adminDb: db } = await import('@/lib/firebase/adminConfig');
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();

@@ -16,7 +16,7 @@ import {
   Filter
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { adminAuth as auth, adminDb as db } from '@/lib/firebase/config';
+import { adminAuth as auth, adminDb as db } from '@/lib/firebase/adminConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { getUsers, getUserStats, UserData } from '@/lib/services/userService';
 import { useActivityLogger } from '@/hooks/useActivityLogger';
