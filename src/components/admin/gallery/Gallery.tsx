@@ -204,7 +204,9 @@ export default function GalleryPage() {
           entityTitle: data.videoFile.name,
           details: `Uploaded gallery video as ${mediaLabel}`,
         });
-        setIsVideoUploadOpen(false);
+        if (!isBulkVideoUpload) {
+          setIsVideoUploadOpen(false);
+        }
         await fetchVideos();
       } else {
         toast.error(result.error || 'Failed to upload video');

@@ -96,29 +96,39 @@ export default function UploadVideoModal({
     }
   }, [isOpen]);
 
-  const handleFile = async (selected: File | undefined) => {
-    if (!selected) return;
+  const handleFiles = async (selectedFiles: File[]) => {
+    const validFiles = selectedFiles.filter((selected) => {
+      const isVideo =
+        ALLOWED_VIDEO_TYPES.includes(selected.type) ||
+        /\.(mp4|webm|ogg|mov)$/i.test(selected.name);
 
-    const isVideo =
-      ALLOWED_VIDEO_TYPES.includes(selected.type) ||
-      /\.(mp4|webm|ogg|mov)$/i.test(selected.name);
+      if (!isVideo) {
+        toast.error(`${selected.name} is not a supported video`);
+        return false;
+      }
 
-    if (!isVideo) {
-      toast.error('Please upload a video (MP4, WEBM, OGG, MOV)');
-      return;
-    }
+      if (selected.size > MAX_VIDEO_SIZE) {
+        toast.error(`${selected.name} must be less than 100MB`);
+        return false;
+      }
 
-    if (selected.size > MAX_VIDEO_SIZE) {
-      toast.error('Video must be less than 100MB');
-      return;
-    }
+      return true;
+    });
 
-    setFiles([...files, selected]);
-    setPreviews([...previews, URL.createObjectURL(selected)]);
+    if (validFiles.length === 0) return;
 
-    const captured = await captureThumbnail(selected);
-    setThumbnails([...thumbnails, captured.blob || new Blob()]);
-    setDurations([...durations, captured.duration]);
+    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
+    const captured = await Promise.all(validFiles.map((file) => captureThumbnail(file)));
+
+    // Append the whole selection in one update so concurrent file processing
+    // cannot overwrite earlier videos from the same selection.
+    setFiles((current) => [...current, ...validFiles]);
+    setPreviews((current) => [...current, ...newPreviews]);
+    setThumbnails((current) => [
+      ...current,
+      ...captured.map((item) => item.blob || new Blob()),
+    ]);
+    setDurations((current) => [...current, ...captured.map((item) => item.duration)]);
   };
 
   const removeFile = (index: number) => {
@@ -136,8 +146,7 @@ export default function UploadVideoModal({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    droppedFiles.forEach((file) => handleFile(file));
+    void handleFiles(Array.from(e.dataTransfer.files));
   };
 
   const handleSubmit = async () => {
@@ -156,6 +165,7 @@ export default function UploadVideoModal({
           mediaType,
         });
       }
+      onClose();
     } else {
       // Single upload
       await onUpload({
@@ -272,7 +282,8 @@ export default function UploadVideoModal({
             onChange={(e) => {
               const selectedFiles = e.target.files;
               if (selectedFiles) {
-                Array.from(selectedFiles).forEach((file) => handleFile(file));
+                void handleFiles(Array.from(selectedFiles));
+                e.target.value = '';
               }
             }}
             className="hidden"
