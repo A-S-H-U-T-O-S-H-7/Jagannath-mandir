@@ -6,6 +6,7 @@ import { X, Upload, Loader2, Calendar, Video, Play, Image as ImageIcon } from 'l
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { AartiVideo } from '@/lib/services/adminDarshanService';
+import { compressVideoUnderLimit, MAX_VIDEO_SIZE } from '@/lib/utils/videoCompression';
 
 interface CreateAartiVideoModalProps {
   isOpen: boolean;
@@ -17,7 +18,6 @@ interface CreateAartiVideoModalProps {
 
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function CreateAartiVideoModal({
@@ -66,7 +66,7 @@ export default function CreateAartiVideoModal({
     }
   }, [editingVideo, isOpen]);
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -76,21 +76,23 @@ export default function CreateAartiVideoModal({
       return;
     }
 
-    if (file.size > MAX_VIDEO_SIZE) {
-      setErrors({ ...errors, videoFile: `Video must be less than ${MAX_VIDEO_SIZE / (1024 * 1024)}MB` });
-      toast.error(`Video size exceeds ${MAX_VIDEO_SIZE / (1024 * 1024)}MB limit.`);
-      return;
-    }
-
     setIsUploading(true);
-    setFormData({
-      ...formData,
-      videoFile: file,
-      videoPreview: URL.createObjectURL(file),
-    });
-    setErrors({ ...errors, videoFile: '' });
-    setIsUploading(false);
-    toast.success('Video uploaded successfully!');
+    try {
+      if (file.size > MAX_VIDEO_SIZE) toast.loading('Compressing video below 200MB. This can take about as long as the video...', { id: 'video-compress' });
+      const preparedFile = await compressVideoUnderLimit(file);
+      setFormData((current) => ({
+        ...current,
+        videoFile: preparedFile,
+        videoPreview: URL.createObjectURL(preparedFile),
+      }));
+      setErrors((current) => ({ ...current, videoFile: '' }));
+      toast.success(file.size > MAX_VIDEO_SIZE ? 'Video compressed below 200MB' : 'Video selected successfully!', { id: 'video-compress' });
+    } catch (error: any) {
+      setErrors((current) => ({ ...current, videoFile: error.message || 'Failed to compress video' }));
+      toast.error(error.message || 'Failed to compress video', { id: 'video-compress' });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,7 +267,7 @@ export default function CreateAartiVideoModal({
                     <>
                       <Upload className="w-6 h-6 text-[#555555]/40" />
                       <p className="text-xs text-[#555555]/60 mt-1">Click to upload video</p>
-                      <p className="text-[10px] text-[#555555]/40">MP4, WebM, OGG (Max 100MB)</p>
+                      <p className="text-[10px] text-[#555555]/40">MP4, WebM, OGG · 200MB limit (larger videos are compressed)</p>
                     </>
                   )}
                 </div>

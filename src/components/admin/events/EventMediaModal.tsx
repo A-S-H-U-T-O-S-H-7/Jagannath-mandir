@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { adminEventService, Event, EventMedia } from '@/lib/services/adminEventService';
 import { compressImageUnderLimit } from '@/lib/utils/imageCompression';
+import { compressVideoUnderLimit, MAX_VIDEO_SIZE } from '@/lib/utils/videoCompression';
 
 interface EventMediaModalProps {
   isOpen: boolean;
@@ -15,7 +16,6 @@ interface EventMediaModalProps {
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
 
 export default function EventMediaModal({ isOpen, event, onClose }: EventMediaModalProps) {
   const [tab, setTab] = useState<'images' | 'videos'>('images');
@@ -57,10 +57,6 @@ export default function EventMediaModal({ isOpen, event, onClose }: EventMediaMo
           toast.error(`${file.name} is not a video`);
           return false;
         }
-        if (file.size > MAX_VIDEO_SIZE) {
-          toast.error(`${file.name} exceeds 100MB`);
-          return false;
-        }
       }
       return true;
     });
@@ -74,10 +70,16 @@ export default function EventMediaModal({ isOpen, event, onClose }: EventMediaMo
         if (oversized.length) toast.loading(`Compressing ${oversized.length} image(s)...`, { id: 'gallery-compress' });
         uploadFiles = await Promise.all(valid.map((file) => compressImageUnderLimit(file, MAX_IMAGE_SIZE)));
         if (oversized.length) toast.success('Images compressed below 5MB', { id: 'gallery-compress' });
+      } else {
+        const oversized = valid.filter((file) => file.size > MAX_VIDEO_SIZE);
+        if (oversized.length) toast.loading(`Compressing ${oversized.length} video(s) below 200MB. This may take a while...`, { id: 'video-compress' });
+        uploadFiles = [];
+        for (const file of valid) uploadFiles.push(await compressVideoUnderLimit(file));
+        if (oversized.length) toast.success('Videos compressed below 200MB', { id: 'video-compress' });
       }
     } catch (error: any) {
       setUploading(false);
-      toast.error(error.message || 'Failed to compress image');
+      toast.error(error.message || 'Failed to compress media');
       return;
     }
     const result = await adminEventService.uploadEventMedia(event.id, uploadFiles, type);
@@ -163,7 +165,7 @@ export default function EventMediaModal({ isOpen, event, onClose }: EventMediaMo
                   Click to bulk upload {tab}
                 </p>
                 <p className="mt-1 text-xs text-[#555555]">
-                  {tab === 'images' ? 'JPG, PNG, WEBP · max 5MB each' : 'MP4, WebM · max 100MB each'}
+                  {tab === 'images' ? 'JPG, PNG, WEBP · max 5MB each' : 'MP4, WebM · 200MB limit (larger videos are compressed)'}
                 </p>
               </>
             )}

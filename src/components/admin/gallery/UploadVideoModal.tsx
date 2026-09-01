@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, Upload, Loader2, Video } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { MEDIA_TYPES, MediaType } from '@/lib/constants/media';
+import { compressVideoUnderLimit, MAX_VIDEO_SIZE } from '@/lib/utils/videoCompression';
 
 interface UploadVideoModalProps {
   isOpen: boolean;
@@ -20,7 +21,6 @@ interface UploadVideoModalProps {
 }
 
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
 
 const formatDuration = (seconds: number) => {
   const total = Math.floor(seconds || 0);
@@ -107,28 +107,33 @@ export default function UploadVideoModal({
         return false;
       }
 
-      if (selected.size > MAX_VIDEO_SIZE) {
-        toast.error(`${selected.name} must be less than 100MB`);
-        return false;
-      }
-
       return true;
     });
 
     if (validFiles.length === 0) return;
 
-    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
-    const captured = await Promise.all(validFiles.map((file) => captureThumbnail(file)));
+    try {
+      const oversized = validFiles.filter((file) => file.size > MAX_VIDEO_SIZE);
+      if (oversized.length) toast.loading(`Compressing ${oversized.length} video(s) below 200MB. This can take about as long as the video...`, { id: 'video-compress' });
+      const preparedFiles: File[] = [];
+      for (const file of validFiles) preparedFiles.push(await compressVideoUnderLimit(file));
+      if (oversized.length) toast.success('Videos compressed below 200MB', { id: 'video-compress' });
 
-    // Append the whole selection in one update so concurrent file processing
-    // cannot overwrite earlier videos from the same selection.
-    setFiles((current) => [...current, ...validFiles]);
-    setPreviews((current) => [...current, ...newPreviews]);
-    setThumbnails((current) => [
-      ...current,
-      ...captured.map((item) => item.blob || new Blob()),
-    ]);
-    setDurations((current) => [...current, ...captured.map((item) => item.duration)]);
+      const newPreviews = preparedFiles.map((file) => URL.createObjectURL(file));
+      const captured = await Promise.all(preparedFiles.map((file) => captureThumbnail(file)));
+
+      // Append the whole selection in one update so concurrent file processing
+      // cannot overwrite earlier videos from the same selection.
+      setFiles((current) => [...current, ...preparedFiles]);
+      setPreviews((current) => [...current, ...newPreviews]);
+      setThumbnails((current) => [
+        ...current,
+        ...captured.map((item) => item.blob || new Blob()),
+      ]);
+      setDurations((current) => [...current, ...captured.map((item) => item.duration)]);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to compress video', { id: 'video-compress' });
+    }
   };
 
   const removeFile = (index: number) => {
@@ -233,7 +238,7 @@ export default function UploadVideoModal({
               <p className="text-sm font-medium text-[#0B3C5D]">
                 {isBulk ? 'Click or drop videos' : 'Click or drop a video'}
               </p>
-              <p className="text-xs text-[#555555]/70 mt-1">MP4, WEBM, MOV (Max 100MB each)</p>
+              <p className="text-xs text-[#555555]/70 mt-1">MP4, WEBM, MOV · 200MB limit (larger videos are compressed)</p>
             </div>
           ) : (
             <div className="space-y-3">
