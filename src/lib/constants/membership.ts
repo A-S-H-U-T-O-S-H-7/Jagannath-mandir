@@ -58,15 +58,6 @@ export const MEMBERSHIP_GRADES = [
       'Information on all major programmes'
     ]
   },
-  {
-    sl: 'T',
-    grade: 'Payment Gateway Test',
-    amountLabel: '1/-',
-    amount: 1,
-    details: [
-      'For CCAvenue payment-flow testing only'
-    ]
-  },
 ] as const;
 
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as const;
@@ -154,9 +145,6 @@ export const getSelectedGrade = (type: string) =>
 export function getMembershipRenewalDetails(type: string) {
   const grade = getSelectedGrade(type);
   if (!grade || grade.grade === 'Patron') return null;
-  if (grade.grade === 'Payment Gateway Test') {
-    return { amount: 1, intervalMs: 2 * 60 * 60 * 1000, label: '₹1 gateway test renewal' };
-  }
   if (grade.grade === 'Life Time Member' || grade.grade === 'Life Associate') {
     return { amount: 1001, intervalMs: 365 * 24 * 60 * 60 * 1000, label: '₹1,001 renewal fee' };
   }

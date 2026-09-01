@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
+  Loader2,
   Users,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -105,6 +106,12 @@ export default function JoinAsMember() {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/signup');
+    }
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -318,6 +325,14 @@ export default function JoinAsMember() {
     existingMembership?.status === 'approved' && renewalDetails && renewalAvailableAt && now >= renewalAvailableAt.getTime(),
   );
   const membershipPlan = existingMembership ? getSelectedGrade(existingMembership.membershipType) : null;
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5F0EA] via-[#F9F8F4] to-[#F0F4F8]">
