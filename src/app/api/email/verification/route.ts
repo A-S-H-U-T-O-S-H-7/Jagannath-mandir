@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     formData.append('email', email.trim());
     formData.append('member_id', memberId.trim());
     formData.append('member_since', memberSince.trim());
+    formData.append('community_name', 'Jagannath Mandir, Noida');
     const memberCardPdf = await generateMemberCardPdf({
       name: name.trim(),
       memberId: memberId.trim(),

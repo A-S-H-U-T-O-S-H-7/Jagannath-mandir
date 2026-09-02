@@ -113,5 +113,47 @@ export async function generateMemberCardPdf(data: MemberCardData): Promise<Buffe
   pdf.setFontSize(5);
   pdf.text('Issued by Samudayik Vikas Samiti', 80, 83, { align: 'center' });
 
+  // Back of the pass - matches the terms page available on the member's profile card.
+  pdf.addPage([160, 90], 'landscape');
+  pdf.setFillColor(6, 42, 66);
+  pdf.rect(0, 0, 160, 90, 'F');
+  pdf.setFillColor(212, 175, 55);
+  pdf.circle(150, 6, 37, 'F');
+  pdf.setFillColor(11, 60, 93);
+  pdf.circle(150, 6, 30, 'F');
+  pdf.setDrawColor(212, 175, 55);
+  pdf.setLineWidth(0.8);
+  pdf.rect(1.5, 1.5, 157, 87, 'S');
+  pdf.setTextColor(244, 216, 120);
+  pdf.setFont('times', 'bold');
+  pdf.setFontSize(18);
+  pdf.text('Member Card Terms', 80, 17, { align: 'center' });
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8.5);
+  const terms = [
+    'This card certifies active membership in Samudayik Vikas Samiti.',
+    'It is valid only for the named member and is not transferable.',
+    'Present this card when requested for temple and member services.',
+    'Report a lost, stolen, or misused card to Samudayik Vikas Samiti.',
+    'Membership remains subject to the Samiti rules and approval.',
+  ];
+  terms.forEach((term, index) => {
+    const y = 30 + index * 10;
+    pdf.setTextColor(244, 216, 120);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('✓', 13, y);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(term, 19, y, { maxWidth: 125 });
+  });
+  pdf.setDrawColor(255, 255, 255);
+  pdf.setLineWidth(0.2);
+  pdf.line(10, 76, 150, 76);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(6.5);
+  pdf.text(`Member ID: ${data.memberId}`, 10, 82);
+  pdf.text('Samudayik Vikas Samiti · Shree Swarna Khetra, Noida', 150, 82, { align: 'right' });
+
   return Buffer.from(pdf.output('arraybuffer'));
 }
