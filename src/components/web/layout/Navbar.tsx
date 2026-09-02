@@ -11,6 +11,7 @@ import {
     Home, Calendar, Users, HelpCircle, Image as GalleryIcon, UserPlus
 } from 'lucide-react';
 import useAuthStore from '@/lib/store/authStore';
+import LanguageSwitcher from '@/components/web/translation/LanguageSwitcher';
 
 export default function Navbar() {
   const router = useRouter();
@@ -157,6 +158,8 @@ export default function Navbar() {
               </Link>
             ))}
 
+            <LanguageSwitcher />
+
             {/* Donate Button */}
             <Link href="/donate" className="cursor-pointer">
               <button className="px-5 py-2 text-sm font-medium text-white bg-[#D4AF37] hover:bg-[#B8962E] rounded-lg transition-all shadow-lg shadow-[#D4AF37]/25 hover:shadow-[#D4AF37]/40 cursor-pointer">
@@ -264,6 +267,12 @@ export default function Navbar() {
                   <span>{link.label}</span>
                 </Link>
               ))}
+
+              <hr className="border-[#E7D7E8]" />
+
+              <div className="flex justify-center py-1">
+                <LanguageSwitcher />
+              </div>
 
               <hr className="border-[#E7D7E8]" />
 

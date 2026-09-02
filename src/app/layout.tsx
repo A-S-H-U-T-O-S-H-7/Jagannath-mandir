@@ -61,7 +61,7 @@ export default function RootLayout({
   }, [initialize]);
 
   return (
-    <html lang="en" className={`${cinzel.variable} ${poppins.variable} ${notoDevanagari.variable} ${tiroDevanagari.variable}`}>
+    <html lang="or" className={`${cinzel.variable} ${poppins.variable} ${notoDevanagari.variable} ${tiroDevanagari.variable}`}>
       <body className="font-body antialiased">
         <Toaster position="top-right" />
         <AnimatePresence mode="wait">
