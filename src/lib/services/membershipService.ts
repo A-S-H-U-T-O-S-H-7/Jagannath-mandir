@@ -329,6 +329,41 @@ export const markMembershipVerificationEmailFailed = async (applicationId: strin
   }
 };
 
+const MEMBER_EDITABLE_FIELDS = [
+  'title', 'fullName', 'gender', 'dateOfBirth', 'fatherName', 'motherName',
+  'address', 'country', 'state', 'city', 'pinCode', 'aadhaar', 'panNumber',
+  'bloodGroup', 'contactNo', 'email', 'qualification', 'occupation', 'introducer',
+  'membershipType', 'membershipAmount', 'paymentMethod', 'chequeOrDdNo', 'bankName',
+  'paymentDate', 'place', 'declarationDate',
+] as const;
+
+/** Updates only member-entered data; approval, payment state, and member ID stay protected. */
+export const updateMembershipApplication = async (
+  applicationId: string,
+  values: Record<string, string>,
+  photoFile?: File | null,
+) => {
+  try {
+    const applicationRef = doc(db, COLLECTION, applicationId);
+    const changes: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+    for (const field of MEMBER_EDITABLE_FIELDS) {
+      if (!(field in values)) continue;
+      const value = values[field].trim();
+      changes[field] = field === 'membershipAmount' ? Number(value || 0) : value;
+    }
+
+    if (photoFile) {
+      if (photoFile.size > 2 * 1024 * 1024) throw new Error('Photo must be under 2MB.');
+      changes.photoUrl = await uploadFile(photoFile, `membership/${applicationId}/photo`);
+    }
+
+    await updateDoc(applicationRef, changes);
+    return { success: true as const };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Unable to update member details.' };
+  }
+};
+
 export const getLatestMembershipByUser = async (email?: string | null, userId?: string | null) => {
   const result = await getAllMembershipApplications();
   if (!result.success) return { success: false, error: result.error, application: null };

@@ -18,6 +18,7 @@ import {
   IdCard,
   ExternalLink,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
@@ -32,6 +33,7 @@ import {
   type MembershipStatus,
 } from '@/lib/services/membershipService';
 import { sendVerificationEmail } from '@/lib/services/emailService';
+import MemberEditModal from '@/components/admin/members/MemberEditModal';
 
 const statusStyles: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -63,6 +65,7 @@ export default function MembersPage() {
   const [filter, setFilter] = useState<'all' | MembershipStatus>('pending');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<MembershipApplication | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -331,6 +334,14 @@ export default function MembersPage() {
                       </button>
                     ) : null}
                     <button
+                      type="button"
+                      disabled={updatingId === item.id}
+                      onClick={() => setEditingMember(item)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-[#D4AF37]/50 bg-[#FFF8DE] px-3 py-2 text-xs font-semibold text-[#0B3C5D] disabled:opacity-50"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </button>
+                    <button
                       onClick={() => setExpandedId(isOpen ? null : item.id)}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] px-3 py-2 text-xs font-semibold text-[#0B3C5D] hover:bg-[#F9F8F4]"
                     >
@@ -415,6 +426,7 @@ export default function MembersPage() {
           })}
         </div>
       )}
+      {editingMember ? <MemberEditModal member={editingMember} onClose={() => setEditingMember(null)} onSaved={() => { setEditingMember(null); void fetchData(); }} /> : null}
     </div>
   );
 }
