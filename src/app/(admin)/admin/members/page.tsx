@@ -17,6 +17,7 @@ import {
   FileText,
   IdCard,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
@@ -24,10 +25,13 @@ import { adminAuth as auth, adminDb as db } from '@/lib/firebase/adminConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   getAllMembershipApplications,
+  markMembershipVerificationEmailFailed,
+  markMembershipVerificationEmailSent,
   updateMembershipStatus,
   type MembershipApplication,
   type MembershipStatus,
 } from '@/lib/services/membershipService';
+import { sendVerificationEmail } from '@/lib/services/emailService';
 
 const statusStyles: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -100,31 +104,60 @@ export default function MembersPage() {
   );
 
   const handleStatus = async (item: MembershipApplication, status: MembershipStatus) => {
+    if (updatingId) return;
     const actionLabel = status === 'approved' ? 'Approve' : 'Reject';
-    const result = await Swal.fire({
-      title: `${actionLabel} this application?`,
-      text:
-        status === 'approved'
-          ? `${item.fullName} will be marked as a temple member.`
-          : `${item.fullName}'s application will be declined.`,
-      icon: status === 'approved' ? 'question' : 'warning',
-      showCancelButton: true,
-      confirmButtonColor: status === 'approved' ? '#0B3C5D' : '#c2410c',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${actionLabel.toLowerCase()}`,
-    });
-
-    if (!result.isConfirmed) return;
-
     setUpdatingId(item.id);
-    const updated = await updateMembershipStatus(item.id, status, auth.currentUser?.email || '');
-    setUpdatingId(null);
+    try {
+      const result = await Swal.fire({
+        title: `${actionLabel} this application?`,
+        text:
+          status === 'approved'
+            ? `${item.fullName} will be marked as a temple member.`
+            : `${item.fullName}'s application will be declined.`,
+        icon: status === 'approved' ? 'question' : 'warning',
+        showCancelButton: true,
+        confirmButtonColor: status === 'approved' ? '#0B3C5D' : '#c2410c',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: `Yes, ${actionLabel.toLowerCase()}`,
+      });
 
-    if (updated.success) {
-      toast.success(`Application ${status}`);
-      fetchData();
-    } else {
-      toast.error(updated.error || 'Unable to update application');
+      if (!result.isConfirmed) return;
+
+      const updated = await updateMembershipStatus(item.id, status, auth.currentUser?.email || '');
+      if (updated.success) {
+        toast.success(`Application ${status}`);
+        void fetchData();
+
+        // Do not keep the admin waiting on the external email/PDF provider.
+        // This is fired once after the member ID and approved status are saved.
+        if (updated.shouldSendVerificationEmail) {
+          void sendVerificationEmail({
+            name: item.fullName,
+            email: item.email,
+            memberId: updated.memberId || item.memberId || item.id,
+            memberSince: new Date().toISOString().slice(0, 10),
+            membershipPlan: item.membershipType,
+            bloodGroup: item.bloodGroup,
+            location: [item.city, item.state].filter(Boolean).join(', '),
+            photoUrl: item.photoUrl,
+          }).then(async (emailSent) => {
+            if (!emailSent) {
+              await markMembershipVerificationEmailFailed(item.id);
+              toast.error('Member approved, but the verification email could not be sent.');
+              return;
+            }
+            const marked = await markMembershipVerificationEmailSent(item.id);
+            if (!marked.success) console.error('Unable to record verification email:', marked.error);
+          }).catch(async (error) => {
+            await markMembershipVerificationEmailFailed(item.id);
+            console.error('Verification email error:', error);
+          });
+        }
+      } else {
+        toast.error(updated.error || 'Unable to update application');
+      }
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -265,7 +298,7 @@ export default function MembersPage() {
                             onClick={() => handleStatus(item, 'approved')}
                             className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3C5D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#062A42] disabled:opacity-50"
                           >
-                            <Check className="h-3.5 w-3.5" /> Approve
+                            {updatingId === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} {updatingId === item.id ? 'Approving…' : 'Approve'}
                           </button>
                         ) : (
                           <span className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">Awaiting payment</span>
@@ -275,7 +308,7 @@ export default function MembersPage() {
                           onClick={() => handleStatus(item, 'rejected')}
                           className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
                         >
-                          <X className="h-3.5 w-3.5" /> Reject
+                          {updatingId === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />} {updatingId === item.id ? 'Updating…' : 'Reject'}
                         </button>
                       </>
                     )}
@@ -285,7 +318,7 @@ export default function MembersPage() {
                         onClick={() => handleStatus(item, 'approved')}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3C5D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#062A42] disabled:opacity-50"
                       >
-                        <Check className="h-3.5 w-3.5" /> Approve
+                        {updatingId === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} {updatingId === item.id ? 'Approving…' : 'Approve'}
                       </button>
                     )}
                     {status === 'approved' && !item.memberId ? (

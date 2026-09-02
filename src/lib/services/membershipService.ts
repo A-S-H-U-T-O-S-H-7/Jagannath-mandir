@@ -73,6 +73,8 @@ export interface MembershipApplication {
   status: MembershipStatus | string;
   reviewedAt?: string;
   reviewedBy?: string;
+  verificationEmailSentAt?: string;
+  verificationEmailInProgress?: boolean;
   createdAt: string;
   updatedAt?: string;
   [key: string]: unknown;
@@ -233,6 +235,10 @@ export const updateMembershipStatus = async (
       status === 'approved'
         ? existingApplication.memberId || `SVS-${new Date().getFullYear()}-${applicationId.slice(-8).toUpperCase()}`
         : existingApplication.memberId || '';
+    const shouldSendVerificationEmail =
+      status === 'approved'
+      && !existingApplication.verificationEmailSentAt
+      && !existingApplication.verificationEmailInProgress;
 
     await updateDoc(applicationRef, {
       status,
@@ -240,6 +246,7 @@ export const updateMembershipStatus = async (
       reviewedAt: now,
       reviewedBy: reviewedBy || '',
       updatedAt: now,
+      ...(shouldSendVerificationEmail ? { verificationEmailInProgress: true } : {}),
     });
 
     const snap = await getDoc(applicationRef);
@@ -259,7 +266,12 @@ export const updateMembershipStatus = async (
       }).catch(() => undefined);
     }
 
-    return { success: true };
+    return {
+      success: true as const,
+      memberId,
+      verificationEmailAlreadySent: Boolean(existingApplication.verificationEmailSentAt),
+      shouldSendVerificationEmail,
+    };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unable to update application.';
     return { success: false, error: message };
@@ -290,6 +302,30 @@ export const getMembershipByUser = async (email?: string | null, userId?: string
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unable to load membership.';
     return { success: false, error: message, application: null };
+  }
+};
+
+export const markMembershipVerificationEmailSent = async (applicationId: string) => {
+  try {
+    await updateDoc(doc(db, COLLECTION, applicationId), {
+      verificationEmailSentAt: new Date().toISOString(),
+      verificationEmailInProgress: false,
+      updatedAt: new Date().toISOString(),
+    });
+    return { success: true as const };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Unable to record verification email' };
+  }
+};
+
+export const markMembershipVerificationEmailFailed = async (applicationId: string) => {
+  try {
+    await updateDoc(doc(db, COLLECTION, applicationId), {
+      verificationEmailInProgress: false,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Unable to clear verification email reservation:', error);
   }
 };
 

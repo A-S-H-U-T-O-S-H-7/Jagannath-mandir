@@ -136,7 +136,8 @@ const useAuthStore = create<AuthState>()(
       
       try {
         await authReady;
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const normalizedEmail = email.trim();
+        const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
         const firebaseUser = userCredential.user;
         
         await updateProfile(firebaseUser, { displayName: name });
@@ -144,7 +145,7 @@ const useAuthStore = create<AuthState>()(
         const userData = {
           uid: firebaseUser.uid,
           displayName: name,
-          email: email,
+          email: normalizedEmail,
           photoURL: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -154,7 +155,7 @@ const useAuthStore = create<AuthState>()(
           .catch(() => undefined);
 
         // Email delivery must not prevent a successful account registration.
-        void sendWelcomeEmail({ name, email })
+        void sendWelcomeEmail({ name, email: normalizedEmail })
           .catch((emailError) => console.error('Welcome email error:', emailError));
         
         const user: UserData = {
@@ -186,7 +187,7 @@ const useAuthStore = create<AuthState>()(
       
       try {
         await authReady;
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
         const firebaseUser = userCredential.user;
         const now = new Date().toISOString();
         set({
@@ -272,7 +273,7 @@ const useAuthStore = create<AuthState>()(
       set({ loading: true, error: null });
       
       try {
-        await sendPasswordResetEmail(auth, email, {
+        await sendPasswordResetEmail(auth, email.trim(), {
           url: `${window.location.origin}/login`,
           handleCodeInApp: true,
         });
