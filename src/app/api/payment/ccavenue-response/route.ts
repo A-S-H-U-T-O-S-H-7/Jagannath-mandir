@@ -12,6 +12,7 @@ import {
 } from '@/lib/payment/ccavenue';
 import { donationServer } from '@/lib/services/donationServer';
 import { membershipServer } from '@/lib/services/membershipServer';
+import { sendPaymentConfirmationEmail } from '@/lib/services/paymentConfirmationEmail';
 
 async function handleMembershipResponse(
   baseUrl: string,
@@ -44,6 +45,28 @@ async function handleMembershipResponse(
   }
 
   if (finalStatus === 'completed') {
+    // CCAvenue may retry callbacks. Record successful delivery so a receipt is
+    // sent only once for this membership payment.
+    if (!applicationResult.data.paymentConfirmationEmailSentAt && applicationResult.data.email) {
+      const paymentId = String(paymentData.transaction_id || paymentData.tracking_id || orderId);
+      const emailSent = await sendPaymentConfirmationEmail({
+        name: String(applicationResult.data.fullName || 'Member'),
+        email: applicationResult.data.email,
+        memberId: String(applicationResult.data.memberId || orderId),
+        membershipPlan: String(applicationResult.data.membershipType || 'Membership'),
+        amount: expectedAmount,
+        paymentId,
+        paymentDate: new Date().toISOString().slice(0, 10),
+      }).catch((error) => {
+        console.error('Payment confirmation email error:', error);
+        return false;
+      });
+
+      if (emailSent) {
+        await membershipServer.markPaymentConfirmationEmailSent(orderId)
+          .catch((error) => console.error('Unable to record payment confirmation email:', error));
+      }
+    }
     return NextResponse.redirect(buildMembershipSuccessRedirect(baseUrl, orderId), 303);
   }
 

@@ -8,6 +8,9 @@ type MembershipServerApplication = {
   membershipAmount?: number;
   fullName?: string;
   membershipType?: string;
+  email?: string;
+  memberId?: string;
+  paymentConfirmationEmailSentAt?: unknown;
   paymentStatus?: string;
   transactionId?: string;
   paymentDetails?: Record<string, unknown>;
@@ -54,6 +57,18 @@ export const membershipServer = {
       return { success: true as const };
     } catch (error: unknown) {
       return { success: false as const, error: error instanceof Error ? error.message : 'Unable to update payment status' };
+    }
+  },
+
+  async markPaymentConfirmationEmailSent(applicationId: string) {
+    try {
+      await getAdminDb().collection(COLLECTION).doc(applicationId).update({
+        paymentConfirmationEmailSentAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { success: true as const };
+    } catch (error: unknown) {
+      return { success: false as const, error: error instanceof Error ? error.message : 'Unable to record payment email' };
     }
   },
 };

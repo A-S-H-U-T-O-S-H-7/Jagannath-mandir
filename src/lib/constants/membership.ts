@@ -1,6 +1,15 @@
 // lib/constants/membership.ts
 
 export const MEMBERSHIP_GRADES = [
+  {
+    sl: '6',
+    grade: 'Testing Member',
+    amountLabel: '1/-',
+    amount: 1,
+    details: [
+      'Testing membership for payment verification'
+    ]
+  },
   { 
     sl: '1', 
     grade: 'Patron', 
