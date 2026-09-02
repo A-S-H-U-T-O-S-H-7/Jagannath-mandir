@@ -59,7 +59,7 @@ export default function SignupPage() {
         toast.success("Account created successfully! Welcome to Jagannath Mandir 🙏");
         router.push("/");
       } else {
-        if (result.error?.includes("email")) {
+        if (/already have an account|already registered|email-already-in-use|already in use/i.test(result.error || "")) {
           setError("email", { message: result.error });
         } else {
           toast.error(result.error || "Signup failed. Please try again.");

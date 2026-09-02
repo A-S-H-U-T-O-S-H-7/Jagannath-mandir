@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { auth, authReady, db } from '@/lib/firebase/config';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { sendWelcomeEmail } from '@/lib/services/emailService';
 
 interface UserData {
   uid: string;
@@ -42,7 +43,7 @@ interface AuthState {
 // Helper function for error messages
 function getAuthErrorMessage(code: string): string {
   const messages: Record<string, string> = {
-    'auth/email-already-in-use': 'This email is already registered. Please login.',
+    'auth/email-already-in-use': 'You already have an account. Please login.',
     'auth/invalid-email': 'Invalid email address.',
     'auth/user-disabled': 'This account has been disabled.',
     'auth/user-not-found': 'No account found with this email.',
@@ -151,6 +152,10 @@ const useAuthStore = create<AuthState>()(
         
         void setDoc(doc(db, 'users', firebaseUser.uid), userData)
           .catch(() => undefined);
+
+        // Email delivery must not prevent a successful account registration.
+        void sendWelcomeEmail({ name, email })
+          .catch((emailError) => console.error('Welcome email error:', emailError));
         
         const user: UserData = {
           uid: firebaseUser.uid,
