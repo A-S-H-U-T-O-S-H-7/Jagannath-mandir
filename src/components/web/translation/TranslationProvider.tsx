@@ -4,12 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { usePathname } from "next/navigation";
 
 export const LANGUAGES = [
-  { code: "en", label: "English", native: "English" },
   { code: "or", label: "Odia", native: "ଓଡ଼ିଆ" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
 ] as const;
 
-export type LanguageCode = (typeof LANGUAGES)[number]["code"];
+export type LanguageCode = "en" | (typeof LANGUAGES)[number]["code"];
 
 type TranslationContextValue = {
   language: LanguageCode;

@@ -9,7 +9,7 @@ export default function LanguageSwitcher() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { language, isTranslating, changeLanguage } = useTranslation();
-  const activeLanguage = LANGUAGES.find((item) => item.code === language) ?? LANGUAGES[0];
+  const activeLanguage = LANGUAGES.find((item) => item.code === language);
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
@@ -22,7 +22,7 @@ export default function LanguageSwitcher() {
   return <div ref={ref} className="relative notranslate" translate="no">
     <button type="button" onClick={() => setOpen((value) => !value)} disabled={isTranslating} aria-label="Choose website language" className="flex items-center gap-1.5 rounded-lg border border-[#B8D4E8] bg-white/80 px-2.5 py-1.5 text-sm font-medium text-[#0B3C5D] shadow-sm transition hover:bg-white disabled:cursor-wait disabled:opacity-70">
       {isTranslating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
-      <span>{activeLanguage.native}</span>
+      <span>{activeLanguage?.native ?? 'Language'}</span>
       <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
     </button>
     <AnimatePresence>

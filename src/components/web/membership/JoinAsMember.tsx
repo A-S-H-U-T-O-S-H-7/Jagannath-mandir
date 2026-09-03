@@ -367,7 +367,7 @@ export default function JoinAsMember() {
             Join as <span className="text-[#D4AF37]">Member</span>
           </h1>
           <p className="mb-3 font-serif text-xl font-semibold tracking-wide text-[#D4AF37] md:text-2xl">
-            Shree Swarna Khetra
+            Shree Swarna Kshetra
           </p>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-[#555555]">
             Fill your details in step 1. On Next, your photo and information will appear on the

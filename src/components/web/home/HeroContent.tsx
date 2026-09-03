@@ -82,7 +82,7 @@ export default function HeroContent() {
         >
           <span className="h-2 w-2 sm:h-3 sm:w-2.5 rounded-full bg-[#D4AF37]" />
           <span className="text-[10px] sm:text-sm font-semibold tracking-wide text-[#0B3C5D] whitespace-nowrap">
-            Swarna Khetra Jagannath Mandir
+            Swarna Kshetra Jagannath Mandir
           </span>
         </motion.div>
 
