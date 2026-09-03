@@ -30,7 +30,8 @@ interface MembershipFormStepProps {
   data: MembershipFormData;
   onChange: (patch: Partial<MembershipFormData>) => void;
   onPhotoChange: (file: File) => void;
-  onAadhaarChange: (file: File | null) => void;
+  onAadhaarFrontChange: (file: File | null) => void;
+  onAadhaarBackChange: (file: File | null) => void;
   onPanChange: (file: File | null) => void; // ✅ NEW
   errors: Record<string, string>;
 }
@@ -98,7 +99,8 @@ export default function MembershipFormStep({
   data,
   onChange,
   onPhotoChange,
-  onAadhaarChange,
+  onAadhaarFrontChange,
+  onAadhaarBackChange,
   onPanChange,
   errors,
 }: MembershipFormStepProps) {
@@ -507,16 +509,28 @@ export default function MembershipFormStep({
             />
           </Field>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Aadhaar Copy (optional)">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="Aadhaar Front (optional)">
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white/80 px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37] transition-colors">
                 <Upload className="h-4 w-4 text-[#D4AF37]" />
-                <span>{data.aadhaarFile ? data.aadhaarFile.name : 'Upload Aadhaar'}</span>
+                <span>{data.aadhaarFrontFile ? data.aadhaarFrontFile.name : 'Upload Aadhaar front'}</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,application/pdf"
                   className="hidden"
-                  onChange={(e) => onAadhaarChange(e.target.files?.[0] || null)}
+                  onChange={(e) => onAadhaarFrontChange(e.target.files?.[0] || null)}
+                />
+              </label>
+            </Field>
+            <Field label="Aadhaar Back (optional)">
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E5E3DD] bg-white/80 px-4 py-3 text-sm text-[#555555] hover:border-[#D4AF37] transition-colors">
+                <Upload className="h-4 w-4 text-[#D4AF37]" />
+                <span>{data.aadhaarBackFile ? data.aadhaarBackFile.name : 'Upload Aadhaar back'}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,application/pdf"
+                  className="hidden"
+                  onChange={(e) => onAadhaarBackChange(e.target.files?.[0] || null)}
                 />
               </label>
             </Field>

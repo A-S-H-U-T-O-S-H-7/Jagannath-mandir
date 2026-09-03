@@ -186,6 +186,14 @@ export default function JoinAsMember() {
     patchForm({ panFile: file });
   };
 
+  const handleAadhaarFrontChange = (file: File | null) => {
+    patchForm({ aadhaarFrontFile: file });
+  };
+
+  const handleAadhaarBackChange = (file: File | null) => {
+    patchForm({ aadhaarBackFile: file });
+  };
+
   const goNext = () => {
     const nextErrors = validateForm(form);
     setErrors(nextErrors);
@@ -424,7 +432,8 @@ export default function JoinAsMember() {
                   errors={errors}
                   onChange={patchForm}
                   onPhotoChange={handlePhoto}
-                  onAadhaarChange={(file) => patchForm({ aadhaarFile: file })}
+                  onAadhaarFrontChange={handleAadhaarFrontChange}
+                  onAadhaarBackChange={handleAadhaarBackChange}
                   onPanChange={handlePanChange} // ✅ Added missing prop
                 />
                 <div className="mt-8 flex justify-end">

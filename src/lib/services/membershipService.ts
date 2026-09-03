@@ -67,6 +67,8 @@ export interface MembershipApplication {
   place?: string;
   declarationDate?: string;
   photoUrl?: string;
+  aadhaarFrontUrl?: string;
+  aadhaarBackUrl?: string;
   aadhaarUrl?: string;
   panUrl?: string; // ✅ NEW
   userId?: string;
@@ -103,7 +105,8 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
     const currentUser = auth.currentUser;
 
     let photoUrl = '';
-    let aadhaarUrl = '';
+    let aadhaarFrontUrl = '';
+    let aadhaarBackUrl = '';
     let panUrl = ''; // ✅ NEW
 
     if (data.photoFile) {
@@ -113,11 +116,18 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
         console.error('Photo upload failed:', error);
       }
     }
-    if (data.aadhaarFile) {
+    if (data.aadhaarFrontFile) {
       try {
-        aadhaarUrl = await uploadFile(data.aadhaarFile, `membership/${docRef.id}/aadhaar`);
+        aadhaarFrontUrl = await uploadFile(data.aadhaarFrontFile, `membership/${docRef.id}/aadhaar-front`);
       } catch (error) {
-        console.error('Aadhaar upload failed:', error);
+        console.error('Aadhaar front upload failed:', error);
+      }
+    }
+    if (data.aadhaarBackFile) {
+      try {
+        aadhaarBackUrl = await uploadFile(data.aadhaarBackFile, `membership/${docRef.id}/aadhaar-back`);
+      } catch (error) {
+        console.error('Aadhaar back upload failed:', error);
       }
     }
     // ✅ NEW: Upload PAN Card
@@ -159,7 +169,8 @@ export const submitMembershipApplication = async (data: MembershipFormData) => {
       place: data.place,
       declarationDate: data.declarationDate,
       photoUrl,
-      aadhaarUrl,
+      aadhaarFrontUrl,
+      aadhaarBackUrl,
       panUrl, // ✅ NEW
       userId: currentUser?.uid || '',
       isRenewal: Boolean(previousApplication),

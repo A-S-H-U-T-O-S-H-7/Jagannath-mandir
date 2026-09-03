@@ -74,7 +74,7 @@ export default function GalleryPage() {
             category: img.description || undefined,
             mediaType: img.mediaType || 'normal',
           }));
-          setGalleryImages(allImages);
+          setGalleryImages(allImages.filter((img) => img.mediaType !== 'media-coverage'));
 
           // ✅ Media Coverage Photos
           const mediaFiltered = allImages.filter((img) => img.mediaType === 'media-coverage');
@@ -84,7 +84,7 @@ export default function GalleryPage() {
         // ✅ All Videos
         if (videosResult.success) {
           const allVideos = videosResult.videos.filter((video) => Boolean(video.videoUrl));
-          setGalleryVideos(allVideos);
+          setGalleryVideos(allVideos.filter((video) => video.mediaType !== 'media-coverage'));
 
           // ✅ Media Coverage Videos
           const mediaVideosFiltered = allVideos.filter((video) => video.mediaType === 'media-coverage');

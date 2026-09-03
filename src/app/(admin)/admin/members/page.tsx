@@ -385,7 +385,7 @@ export default function MembersPage() {
                       <Detail label="Declaration date" value={item.declarationDate} />
                     </div>
 
-                    {(item.photoUrl || item.aadhaarUrl || item.panUrl) && (
+                    {(item.photoUrl || item.aadhaarFrontUrl || item.aadhaarBackUrl || item.aadhaarUrl || item.panUrl) && (
                       <div className="mt-5 flex flex-wrap gap-3">
                         {item.photoUrl && (
                           <a
@@ -397,6 +397,26 @@ export default function MembersPage() {
                             <ExternalLink className="h-3.5 w-3.5" /> Open photo
                           </a>
                         )}
+                        {item.aadhaarFrontUrl && (
+                          <a
+                            href={item.aadhaarFrontUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Open Aadhaar front
+                          </a>
+                        )}
+                        {item.aadhaarBackUrl && (
+                          <a
+                            href={item.aadhaarBackUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Open Aadhaar back
+                          </a>
+                        )}
                         {item.aadhaarUrl && (
                           <a
                             href={item.aadhaarUrl}
@@ -404,7 +424,7 @@ export default function MembersPage() {
                             rel="noreferrer"
                             className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E3DD] bg-white px-3 py-2 text-xs font-semibold text-[#0B3C5D]"
                           >
-                            <FileText className="h-3.5 w-3.5" /> Open Aadhaar
+                            <FileText className="h-3.5 w-3.5" /> Open Aadhaar (legacy)
                           </a>
                         )}
                         {item.panUrl && (

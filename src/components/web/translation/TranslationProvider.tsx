@@ -4,8 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { usePathname } from "next/navigation";
 
 export const LANGUAGES = [
-  { code: "or", label: "Odia", native: "ଓଡ଼ିଆ" },
   { code: "en", label: "English", native: "English" },
+  { code: "or", label: "Odia", native: "ଓଡ଼ିଆ" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
 ] as const;
 
@@ -66,7 +66,7 @@ function batchNodes(nodes: Text[]) {
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [language, setLanguage] = useState<LanguageCode>("or");
+  const [language, setLanguage] = useState<LanguageCode>("en");
   const [isTranslating, setIsTranslating] = useState(false);
   const originals = useRef(new Map<Text, string>());
   const cache = useRef(new Map<string, string>());

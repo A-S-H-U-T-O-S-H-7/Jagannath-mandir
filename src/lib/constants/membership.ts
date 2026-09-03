@@ -111,7 +111,8 @@ export interface MembershipFormData {
   declarationDate: string;
   photoPreview: string;
   photoFile: File | null;
-  aadhaarFile: File | null;
+  aadhaarFrontFile: File | null;
+  aadhaarBackFile: File | null;
   panFile: File | null; // ✅ NEW
 }
 
@@ -144,7 +145,8 @@ export const emptyMembershipForm = (): MembershipFormData => ({
   declarationDate: new Date().toISOString().slice(0, 10),
   photoPreview: '',
   photoFile: null,
-  aadhaarFile: null,
+  aadhaarFrontFile: null,
+  aadhaarBackFile: null,
   panFile: null, 
 });
 
