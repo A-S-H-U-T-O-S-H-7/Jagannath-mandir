@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
   updateProfile,
   GoogleAuthProvider,
+  getAdditionalUserInfo,
   signInWithPopup,
 } from 'firebase/auth';
 import { auth, authReady, db } from '@/lib/firebase/config';
@@ -222,6 +223,7 @@ const useAuthStore = create<AuthState>()(
         provider.setCustomParameters({ prompt: 'select_account' });
         const userCredential = await signInWithPopup(auth, provider);
         const firebaseUser = userCredential.user;
+        const isNewUser = getAdditionalUserInfo(userCredential)?.isNewUser === true;
         const now = new Date().toISOString();
         const user: UserData = {
           uid: firebaseUser.uid,
@@ -244,6 +246,16 @@ const useAuthStore = create<AuthState>()(
             }
           })
           .catch(() => undefined);
+
+        // Send the welcome email only once, when Google creates the account.
+        // Existing Google users use this same method to sign in and must not
+        // receive another welcome email.
+        if (isNewUser && firebaseUser.email) {
+          void sendWelcomeEmail({
+            name: user.displayName,
+            email: firebaseUser.email,
+          }).catch((emailError) => console.error('Google welcome email error:', emailError));
+        }
         
         return { success: true };
       } catch (error: any) {
