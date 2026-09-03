@@ -88,10 +88,12 @@ export default function UploadVideoModal({
 
   useEffect(() => {
     if (!isOpen) {
+      previews.forEach((preview) => URL.revokeObjectURL(preview));
       setFiles([]);
       setPreviews([]);
       setThumbnails([]);
       setDurations([]);
+      setMediaType('normal');
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, [isOpen]);

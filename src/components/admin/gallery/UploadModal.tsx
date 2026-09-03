@@ -1,7 +1,7 @@
 // components/admin/gallery/UploadModal.tsx
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { X, Upload, Image as ImageIcon, Loader2, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { MEDIA_TYPES, MediaType } from '@/lib/constants/media';
@@ -29,6 +29,17 @@ export default function UploadModal({
   const [dragActive, setDragActive] = useState(false);
   const [mediaType, setMediaType] = useState<MediaType>('normal');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // The modal remains mounted while closed, so clear the prior selection after
+  // a successful upload or a manual close before it is opened again.
+  useEffect(() => {
+    if (isOpen) return;
+    previews.forEach((preview) => URL.revokeObjectURL(preview));
+    setFiles([]);
+    setPreviews([]);
+    setMediaType('normal');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [isOpen]);
 
   const handleFileChange = async (selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
