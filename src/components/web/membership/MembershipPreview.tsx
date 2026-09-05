@@ -510,7 +510,7 @@ export default function MembershipPreview({
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0B3C5D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0B3C5D]/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           <Send className="h-4 w-4" />
-          {submitting ? 'Submitting…' : data.paymentMethod === 'Online Payment' ? 'Submit & Pay' : 'Submit Application'}
+          {submitting ? 'Submitting…' : data.paymentMethod === 'Online Payment' ? 'Pay & Submit' : 'Submit Application'}
         </button>
       </div>
     </div>
