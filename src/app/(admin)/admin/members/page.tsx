@@ -138,7 +138,7 @@ export default function MembersPage() {
             name: item.fullName,
             email: item.email,
             memberId: updated.memberId || item.memberId || item.id,
-            memberSince: new Date().toISOString().slice(0, 10),
+            memberSince: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
             membershipPlan: item.membershipType,
             bloodGroup: item.bloodGroup,
             location: [item.city, item.state].filter(Boolean).join(', '),

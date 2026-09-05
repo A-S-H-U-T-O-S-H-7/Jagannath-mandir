@@ -1,6 +1,10 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingIncludes: {
+    '/api/member-card': ['./public/memberjaga.png', './public/swarnakshetra-h.png', './public/swarnakshetra-o.png'],
+    '/api/email/verification': ['./public/memberjaga.png', './public/swarnakshetra-h.png', './public/swarnakshetra-o.png'],
+  },
   images: {
     remotePatterns: [
       {
