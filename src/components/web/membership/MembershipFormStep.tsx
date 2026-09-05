@@ -500,7 +500,7 @@ export default function MembershipFormStep({
             </Field>
           </div>
 
-          <Field label="Introducer Name & Details">
+          <Field label="Introducer Name & Details (optional)">
             <input
               value={data.introducer}
               onChange={(e) => setFromInput('introducer', e, uppercase)}

@@ -16,6 +16,8 @@ import {
 } from "react-icons/fa";
 import { getContactInfo } from '@/lib/services/settingsService';
 import { formatTimeRange } from '@/lib/utils/timingHelpers';
+import TempleMap from '@/components/web/shared/TempleMap';
+import { TEMPLE_LOCATION } from '@/lib/constants/templeLocation';
 
 const footerLinks = {
   Temple: [
@@ -79,7 +81,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#0B3C5D] text-white/80">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-4">
           {/* Brand - Full width on mobile */}
           <div className="md:col-span-1">
             <Link href="/" className="inline-block">
@@ -112,7 +114,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-1">
             <div className="grid grid-cols-2 gap-6 md:gap-10">
               {Object.entries(footerLinks).map(([title, links]) => (
                 <div key={title}>
@@ -166,12 +168,10 @@ export default function Footer() {
                   </a>
                 </li>
               )}
-              {contactInfo?.contact?.address && (
-                <li className="flex items-center gap-3 text-sm text-white/50">
-                  <MapPin className="w-4 h-4 text-[#D4AF37]" />
-                  <span>{contactInfo.contact.address}</span>
-                </li>
-              )}
+              <li className="flex items-start gap-3 text-sm text-white/50">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#D4AF37]" />
+                <a href={TEMPLE_LOCATION.shareUrl} target="_blank" rel="noopener noreferrer" className="leading-relaxed transition-colors hover:text-[#D4AF37]">{contactInfo?.contact?.address || TEMPLE_LOCATION.address}</a>
+              </li>
               {contactInfo?.timings && (
                 <>
                   <li className="flex items-start gap-3 text-sm text-white/50">
@@ -211,6 +211,7 @@ export default function Footer() {
               </div>
             )}
           </div>
+          <TempleMap compact />
         </div>
 
         {/* Bottom Bar */}

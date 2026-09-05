@@ -103,7 +103,7 @@ export default function ContactSettings({ settings, onUpdate }: ContactSettingsP
                 onChange={(e) => handleChange('address', e.target.value)}
                 rows={3}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm border border-[#E5E3DD]/50 bg-white/50 text-[#0B3C5D] focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all duration-200 resize-none placeholder:text-[#555555]/40"
-                placeholder="Sector 93A, Noida, Uttar Pradesh - 201301"
+                placeholder="Royale Garden Estate, Sector-61, Noida"
               />
             </div>
           </div>

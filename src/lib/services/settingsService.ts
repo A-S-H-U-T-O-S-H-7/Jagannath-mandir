@@ -2,6 +2,7 @@
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore';
 import { normalizeTimings } from '@/lib/utils/timingHelpers';
+import { TEMPLE_LOCATION } from '@/lib/constants/templeLocation';
 
 const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'site_settings';
@@ -20,7 +21,7 @@ const DEFAULT_SETTINGS = {
     phone1: '+91 98765 43210',
     phone2: '',
     contactEmail: 'info@jagnanthmandir.com',
-    address: 'Sector 93A, Noida, Uttar Pradesh - 201301',
+    address: TEMPLE_LOCATION.address,
   },
   timings: {
     morningStart: '5:00 AM',
@@ -41,6 +42,15 @@ const DEFAULT_SETTINGS = {
   },
 };
 
+// Replace the former default address while preserving admin updates.
+const normalizeContact = (contact: Partial<typeof DEFAULT_SETTINGS.contact> = {}) => ({
+  ...DEFAULT_SETTINGS.contact,
+  ...contact,
+  address: !contact.address || contact.address === 'Sector 93A, Noida, Uttar Pradesh - 201301'
+    ? TEMPLE_LOCATION.address
+    : contact.address,
+});
+
 // Get all settings
 export const getSettings = async (firestore: Firestore = db) => {
   try {
@@ -55,7 +65,7 @@ export const getSettings = async (firestore: Firestore = db) => {
           ...DEFAULT_SETTINGS,
           ...data,
           social: { ...DEFAULT_SETTINGS.social, ...(data.social || {}) },
-          contact: { ...DEFAULT_SETTINGS.contact, ...(data.contact || {}) },
+          contact: normalizeContact(data.contact || {}),
           timings: normalizeTimings({ ...DEFAULT_SETTINGS.timings, ...(data.timings || {}) }),
           song: { ...DEFAULT_SETTINGS.song, ...(data.song || {}) },
         },
@@ -144,7 +154,7 @@ export const getContactInfo = async () => {
       const data = settingsSnap.data();
       return {
         success: true,
-        contact: data.contact || DEFAULT_SETTINGS.contact,
+        contact: normalizeContact(data.contact || {}),
         social: data.social || DEFAULT_SETTINGS.social,
         timings: normalizeTimings({ ...DEFAULT_SETTINGS.timings, ...(data.timings || {}) }),
       };

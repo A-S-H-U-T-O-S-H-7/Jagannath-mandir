@@ -22,6 +22,8 @@ import { toast } from 'react-hot-toast';
 import { submitContactForm } from '@/lib/services/adminContactService';
 import { getContactInfo } from '@/lib/services/settingsService';
 import { formatTimeRange, normalizeRituals } from '@/lib/utils/timingHelpers';
+import TempleMap from '@/components/web/shared/TempleMap';
+import { TEMPLE_LOCATION } from '@/lib/constants/templeLocation';
 
 const helpTypes = [
   { id: "general", label: "General Inquiry", icon: HelpCircle },
@@ -60,8 +62,8 @@ export default function ContactPage() {
     {
       icon: <MapPin className="w-5 h-5" />,
       label: "Address",
-      value: "Sector 93A, Noida, Uttar Pradesh - 201301",
-      href: null as string | null,
+      value: TEMPLE_LOCATION.address,
+      href: TEMPLE_LOCATION.shareUrl as string | null,
     },
   ]);
   const [timings, setTimings] = useState({
@@ -101,14 +103,12 @@ export default function ContactPage() {
               href: `mailto:${c.contactEmail}`,
             });
           }
-          if (c.address) {
-            items.push({
-              icon: <MapPin className="w-5 h-5" />,
-              label: "Address",
-              value: c.address,
-              href: null,
-            });
-          }
+          items.push({
+            icon: <MapPin className="w-5 h-5" />,
+            label: "Address",
+            value: c.address || TEMPLE_LOCATION.address,
+            href: TEMPLE_LOCATION.shareUrl,
+          });
           if (items.length > 0) setContactItems(items);
         }
         if (result.timings) {
@@ -242,6 +242,8 @@ export default function ContactPage() {
                       {item.href ? (
                         <a
                           href={item.href}
+                          target={item.label === 'Address' ? '_blank' : undefined}
+                          rel={item.label === 'Address' ? 'noopener noreferrer' : undefined}
                           className="text-sm font-medium text-[#0B3C5D] hover:text-[#D4AF37] transition-colors"
                         >
                           {item.value}
@@ -470,6 +472,9 @@ export default function ContactPage() {
               </AnimatePresence>
             </div>
           </motion.div>
+        </div>
+        <div className="mt-8">
+          <TempleMap />
         </div>
       </div>
     </div>

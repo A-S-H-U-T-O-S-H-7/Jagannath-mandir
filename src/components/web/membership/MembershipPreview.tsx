@@ -368,7 +368,7 @@ export default function MembershipPreview({
 
                 <div>
                   Introducer Name &amp; Details:{' '}
-                  <DottedValue value={data.introducer} minWidth="70%" />
+                  <DottedValue value={data.introducer || 'Not provided'} minWidth="70%" />
                 </div>
               </div>
 
